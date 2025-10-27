@@ -46,15 +46,16 @@ final class Encoders
         }
     }
 
-    private static function encodeKeyValuePair(string $key, mixed $value, LineWriter $writer, EncodeOptions $options, int $depth): void
+    private static function encodeKeyValuePair(string $key, mixed $value, LineWriter $writer, EncodeOptions $options, int $depth, bool $isListItem = false): void
     {
-        // Encode the key (might need quoting)
-        $encodedKey = Primitives::encodeStringLiteral($key, $options->delimiter);
+        // Encode the key (might need quoting) - pass isKey: true
+        $encodedKey = Primitives::encodeStringLiteral($key, $options->delimiter, true);
+        $prefix = $isListItem ? Constants::LIST_ITEM_PREFIX : '';
 
         // Handle primitives inline
         if (Normalize::isJsonPrimitive($value)) {
             $encodedValue = Primitives::encodePrimitive($value, $options->delimiter);
-            $writer->push($depth, $encodedKey.Constants::COLON.Constants::SPACE.$encodedValue);
+            $writer->push($depth, $prefix.$encodedKey.Constants::COLON.Constants::SPACE.$encodedValue);
 
             return;
         }
@@ -65,7 +66,7 @@ final class Encoders
 
             // Empty array - treat as empty object in PHP (since we can't distinguish)
             if (empty($array)) {
-                $writer->push($depth, $encodedKey.Constants::COLON);
+                $writer->push($depth, $prefix.$encodedKey.Constants::COLON);
 
                 return;
             }
@@ -73,14 +74,16 @@ final class Encoders
             // Inline primitive array
             if (Normalize::isArrayOfPrimitives($array)) {
                 $inlineArray = self::formatInlineArray($array, $options);
-                $writer->push($depth, $encodedKey.$inlineArray);
+                $writer->push($depth, $prefix.$encodedKey.$inlineArray);
 
                 return;
             }
 
             // Array of arrays
             if (Normalize::isArrayOfArrays($array)) {
-                $writer->push($depth, $encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
+                $lengthPrefix = $options->lengthMarker !== false ? $options->lengthMarker : '';
+                $delimiterKey = self::getDelimiterKey($options->delimiter);
+                $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
                     $inlineArray = self::formatInlineArray($item, $options);
                     $writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
@@ -93,14 +96,14 @@ final class Encoders
             if (Normalize::isArrayOfObjects($array)) {
                 $header = self::detectTabularHeader($array);
                 if ($header !== null && self::isTabularArray($array, $header)) {
-                    $writer->push($depth, $encodedKey.self::formatArrayHeader(count($array), $header, $options));
+                    $writer->push($depth, $prefix.$encodedKey.self::formatArrayHeader(count($array), $header, $options));
                     self::writeTabularRows($array, $header, $writer, $options, $depth + 1);
 
                     return;
                 }
 
                 // Fall back to list format
-                $writer->push($depth, $encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
+                $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
                     self::encodeObjectAsListItem($item, $writer, $options, $depth + 1);
                 }
@@ -109,7 +112,7 @@ final class Encoders
             }
 
             // Mixed array - use list format
-            $writer->push($depth, $encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
+            $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
                 self::encodeMixedArrayItem($item, $writer, $options, $depth + 1);
             }
@@ -123,20 +126,20 @@ final class Encoders
 
             // Empty object
             if (empty($object)) {
-                $writer->push($depth, $encodedKey.Constants::COLON);
+                $writer->push($depth, $prefix.$encodedKey.Constants::COLON);
 
                 return;
             }
 
             // Non-empty object
-            $writer->push($depth, $encodedKey.Constants::COLON);
+            $writer->push($depth, $prefix.$encodedKey.Constants::COLON);
             self::encodeObject($object, $writer, $options, $depth + 1);
 
             return;
         }
 
         // Fallback
-        $writer->push($depth, $encodedKey.Constants::COLON.Constants::SPACE.Constants::NULL_LITERAL);
+        $writer->push($depth, $prefix.$encodedKey.Constants::COLON.Constants::SPACE.Constants::NULL_LITERAL);
     }
 
     private static function encodeArray(array $array, LineWriter $writer, EncodeOptions $options, int $depth): void
@@ -158,7 +161,9 @@ final class Encoders
 
         // Array of arrays
         if (Normalize::isArrayOfArrays($array)) {
-            $writer->push($depth, Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
+            $lengthPrefix = $options->lengthMarker !== false ? $options->lengthMarker : '';
+            $delimiterKey = self::getDelimiterKey($options->delimiter);
+            $writer->push($depth, Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
                 $inlineArray = self::formatInlineArray($item, $options);
                 $writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
@@ -204,14 +209,23 @@ final class Encoders
             $array
         );
 
-        return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.Constants::SPACE.implode($options->delimiter, $encoded);
+        $joined = implode($options->delimiter, $encoded);
+
+        // Only add space after colon if there are items
+        return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.($joined !== '' ? Constants::SPACE.$joined : '');
     }
 
     private static function formatArrayHeader(int $length, array $fields, EncodeOptions $options): string
     {
         $lengthPrefix = $options->lengthMarker !== false ? $options->lengthMarker : '';
         $delimiterKey = self::getDelimiterKey($options->delimiter);
-        $fieldsList = implode($options->delimiter, $fields);
+
+        // Quote field names if they contain special characters - these are keys
+        $quotedFields = array_map(
+            fn ($field) => Primitives::encodeStringLiteral($field, $options->delimiter, true),
+            $fields
+        );
+        $fieldsList = implode($options->delimiter, $quotedFields);
 
         return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::OPEN_BRACE.$fieldsList.Constants::CLOSE_BRACE.Constants::COLON;
     }
@@ -232,13 +246,21 @@ final class Encoders
 
     private static function isTabularArray(array $array, array $expectedFields): bool
     {
+        // Sort expected fields for comparison
+        $sortedExpected = $expectedFields;
+        sort($sortedExpected);
+
         foreach ($array as $item) {
             if (! Normalize::isJsonObject($item)) {
                 return false;
             }
 
             $keys = array_keys($item);
-            if ($keys !== $expectedFields) {
+            $sortedKeys = $keys;
+            sort($sortedKeys);
+
+            // Check if same set of keys (order doesn't matter)
+            if ($sortedKeys !== $sortedExpected) {
                 return false;
             }
 
@@ -273,28 +295,15 @@ final class Encoders
             return;
         }
 
-        // First key-value pair on the marker line (only if it's a primitive)
+        // First key-value pair always on the marker line
         $firstKey = $keys[0];
-        $firstValue = $object[$firstKey];
+        self::encodeKeyValuePair($firstKey, $object[$firstKey], $writer, $options, $depth, true);
 
-        if (Normalize::isJsonPrimitive($firstValue)) {
-            $encodedKey = Primitives::encodeStringLiteral($firstKey, $options->delimiter);
-            $encodedValue = Primitives::encodePrimitive($firstValue, $options->delimiter);
-            $writer->push($depth, Constants::LIST_ITEM_PREFIX.$encodedKey.Constants::COLON.Constants::SPACE.$encodedValue);
-
-            // Remaining properties indented
-            for ($i = 1; $i < count($keys); $i++) {
-                $key = $keys[$i];
-                $value = $object[$key];
-                self::encodeKeyValuePair($key, $value, $writer, $options, $depth + 1);
-            }
-        } else {
-            // If first value is not a primitive, write marker then all properties indented
-            $writer->push($depth, Constants::LIST_ITEM_PREFIX);
-            foreach ($keys as $key) {
-                $value = $object[$key];
-                self::encodeKeyValuePair($key, $value, $writer, $options, $depth + 1);
-            }
+        // Remaining properties indented
+        for ($i = 1; $i < count($keys); $i++) {
+            $key = $keys[$i];
+            $value = $object[$key];
+            self::encodeKeyValuePair($key, $value, $writer, $options, $depth + 1);
         }
     }
 

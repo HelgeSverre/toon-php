@@ -19,22 +19,40 @@ final class Primitives
         }
 
         if (is_int($value) || is_float($value)) {
-            // Handle -0 (only for floats, and only if non-zero)
+            // Handle integer zero
+            if (is_int($value) && $value === 0) {
+                return '0';
+            }
+
+            // Handle float zero and negative zero
             if (is_float($value) && $value === 0.0) {
-                // Check for negative zero
-                if (@(1 / $value) === -INF) {
-                    return '0';
-                }
+                // Both 0.0 and -0.0 should encode as '0'
+                // Note: Could check for negative zero with fdiv(1, $value) === -INF
+                // but we always return '0' anyway for consistency with JS
+                return '0';
             }
 
             // Expand scientific notation for consistency with JS
-            if (is_float($value) && $value !== 0.0 && (abs($value) < 1e-6 || abs($value) >= 1e21)) {
-                // For very large or very small numbers
+            // Check if the value would be displayed in scientific notation
+            if (is_float($value) && (abs($value) <= 1e-6 || abs($value) >= 1e20)) {
+                // Save current locale
+                $oldLocale = setlocale(LC_NUMERIC, '0');
+                setlocale(LC_NUMERIC, 'C');
+
+                // For very large numbers
                 if (abs($value) >= 1) {
-                    return sprintf('%.0f', $value);
+                    $result = sprintf('%.0f', $value);
                 } else {
-                    return rtrim(rtrim(sprintf('%.10f', $value), '0'), '.');
+                    // For very small numbers
+                    $result = rtrim(rtrim(sprintf('%.10f', $value), '0'), '.');
                 }
+
+                // Restore locale
+                if ($oldLocale !== false) {
+                    setlocale(LC_NUMERIC, $oldLocale);
+                }
+
+                return $result;
             }
 
             return (string) $value;
@@ -47,9 +65,9 @@ final class Primitives
         throw new InvalidArgumentException('Unsupported primitive type');
     }
 
-    public static function encodeStringLiteral(string $value, string $delimiter): string
+    public static function encodeStringLiteral(string $value, string $delimiter, bool $isKey = false): string
     {
-        if (self::isSafeUnquoted($value, $delimiter)) {
+        if (self::isSafeUnquoted($value, $delimiter, $isKey)) {
             return $value;
         }
 
@@ -67,7 +85,7 @@ final class Primitives
         return $escaped;
     }
 
-    public static function isSafeUnquoted(string $value, string $delimiter): bool
+    public static function isSafeUnquoted(string $value, string $delimiter, bool $isKey = false): bool
     {
         // Empty strings need quoting
         if ($value === '') {
@@ -76,6 +94,11 @@ final class Primitives
 
         // Strings with leading or trailing whitespace need quoting
         if (trim($value) !== $value) {
+            return false;
+        }
+
+        // Keys with internal spaces need quoting (but values with spaces are ok)
+        if ($isKey && str_contains($value, Constants::SPACE)) {
             return false;
         }
 
