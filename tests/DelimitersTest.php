@@ -168,8 +168,7 @@ final class DelimitersTest extends TestCase
     {
         $input = ['items' => []];
         $options = new EncodeOptions(lengthMarker: '#');
-        // Empty arrays are treated as empty objects in PHP
-        $expected = 'items:';
+        $expected = 'items[#0]:';
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 

@@ -33,8 +33,7 @@ final class ArraysTest extends TestCase
     public function test_encode_empty_array(): void
     {
         $input = ['items' => []];
-        // In PHP, empty arrays are treated as empty objects
-        $expected = 'items:';
+        $expected = 'items[0]:';
         $this->assertEquals($expected, Toon::encode($input));
     }
 

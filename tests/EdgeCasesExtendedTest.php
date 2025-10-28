@@ -35,7 +35,7 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $result = Toon::encode($data);
-        $this->assertStringContainsString('inner:', $result);
+        $this->assertStringContainsString('inner[0]:', $result);
     }
 
     public function test_deeply_nested_empty_objects(): void
@@ -49,7 +49,7 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $result = Toon::encode($data);
-        $this->assertStringContainsString('level3:', $result);
+        $this->assertStringContainsString('level3[0]:', $result);
     }
 
     public function test_mixed_array_with_primitives_and_objects(): void

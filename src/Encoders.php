@@ -81,9 +81,10 @@ final class Encoders
             assert(is_array($value));
             $array = $value;
 
-            // Empty array - treat as empty object in PHP (since we can't distinguish)
+            // Empty array
             if (empty($array)) {
-                $writer->push($depth, $prefix.$encodedKey.Constants::COLON);
+                $inlineArray = self::formatInlineArray($array, $options);
+                $writer->push($depth, $prefix.$encodedKey.$inlineArray);
 
                 return;
             }

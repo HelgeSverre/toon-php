@@ -113,7 +113,7 @@ final class ObjectsTest extends TestCase
     public function test_encode_empty_nested_object(): void
     {
         $input = ['user' => []];
-        $expected = 'user:';
+        $expected = 'user[0]:';
         $this->assertEquals($expected, Toon::encode($input));
     }
 
