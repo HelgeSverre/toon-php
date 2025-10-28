@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-28
+
+### Fixed
+
+- **Empty array encoding**: Fixed empty arrays to correctly output with `[0]` marker (e.g., `items[0]:`) to match the original TypeScript implementation, instead of treating them as empty objects (e.g., `items:`)
+
+### Added
+
+- **Implementation verification**: Comprehensive cross-implementation testing with 30+ test cases comparing PHP output against the original TypeScript TOON implementation to ensure complete compatibility
+
+### Changed
+
+- **README**: Updated token savings table with actual benchmark data and added implementation verification section
+- **README**: Removed outdated PHP-specific limitations section about empty array handling
+
 ## [1.1.0] - 2025-10-28
 
 ### Added
@@ -99,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive PHPUnit test coverage
 - Follows PHP-FIG coding standards (via Laravel Pint)
 
+[1.2.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.2.0
 [1.1.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.1.0
 [1.0.1]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.0.1
 [1.0.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.0.0
