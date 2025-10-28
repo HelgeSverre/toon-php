@@ -6,6 +6,17 @@ namespace HelgeSverre\Toon;
 
 final class Encoders
 {
+    /**
+     * Encode any value to TOON format, writing output to a LineWriter.
+     *
+     * Handles primitives, arrays, and objects. Automatically selects the most
+     * compact representation (inline arrays, tabular format, or list format).
+     *
+     * @param  mixed  $value  The value to encode
+     * @param  LineWriter  $writer  Output writer for accumulating lines
+     * @param  EncodeOptions  $options  Encoding configuration
+     * @param  int  $depth  Current indentation depth (default: 0)
+     */
     public static function encodeValue(mixed $value, LineWriter $writer, EncodeOptions $options, int $depth = 0): void
     {
         // Handle primitives
@@ -23,6 +34,7 @@ final class Encoders
 
         // Handle arrays
         if (Normalize::isJsonArray($value)) {
+            assert(is_array($value));
             self::encodeArray($value, $writer, $options, $depth);
 
             return;
@@ -30,6 +42,7 @@ final class Encoders
 
         // Handle objects
         if (Normalize::isJsonObject($value)) {
+            assert(is_array($value) && ! array_is_list($value));
             self::encodeObject($value, $writer, $options, $depth);
 
             return;
@@ -39,6 +52,9 @@ final class Encoders
         $writer->push($depth, Constants::NULL_LITERAL);
     }
 
+    /**
+     * @param  array<string, mixed>  $object
+     */
     private static function encodeObject(array $object, LineWriter $writer, EncodeOptions $options, int $depth): void
     {
         foreach ($object as $key => $value) {
@@ -48,8 +64,8 @@ final class Encoders
 
     private static function encodeKeyValuePair(string $key, mixed $value, LineWriter $writer, EncodeOptions $options, int $depth, bool $isListItem = false): void
     {
-        // Encode the key (might need quoting) - pass isKey: true
-        $encodedKey = Primitives::encodeStringLiteral($key, $options->delimiter, true);
+        // Encode the key using identifier pattern matching
+        $encodedKey = Primitives::encodeKey($key);
         $prefix = $isListItem ? Constants::LIST_ITEM_PREFIX : '';
 
         // Handle primitives inline
@@ -62,6 +78,7 @@ final class Encoders
 
         // Handle arrays
         if (Normalize::isJsonArray($value)) {
+            assert(is_array($value));
             $array = $value;
 
             // Empty array - treat as empty object in PHP (since we can't distinguish)
@@ -85,6 +102,7 @@ final class Encoders
                 $delimiterKey = self::getDelimiterKey($options->delimiter);
                 $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
+                    assert(is_array($item));
                     $inlineArray = self::formatInlineArray($item, $options);
                     $writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
                 }
@@ -105,6 +123,7 @@ final class Encoders
                 // Fall back to list format
                 $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
+                    assert(is_array($item) && ! array_is_list($item));
                     self::encodeObjectAsListItem($item, $writer, $options, $depth + 1);
                 }
 
@@ -122,6 +141,7 @@ final class Encoders
 
         // Handle nested objects
         if (Normalize::isJsonObject($value)) {
+            assert(is_array($value) && ! array_is_list($value));
             $object = $value;
 
             // Empty object
@@ -142,14 +162,12 @@ final class Encoders
         $writer->push($depth, $prefix.$encodedKey.Constants::COLON.Constants::SPACE.Constants::NULL_LITERAL);
     }
 
+    /**
+     * @param  array<mixed>  $array
+     */
     private static function encodeArray(array $array, LineWriter $writer, EncodeOptions $options, int $depth): void
     {
-        // Empty array
-        if (empty($array)) {
-            $writer->push($depth, Constants::OPEN_BRACKET.'0'.Constants::CLOSE_BRACKET.Constants::COLON);
-
-            return;
-        }
+        // Note: Empty arrays are handled in encodeValue() before this method is called
 
         // Inline primitive array
         if (Normalize::isArrayOfPrimitives($array)) {
@@ -165,6 +183,7 @@ final class Encoders
             $delimiterKey = self::getDelimiterKey($options->delimiter);
             $writer->push($depth, Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
+                assert(is_array($item));
                 $inlineArray = self::formatInlineArray($item, $options);
                 $writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
             }
@@ -185,6 +204,7 @@ final class Encoders
             // Fall back to list format
             $writer->push($depth, Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
+                assert(is_array($item) && ! array_is_list($item));
                 self::encodeObjectAsListItem($item, $writer, $options, $depth + 1);
             }
 
@@ -198,6 +218,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  array<mixed>  $array
+     */
     private static function formatInlineArray(array $array, EncodeOptions $options): string
     {
         $length = count($array);
@@ -215,14 +238,17 @@ final class Encoders
         return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.($joined !== '' ? Constants::SPACE.$joined : '');
     }
 
+    /**
+     * @param  array<string>  $fields
+     */
     private static function formatArrayHeader(int $length, array $fields, EncodeOptions $options): string
     {
         $lengthPrefix = $options->lengthMarker !== false ? $options->lengthMarker : '';
         $delimiterKey = self::getDelimiterKey($options->delimiter);
 
-        // Quote field names if they contain special characters - these are keys
+        // Encode field names as keys using identifier pattern matching
         $quotedFields = array_map(
-            fn ($field) => Primitives::encodeStringLiteral($field, $options->delimiter, true),
+            fn ($field) => Primitives::encodeKey($field),
             $fields
         );
         $fieldsList = implode($options->delimiter, $quotedFields);
@@ -230,6 +256,10 @@ final class Encoders
         return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::OPEN_BRACE.$fieldsList.Constants::CLOSE_BRACE.Constants::COLON;
     }
 
+    /**
+     * @param  array<mixed>|null  $array
+     * @return array<string>|null
+     */
     private static function detectTabularHeader(?array $array): ?array
     {
         if ($array === null || empty($array)) {
@@ -241,9 +271,15 @@ final class Encoders
             return null;
         }
 
+        assert(is_array($firstObject));
+
         return array_keys($firstObject);
     }
 
+    /**
+     * @param  array<mixed>  $array
+     * @param  array<string>  $expectedFields
+     */
     private static function isTabularArray(array $array, array $expectedFields): bool
     {
         // Sort expected fields for comparison
@@ -255,6 +291,7 @@ final class Encoders
                 return false;
             }
 
+            assert(is_array($item));
             $keys = array_keys($item);
             $sortedKeys = $keys;
             sort($sortedKeys);
@@ -275,9 +312,14 @@ final class Encoders
         return true;
     }
 
+    /**
+     * @param  array<mixed>  $array
+     * @param  array<string>  $fields
+     */
     private static function writeTabularRows(array $array, array $fields, LineWriter $writer, EncodeOptions $options, int $depth): void
     {
         foreach ($array as $object) {
+            assert(is_array($object));
             $values = [];
             foreach ($fields as $field) {
                 $values[] = Primitives::encodePrimitive($object[$field], $options->delimiter);
@@ -286,6 +328,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $object
+     */
     private static function encodeObjectAsListItem(array $object, LineWriter $writer, EncodeOptions $options, int $depth): void
     {
         $keys = array_keys($object);
@@ -319,6 +364,7 @@ final class Encoders
 
         // Arrays
         if (Normalize::isJsonArray($item)) {
+            assert(is_array($item));
             if (Normalize::isArrayOfPrimitives($item)) {
                 $inlineArray = self::formatInlineArray($item, $options);
                 $writer->push($depth, Constants::LIST_ITEM_PREFIX.$inlineArray);
@@ -337,6 +383,7 @@ final class Encoders
 
         // Objects
         if (Normalize::isJsonObject($item)) {
+            assert(is_array($item) && ! array_is_list($item));
             self::encodeObjectAsListItem($item, $writer, $options, $depth);
 
             return;
@@ -349,7 +396,7 @@ final class Encoders
     private static function getDelimiterKey(string $delimiter): string
     {
         return match ($delimiter) {
-            Constants::DELIMITER_TAB => '\t',
+            Constants::DELIMITER_TAB => "\t",
             Constants::DELIMITER_PIPE => '|',
             default => '',
         };

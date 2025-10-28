@@ -308,6 +308,41 @@ Run static analysis:
 composer analyse
 ```
 
+## Benchmarks
+
+The `benchmarks/` directory contains tools for measuring TOON's token efficiency compared to JSON and XML across realistic datasets.
+
+### Running Benchmarks
+
+```bash
+cd benchmarks
+composer install
+composer run benchmark
+```
+
+The benchmark tests four dataset types:
+
+- **GitHub Repositories** (100 records) - Repository metadata
+- **Analytics Data** (180 days) - Time-series metrics
+- **E-Commerce Orders** (50 orders) - Nested order structures
+- **Employee Records** (100 records) - Tabular data
+
+Results are saved to `benchmarks/results/token-efficiency.md` with detailed comparisons and visualizations.
+
+### Token Counting
+
+For accurate token counts, set your Anthropic API key:
+
+```bash
+cd benchmarks
+cp .env.example .env
+# Add your ANTHROPIC_API_KEY to .env
+```
+
+Without an API key, the benchmark uses character/word-based estimation.
+
+See [benchmarks/README.md](benchmarks/README.md) for detailed documentation.
+
 ## Use Cases
 
 TOON is ideal for:

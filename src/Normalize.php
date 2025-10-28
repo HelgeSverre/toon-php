@@ -11,6 +11,16 @@ use stdClass;
 
 final class Normalize
 {
+    /**
+     * Normalize a PHP value into a form suitable for TOON encoding.
+     *
+     * Handles type conversion, object serialization, and recursive normalization
+     * of nested structures. Converts non-finite floats to null, DateTime to ISO strings,
+     * and objects via JsonSerializable, toArray(), or public properties.
+     *
+     * @param  mixed  $value  The value to normalize
+     * @return mixed The normalized value (primitives, arrays, or associative arrays)
+     */
     public static function normalizeValue(mixed $value): mixed
     {
         // Handle null
@@ -25,14 +35,14 @@ final class Normalize
 
         // Handle numbers
         if (is_int($value) || is_float($value)) {
-            // Canonicalize -0 to 0
-            if ($value === 0 && is_float($value) && 1 / $value === -INF) {
-                return 0;
-            }
-
             // Convert non-finite values to null
             if (is_float($value) && ! is_finite($value)) {
                 return null;
+            }
+
+            // Canonicalize -0.0 to 0
+            if (is_float($value) && $value === 0.0 && fdiv(1, $value) === -INF) {
+                return 0;
             }
 
             return $value;
@@ -61,14 +71,9 @@ final class Normalize
 
         // Handle objects
         if (is_object($value)) {
-            // Handle stdClass and plain objects
-            if ($value instanceof stdClass || self::isPlainObject($value)) {
-                $result = [];
-                foreach (get_object_vars($value) as $key => $val) {
-                    $result[$key] = self::normalizeValue($val);
-                }
-
-                return $result;
+            // Handle JsonSerializable first (preferred method)
+            if ($value instanceof JsonSerializable) {
+                return self::normalizeValue($value->jsonSerialize());
             }
 
             // Handle objects with toArray method
@@ -76,29 +81,48 @@ final class Normalize
                 return self::normalizeValue($value->toArray());
             }
 
-            // Handle JsonSerializable
-            if ($value instanceof JsonSerializable) {
-                return self::normalizeValue($value->jsonSerialize());
+            // For stdClass and any other objects: use public properties only
+            // This prevents leaking private/protected properties
+            $result = [];
+            foreach (get_object_vars($value) as $key => $val) {
+                $result[$key] = self::normalizeValue($val);
             }
 
-            // Fallback: convert to array
-            return self::normalizeValue((array) $value);
+            return $result;
         }
 
         // Fallback for unsupported types
         return null;
     }
 
+    /**
+     * Check if a value is a JSON primitive (string, number, boolean, or null).
+     *
+     * @param  mixed  $value  The value to check
+     * @return bool True if the value is a primitive type
+     */
     public static function isJsonPrimitive(mixed $value): bool
     {
         return is_string($value) || is_int($value) || is_float($value) || is_bool($value) || $value === null;
     }
 
+    /**
+     * Check if a value is a JSON array (PHP list with sequential integer keys).
+     *
+     * @param  mixed  $value  The value to check
+     * @return bool True if the value is an array list
+     */
     public static function isJsonArray(mixed $value): bool
     {
         return is_array($value) && array_is_list($value);
     }
 
+    /**
+     * Check if a value is a JSON object (PHP associative array).
+     *
+     * @param  mixed  $value  The value to check
+     * @return bool True if the value is an associative array
+     */
     public static function isJsonObject(mixed $value): bool
     {
         return is_array($value) && ! array_is_list($value);
@@ -131,6 +155,9 @@ final class Normalize
         return false;
     }
 
+    /**
+     * @param  array<mixed>  $value
+     */
     public static function isArrayOfPrimitives(array $value): bool
     {
         if (! array_is_list($value)) {
@@ -146,6 +173,9 @@ final class Normalize
         return true;
     }
 
+    /**
+     * @param  array<mixed>  $value
+     */
     public static function isArrayOfArrays(array $value): bool
     {
         if (! array_is_list($value)) {
@@ -157,7 +187,8 @@ final class Normalize
         }
 
         foreach ($value as $item) {
-            if (! is_array($item) || ! array_is_list($item)) {
+            // Each item must be an array and specifically an array of primitives
+            if (! is_array($item) || ! self::isArrayOfPrimitives($item)) {
                 return false;
             }
         }
@@ -165,6 +196,9 @@ final class Normalize
         return true;
     }
 
+    /**
+     * @param  array<mixed>  $value
+     */
     public static function isArrayOfObjects(array $value): bool
     {
         if (! array_is_list($value)) {

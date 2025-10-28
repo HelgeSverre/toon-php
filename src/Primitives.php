@@ -8,6 +8,15 @@ use InvalidArgumentException;
 
 final class Primitives
 {
+    /**
+     * Encode a primitive value (null, bool, int, float, string) to TOON format.
+     *
+     * @param  mixed  $value  The primitive value to encode
+     * @param  string  $delimiter  The delimiter used in the context (affects string quoting)
+     * @return string The encoded primitive value
+     *
+     * @throws InvalidArgumentException If the value is not a supported primitive type
+     */
     public static function encodePrimitive(mixed $value, string $delimiter): string
     {
         if ($value === null) {
@@ -27,29 +36,29 @@ final class Primitives
             // Handle float zero and negative zero
             if (is_float($value) && $value === 0.0) {
                 // Both 0.0 and -0.0 should encode as '0'
-                // Note: Could check for negative zero with fdiv(1, $value) === -INF
-                // but we always return '0' anyway for consistency with JS
                 return '0';
             }
 
-            // Expand scientific notation for consistency with JS
-            // Check if the value would be displayed in scientific notation
-            if (is_float($value) && (abs($value) <= 1e-6 || abs($value) >= 1e20)) {
-                // Save current locale
-                $oldLocale = setlocale(LC_NUMERIC, '0');
-                setlocale(LC_NUMERIC, 'C');
-
-                // For very large numbers
-                if (abs($value) >= 1) {
-                    $result = sprintf('%.0f', $value);
-                } else {
-                    // For very small numbers
-                    $result = rtrim(rtrim(sprintf('%.10f', $value), '0'), '.');
+            // For floats, expand scientific notation for consistency with JS
+            // Use json_encode for locale-independent formatting, then process
+            if (is_float($value)) {
+                // json_encode gives us locale-independent decimal representation
+                $result = json_encode($value);
+                if ($result === false) {
+                    throw new InvalidArgumentException('Failed to encode float value');
                 }
 
-                // Restore locale
-                if ($oldLocale !== false) {
-                    setlocale(LC_NUMERIC, $oldLocale);
+                // If result contains scientific notation, expand it
+                if (stripos($result, 'e') !== false) {
+                    if (abs($value) >= 1) {
+                        // For large numbers, use integer format
+                        // Must ensure locale-independent output
+                        $result = number_format($value, 0, '.', '');
+                    } else {
+                        // For small numbers, use fixed-point and trim trailing zeros
+                        // Create locale-independent representation
+                        $result = rtrim(rtrim(number_format($value, 20, '.', ''), '0'), '.');
+                    }
                 }
 
                 return $result;
@@ -65,6 +74,33 @@ final class Primitives
         throw new InvalidArgumentException('Unsupported primitive type');
     }
 
+    /**
+     * Encode an object key for TOON format.
+     *
+     * Keys matching the identifier pattern ^[A-Za-z_][\w.]*$ are unquoted.
+     * Other keys are quoted and escaped.
+     *
+     * @param  string  $key  The key to encode
+     * @return string The encoded key (quoted or unquoted)
+     */
+    public static function encodeKey(string $key): string
+    {
+        // Keys are unquoted if they match the identifier pattern: ^[A-Za-z_][\w.]*$
+        if (preg_match('/^[A-Za-z_][\w.]*$/', $key)) {
+            return $key;
+        }
+
+        return Constants::DOUBLE_QUOTE.self::escapeString($key).Constants::DOUBLE_QUOTE;
+    }
+
+    /**
+     * Encode a string literal, determining if quoting is needed.
+     *
+     * @param  string  $value  The string value to encode
+     * @param  string  $delimiter  The delimiter used in the context (affects quoting decisions)
+     * @param  bool  $isKey  Whether this string is an object key (stricter quoting rules)
+     * @return string The encoded string (quoted or unquoted)
+     */
     public static function encodeStringLiteral(string $value, string $delimiter, bool $isKey = false): string
     {
         if (self::isSafeUnquoted($value, $delimiter, $isKey)) {
@@ -74,6 +110,14 @@ final class Primitives
         return Constants::DOUBLE_QUOTE.self::escapeString($value).Constants::DOUBLE_QUOTE;
     }
 
+    /**
+     * Escape special characters in a string for use in quoted strings.
+     *
+     * Escapes backslashes, double quotes, newlines, carriage returns, and tabs.
+     *
+     * @param  string  $value  The string to escape
+     * @return string The escaped string
+     */
     public static function escapeString(string $value): string
     {
         $escaped = str_replace(Constants::BACKSLASH, Constants::BACKSLASH.Constants::BACKSLASH, $value);
@@ -85,6 +129,18 @@ final class Primitives
         return $escaped;
     }
 
+    /**
+     * Check if a string can be safely represented without quotes.
+     *
+     * Strings need quoting if they: are empty, have leading/trailing whitespace,
+     * contain structural characters, match keywords, look numeric, contain control
+     * characters, or start with list markers.
+     *
+     * @param  string  $value  The string to check
+     * @param  string  $delimiter  The delimiter used in the context
+     * @param  bool  $isKey  Whether this string is an object key (stricter rules)
+     * @return bool True if the string can be unquoted, false if it needs quotes
+     */
     public static function isSafeUnquoted(string $value, string $delimiter, bool $isKey = false): bool
     {
         // Empty strings need quoting
@@ -102,13 +158,18 @@ final class Primitives
             return false;
         }
 
-        // Keywords need quoting
-        if (strtolower($value) === Constants::TRUE_LITERAL || strtolower($value) === Constants::FALSE_LITERAL || strtolower($value) === Constants::NULL_LITERAL) {
+        // Keywords need quoting (case-sensitive)
+        if ($value === Constants::TRUE_LITERAL || $value === Constants::FALSE_LITERAL || $value === Constants::NULL_LITERAL) {
             return false;
         }
 
-        // Numeric patterns need quoting (including octal-like values)
+        // Numeric patterns need quoting (including octal, hex, and binary patterns)
         if (is_numeric($value) || preg_match('/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/', $value) || preg_match('/^0[0-7]+$/', $value)) {
+            return false;
+        }
+
+        // Hex and binary patterns need quoting
+        if (preg_match('/^(?:0x[0-9A-Fa-f]+|0b[01]+)$/', $value)) {
             return false;
         }
 

@@ -38,8 +38,9 @@
   "minimum-stability": "stable",
   "prefer-stable": true,
   "scripts": {
-    "test": "vendor/bin/phpunit",
-    "coverage": "herd coverage vendor/bin/phpunit --coverage-html coverage",
+    "test": "vendor/bin/phpunit --no-coverage",
+    "coverage": "vendor/bin/phpunit --coverage-html coverage",
+    "coverage:herd": "herd coverage vendor/bin/phpunit --coverage-html coverage",
     "format": "vendor/bin/pint src",
     "analyse": "phpstan analyse src/ tests/",
     "pint": "@format",
