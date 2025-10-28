@@ -5,6 +5,16 @@ composer.lock
 .phpunit.cache
 .DS_Store
 .idea/
+wip/
 *.swp
 *.swo
 *~
+
+# Benchmarks
+/benchmarks/vendor/
+/benchmarks/composer.lock
+/benchmarks/.env
+/benchmarks/data/*
+!/benchmarks/data/.gitkeep
+/benchmarks/results/*.md
+!/benchmarks/results/.gitkeep
