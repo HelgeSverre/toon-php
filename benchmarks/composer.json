@@ -1,0 +1,29 @@
+{
+  "name": "helgesverre/toon-benchmarks",
+  "description": "Benchmarks for Token-Oriented Object Notation",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^8.1",
+    "helgesverre/toon": "dev-main",
+    "fakerphp/faker": "^1.23",
+    "guzzlehttp/guzzle": "^7.8",
+    "symfony/console": "^6.0|^7.0"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Benchmarks\\": "src/"
+    }
+  },
+  "scripts": {
+    "benchmark": "php scripts/token-efficiency.php"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

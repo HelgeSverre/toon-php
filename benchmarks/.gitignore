@@ -1,0 +1,14 @@
+# Dependencies
+/vendor/
+composer.lock
+
+# Environment files
+.env
+
+# Generated data
+/data/*
+!/data/.gitkeep
+
+# Results (optional - uncomment if you don't want to commit results)
+# /results/*
+# !/results/.gitkeep

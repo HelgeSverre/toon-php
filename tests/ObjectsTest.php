@@ -116,4 +116,39 @@ final class ObjectsTest extends TestCase
         $expected = 'user:';
         $this->assertEquals($expected, Toon::encode($input));
     }
+
+    public function test_encode_object_keys_with_dots(): void
+    {
+        // Keys with dots that match identifier pattern should be unquoted
+        $this->assertEquals('user.name: Ada', Toon::encode(['user.name' => 'Ada']));
+        $this->assertEquals('config.server.port: 8080', Toon::encode(['config.server.port' => 8080]));
+        $this->assertEquals('_private.value: 42', Toon::encode(['_private.value' => 42]));
+    }
+
+    public function test_encode_object_keys_identifier_pattern(): void
+    {
+        // Valid identifier patterns should be unquoted
+        $this->assertEquals('validKey: 1', Toon::encode(['validKey' => 1]));
+        $this->assertEquals('_underscore: 2', Toon::encode(['_underscore' => 2]));
+        $this->assertEquals('camelCase: 3', Toon::encode(['camelCase' => 3]));
+        $this->assertEquals('PascalCase: 4', Toon::encode(['PascalCase' => 4]));
+        $this->assertEquals('snake_case: 5', Toon::encode(['snake_case' => 5]));
+        $this->assertEquals('with123numbers: 6', Toon::encode(['with123numbers' => 6]));
+
+        // Invalid patterns should be quoted
+        $this->assertEquals('"123start": 7', Toon::encode(['123start' => 7]));
+        $this->assertEquals('"-hyphen": 8', Toon::encode(['-hyphen' => 8]));
+        $this->assertEquals('"has space": 9', Toon::encode(['has space' => 9]));
+    }
+
+    public function test_encode_object_keys_keywords(): void
+    {
+        // Keys that match identifier pattern are unquoted even if they look like keywords
+        // This is different from values - keys use identifier pattern matching only
+        $this->assertEquals('true: 1', Toon::encode(['true' => 1]));
+        $this->assertEquals('false: 2', Toon::encode(['false' => 2]));
+        $this->assertEquals('null: 3', Toon::encode(['null' => 3]));
+        $this->assertEquals('True: 1', Toon::encode(['True' => 1]));
+        $this->assertEquals('FALSE: 2', Toon::encode(['FALSE' => 2]));
+    }
 }

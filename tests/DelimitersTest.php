@@ -15,7 +15,7 @@ final class DelimitersTest extends TestCase
     {
         $input = ['tags' => ['reading', 'gaming', 'coding']];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "tags[3\\t]: reading\tgaming\tcoding";
+        $expected = "tags[3\t]: reading\tgaming\tcoding";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -28,7 +28,7 @@ final class DelimitersTest extends TestCase
             ],
         ];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "items[2\\t]{sku\tqty\tprice}:\n  A1\t2\t9.99\n  B2\t1\t14.5";
+        $expected = "items[2\t]{sku\tqty\tprice}:\n  A1\t2\t9.99\n  B2\t1\t14.5";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -36,7 +36,7 @@ final class DelimitersTest extends TestCase
     {
         $input = ['pairs' => [['a', 'b'], ['c', 'd']]];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "pairs[2\\t]:\n  - [2\\t]: a\tb\n  - [2\\t]: c\td";
+        $expected = "pairs[2\t]:\n  - [2\t]: a\tb\n  - [2\t]: c\td";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -44,7 +44,7 @@ final class DelimitersTest extends TestCase
     {
         $input = ['x', 'y', 'z'];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "[3\\t]: x\ty\tz";
+        $expected = "[3\t]: x\ty\tz";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -52,7 +52,7 @@ final class DelimitersTest extends TestCase
     {
         $input = [['id' => 1], ['id' => 2]];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "[2\\t]{id}:\n  1\n  2";
+        $expected = "[2\t]{id}:\n  1\n  2";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -107,7 +107,7 @@ final class DelimitersTest extends TestCase
     {
         $input = ['items' => ['a', "b\tc", 'd']];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "items[3\\t]: a\t\"b\\tc\"\td";
+        $expected = "items[3\t]: a\t\"b\\tc\"\td";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -123,7 +123,7 @@ final class DelimitersTest extends TestCase
     {
         $input = ['items' => ['a,b', 'c,d']];
         $options = new EncodeOptions(delimiter: "\t");
-        $expected = "items[2\\t]: a,b\tc,d";
+        $expected = "items[2\t]: a,b\tc,d";
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
@@ -207,5 +207,72 @@ final class DelimitersTest extends TestCase
         $input = ['tags' => ['reading', 'gaming', 'coding']];
         $expected = 'tags[3]: reading,gaming,coding';
         $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_pipe_delimiter_in_array_of_arrays(): void
+    {
+        $input = [
+            [1, 2, 3],
+            [4, 5, 6],
+        ];
+        $options = new EncodeOptions(delimiter: '|');
+        $expected = "[2|]:\n  - [3|]: 1|2|3\n  - [3|]: 4|5|6";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_tab_delimiter_in_array_of_arrays(): void
+    {
+        $input = [
+            [1, 2, 3],
+            [4, 5, 6],
+        ];
+        $options = new EncodeOptions(delimiter: "\t");
+        $expected = "[2\t]:\n  - [3\t]: 1\t2\t3\n  - [3\t]: 4\t5\t6";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_comma_delimiter_has_no_delimiter_key(): void
+    {
+        $input = ['items' => [1, 2, 3]];
+        $expected = 'items[3]: 1,2,3';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_pipe_delimiter_with_empty_array_items(): void
+    {
+        $input = ['items' => [[], []]];
+        $options = new EncodeOptions(delimiter: '|');
+        $expected = "items[2|]:\n  - [0|]:\n  - [0|]:";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_tab_delimiter_with_mixed_content(): void
+    {
+        $input = [
+            'name' => 'test',
+            'items' => [1, 2, 3],
+        ];
+        $options = new EncodeOptions(delimiter: "\t");
+        $expected = "name: test\nitems[3\t]: 1\t2\t3";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_pipe_delimiter_with_mixed_content(): void
+    {
+        $input = [
+            'name' => 'test',
+            'items' => [1, 2, 3],
+        ];
+        $options = new EncodeOptions(delimiter: '|');
+        $expected = "name: test\nitems[3|]: 1|2|3";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_delimiter_with_single_item_array(): void
+    {
+        $input = ['items' => ['only']];
+        $options = new EncodeOptions(delimiter: '|');
+        $expected = 'items[1|]: only';
+        $this->assertEquals($expected, Toon::encode($input, $options));
     }
 }
