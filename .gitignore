@@ -10,6 +10,9 @@ wip/
 *.swo
 *~
 
+# Claude Code
+.claude/settings.local.json
+
 # Benchmarks
 /benchmarks/vendor/
 /benchmarks/composer.lock
