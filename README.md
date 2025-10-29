@@ -65,6 +65,8 @@ $tabular = EncodeOptions::tabular();
 $withMarkers = EncodeOptions::withLengthMarkers();
 ```
 
+**New to TOON?** Check out our [step-by-step tutorials](tutorials) to learn how to integrate TOON with OpenAI, Anthropic, Laravel, and more.
+
 ## Basic Usage
 
 ```php
@@ -329,6 +331,30 @@ $response = $client->messages()->create([
 ```
 
 See the [`examples/`](examples) directory for complete working examples.
+
+## Tutorials
+
+Comprehensive step-by-step guides for learning TOON and integrating it with popular PHP AI/LLM libraries:
+
+### Getting Started
+- **[Getting Started with TOON](tutorials/01-getting-started.md)** (10-15 min)
+  Learn the basics: installation, encoding, configuration, and your first LLM integration.
+
+### Framework Integrations
+- **[OpenAI PHP Client Integration](tutorials/02-openai-integration.md)** (15-20 min)
+  Integrate TOON with OpenAI's official PHP client. Covers messages, function calling, and streaming.
+
+- **[Laravel + Prism AI Application](tutorials/03-laravel-prism-integration.md)** (20-30 min)
+  Build a complete Laravel AI chatbot using TOON and Prism for multi-provider support.
+
+### Advanced Topics
+- **[Token Optimization Strategies](tutorials/04-token-optimization-strategies.md)** (20-25 min)
+  Deep dive into token economics, RAG optimization, and cost reduction strategies.
+
+- **[Building a RAG System with Neuron AI](tutorials/05-rag-system-neuron-ai.md)** (30-40 min)
+  Create a production-ready RAG pipeline with TOON, Neuron AI, and vector stores.
+
+See the [`tutorials/`](tutorials) directory for all tutorials and learning paths.
 
 ## Token Savings
 
