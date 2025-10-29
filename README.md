@@ -23,6 +23,48 @@ composer require helgesverre/toon
 
 - PHP 8.1 or higher
 
+## Quick Start
+
+TOON provides convenient helper functions for common use cases:
+
+```php
+// Basic encoding
+echo toon(['user' => 'Alice', 'score' => 95]);
+// user: Alice
+// score: 95
+
+// Compact format (minimal indentation)
+echo toon_compact($largeDataset);
+
+// Readable format (generous indentation)
+echo toon_readable($debugData);
+
+// Compare token savings
+$stats = toon_compare($myData);
+echo "Savings: {$stats['savings_percent']}";
+// Savings: 45.3%
+```
+
+### Preset Configurations
+
+Choose the right format for your use case:
+
+```php
+use HelgeSverre\Toon\EncodeOptions;
+
+// Maximum compactness (production)
+$compact = EncodeOptions::compact();
+
+// Human-readable (debugging)
+$readable = EncodeOptions::readable();
+
+// Tab-delimited (spreadsheets)
+$tabular = EncodeOptions::tabular();
+
+// With length markers
+$withMarkers = EncodeOptions::withLengthMarkers();
+```
+
 ## Basic Usage
 
 ```php
@@ -215,6 +257,78 @@ echo Toon::encode(INF);     // null
 echo Toon::encode(-INF);    // null
 echo Toon::encode(NAN);     // null
 ```
+
+## Helper Functions
+
+TOON provides global helper functions for convenience:
+
+```php
+// Basic encoding
+$toon = toon($data);
+
+// Compact (minimal indentation)
+$compact = toon_compact($data);
+
+// Readable (generous indentation)
+$readable = toon_readable($data);
+
+// Tabular (tab-delimited)
+$tabular = toon_tabular($data);
+
+// Compare with JSON
+$stats = toon_compare($data);
+// Returns: ['toon' => 450, 'json' => 800, 'savings' => 350, 'savings_percent' => '43.8%']
+
+// Get size estimate
+$size = toon_size($data);
+
+// Estimate token count (4 chars/token heuristic)
+$tokens = toon_estimate_tokens($data);
+```
+
+## Real-World Examples
+
+### OpenAI Integration
+
+```php
+use OpenAI\Client;
+
+$client = OpenAI::client($apiKey);
+
+// Encode large context data with TOON
+$userData = [...]; // Your data
+$context = toon_compact($userData);
+
+$response = $client->chat()->create([
+    'model' => 'gpt-4o-mini',
+    'messages' => [
+        ['role' => 'system', 'content' => 'Data is in TOON format.'],
+        ['role' => 'user', 'content' => $context],
+    ],
+]);
+```
+
+### Anthropic/Claude Integration
+
+```php
+use Anthropic\Anthropic;
+use Anthropic\Resources\Messages\MessageParam;
+
+$client = Anthropic::factory()->withApiKey($apiKey)->make();
+
+$largeDataset = [...]; // Your data
+$toonContext = toon_compact($largeDataset);
+
+$response = $client->messages()->create([
+    'model' => 'claude-sonnet-4-20250514',
+    'max_tokens' => 1000,
+    'messages' => [
+        MessageParam::with(role: 'user', content: $toonContext),
+    ],
+]);
+```
+
+See the [`examples/`](examples) directory for complete working examples.
 
 ## Token Savings
 

@@ -9,7 +9,15 @@
     "compression",
     "ai",
     "format",
-    "serialization"
+    "serialization",
+    "openai",
+    "anthropic",
+    "claude",
+    "gpt",
+    "laravel",
+    "optimization",
+    "prompt",
+    "cost-reduction"
   ],
   "authors": [
     {
@@ -28,7 +36,10 @@
   "autoload": {
     "psr-4": {
       "HelgeSverre\\Toon\\": "src/"
-    }
+    },
+    "files": [
+      "src/helpers.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

@@ -46,6 +46,91 @@ final class EncodeOptions
     }
 
     /**
+     * Create options optimized for maximum compactness.
+     *
+     * Uses minimal indentation and comma delimiter for smallest output size.
+     * Ideal for production use where token count is critical.
+     *
+     * @return self Compact options (indent: 0, delimiter: comma, lengthMarker: false)
+     */
+    public static function compact(): self
+    {
+        return new self(
+            indent: 0,
+            delimiter: Constants::DELIMITER_COMMA,
+            lengthMarker: false
+        );
+    }
+
+    /**
+     * Create options optimized for human readability.
+     *
+     * Uses generous indentation for better visual structure.
+     * Ideal for debugging, documentation, or human review.
+     *
+     * @return self Readable options (indent: 4, delimiter: comma, lengthMarker: false)
+     */
+    public static function readable(): self
+    {
+        return new self(
+            indent: 4,
+            delimiter: Constants::DELIMITER_COMMA,
+            lengthMarker: false
+        );
+    }
+
+    /**
+     * Create options optimized for tabular data.
+     *
+     * Uses tab delimiter for maximum compatibility with spreadsheet applications.
+     * Ideal for data that will be copied to Excel, CSV tools, or analyzed in tables.
+     *
+     * @return self Tabular options (indent: 2, delimiter: tab, lengthMarker: false)
+     */
+    public static function tabular(): self
+    {
+        return new self(
+            indent: 2,
+            delimiter: Constants::DELIMITER_TAB,
+            lengthMarker: false
+        );
+    }
+
+    /**
+     * Create options with length markers enabled.
+     *
+     * Includes '#' prefix on array lengths for easier parsing.
+     * Ideal when length information is important for processing.
+     *
+     * @return self Options with length markers (indent: 2, delimiter: comma, lengthMarker: '#')
+     */
+    public static function withLengthMarkers(): self
+    {
+        return new self(
+            indent: 2,
+            delimiter: Constants::DELIMITER_COMMA,
+            lengthMarker: '#'
+        );
+    }
+
+    /**
+     * Create options optimized for pipe-delimited output.
+     *
+     * Uses pipe delimiter which is rare in natural text, reducing escaping needs.
+     * Ideal when data contains lots of commas or tabs.
+     *
+     * @return self Pipe-delimited options (indent: 2, delimiter: pipe, lengthMarker: false)
+     */
+    public static function pipeDelimited(): self
+    {
+        return new self(
+            indent: 2,
+            delimiter: Constants::DELIMITER_PIPE,
+            lengthMarker: false
+        );
+    }
+
+    /**
      * Create a copy with different indentation.
      *
      * @param  int  $indent  Number of spaces for indentation
