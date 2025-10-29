@@ -9,16 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Empty array encoding**: Fixed empty arrays to correctly output with `[0]` marker (e.g., `items[0]:`) to match the original TypeScript implementation, instead of treating them as empty objects (e.g., `items:`)
-
-### Added
-
-- **Implementation verification**: Comprehensive cross-implementation testing with 30+ test cases comparing PHP output against the original TypeScript TOON implementation to ensure complete compatibility
+- **Empty array encoding**: Empty arrays now correctly output with `[0]` length marker (e.g., `items[0]:`)
 
 ### Changed
 
-- **README**: Updated token savings table with actual benchmark data and added implementation verification section
-- **README**: Removed outdated PHP-specific limitations section about empty array handling
+- **README**: Updated token savings table with benchmark data
+- **README**: Removed outdated empty array limitations section
 
 ## [1.1.0] - 2025-10-28
 
