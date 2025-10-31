@@ -281,4 +281,62 @@ final class NormalizationTest extends TestCase
         $this->assertFalse(Normalize::isJsonObject([])); // Empty array is a list
         $this->assertFalse(Normalize::isJsonObject(new stdClass));
     }
+
+    public function test_normalize_enum(): void
+    {
+        /**
+         * BackedEnums
+         */
+        $expected = "active";
+        $this->assertEquals($expected, Toon::encode(Status::ACTIVE));
+
+        $expected = "201";
+        $this->assertEquals($expected, Toon::encode(HttpCode::CREATED));
+
+        /**
+         * should return list of values
+         */
+        $expected = "[2]: 201,400";
+        $this->assertEquals($expected, Toon::encode(HttpCode::cases()));
+
+        /**
+         * UnitEnums
+         */
+        $expected = "TWO";
+        $this->assertEquals($expected, Toon::encode(Counting::TWO));
+
+        $expected = "[3]: ONE,TWO,THREE";
+        $this->assertEquals($expected, Toon::encode(Counting::cases()));
+    }
+
+    public function test_normalize_object_with_enums(): void
+    {
+        $obj = new class
+        {
+            public Status $status = Status::INACTIVE;
+            public Counting $count = Counting::THREE;
+        };
+
+        $expected = "status: inactive\ncount: THREE";
+        $this->assertEquals($expected, Toon::encode($obj));
+    }
+}
+
+enum Counting
+{
+    case ONE;
+    case TWO;
+    case THREE;
+}
+
+enum Status: string
+{
+    case ACTIVE = 'active';
+    case INACTIVE = 'inactive';
+}
+
+enum HttpCode: int
+{
+    case CREATED = 201;
+    case ERROR = 400;
 }

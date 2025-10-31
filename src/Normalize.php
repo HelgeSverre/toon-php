@@ -53,6 +53,14 @@ final class Normalize
             return $value->format('c');
         }
 
+        if ($value instanceof \BackedEnum) {
+            return self::normalizeValue($value->value);
+        }
+
+        if ($value instanceof \UnitEnum) {
+            return self::normalizeValue($value->name);
+        }
+
         // Handle arrays
         if (is_array($value)) {
             // Check if it's a list (sequential integer keys starting at 0)
