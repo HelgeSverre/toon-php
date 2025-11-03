@@ -250,6 +250,44 @@ echo Toon::encode($date);
 // "2025-01-01T00:00:00+00:00"
 ```
 
+### PHP Enums
+
+PHP enums are automatically normalized - BackedEnum values are extracted, UnitEnum names are used:
+
+```php
+enum Status: string {
+    case ACTIVE = 'active';
+    case INACTIVE = 'inactive';
+}
+
+enum Priority: int {
+    case LOW = 1;
+    case HIGH = 10;
+}
+
+enum Color {
+    case RED;
+    case GREEN;
+    case BLUE;
+}
+
+// BackedEnum with string value
+echo Toon::encode(Status::ACTIVE);
+// active
+
+// BackedEnum with int value
+echo Toon::encode(Priority::HIGH);
+// 10
+
+// UnitEnum (no backing value)
+echo Toon::encode(Color::BLUE);
+// BLUE
+
+// Array of enum cases
+echo Toon::encode(Priority::cases());
+// [2]: 1,10
+```
+
 ### Special Numeric Values
 
 Non-finite numbers are converted to null:
