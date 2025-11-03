@@ -287,25 +287,25 @@ final class NormalizationTest extends TestCase
         /**
          * BackedEnums
          */
-        $expected = "active";
+        $expected = 'active';
         $this->assertEquals($expected, Toon::encode(Status::ACTIVE));
 
-        $expected = "201";
+        $expected = '201';
         $this->assertEquals($expected, Toon::encode(HttpCode::CREATED));
 
         /**
          * should return list of values
          */
-        $expected = "[2]: 201,400";
+        $expected = '[2]: 201,400';
         $this->assertEquals($expected, Toon::encode(HttpCode::cases()));
 
         /**
          * UnitEnums
          */
-        $expected = "TWO";
+        $expected = 'TWO';
         $this->assertEquals($expected, Toon::encode(Counting::TWO));
 
-        $expected = "[3]: ONE,TWO,THREE";
+        $expected = '[3]: ONE,TWO,THREE';
         $this->assertEquals($expected, Toon::encode(Counting::cases()));
     }
 
@@ -314,6 +314,7 @@ final class NormalizationTest extends TestCase
         $obj = new class
         {
             public Status $status = Status::INACTIVE;
+
             public Counting $count = Counting::THREE;
         };
 
