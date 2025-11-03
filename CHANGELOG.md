@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-03
+
+### Added
+
+- **Enum support**: Native PHP enum normalization for both `BackedEnum` and `UnitEnum` types
+  - BackedEnum values are extracted and normalized (e.g., `Status::ACTIVE` → `"active"`)
+  - UnitEnum names are extracted and normalized (e.g., `Counting::TWO` → `"TWO"`)
+  - Arrays of enum cases are properly encoded (e.g., `HttpCode::cases()` → `"[2]: 201,400"`)
+  - Thanks to @AmolKumarGupta for the contribution!
+
 ## [1.2.0] - 2025-10-28
 
 ### Fixed
@@ -110,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive PHPUnit test coverage
 - Follows PHP-FIG coding standards (via Laravel Pint)
 
+[1.3.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.3.0
 [1.2.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.2.0
 [1.1.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.1.0
 [1.0.1]: https://github.com/HelgeSverre/toon-php/releases/tag/v1.0.1
