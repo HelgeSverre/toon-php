@@ -43,12 +43,12 @@ echo "=== Large Context Optimization for Claude ===\n\n";
 echo "Dataset: 50 customer support tickets\n\n";
 
 echo "JSON Encoding:\n";
-echo "Size: ".strlen($jsonEncoded)." characters\n";
-echo "Estimated tokens: ".ceil(strlen($jsonEncoded) / 4)."\n\n";
+echo 'Size: '.strlen($jsonEncoded)." characters\n";
+echo 'Estimated tokens: '.ceil(strlen($jsonEncoded) / 4)."\n\n";
 
 echo "TOON Encoding:\n";
-echo "Size: ".strlen($toonEncoded)." characters\n";
-echo "Estimated tokens: ".ceil(strlen($toonEncoded) / 4)."\n\n";
+echo 'Size: '.strlen($toonEncoded)." characters\n";
+echo 'Estimated tokens: '.ceil(strlen($toonEncoded) / 4)."\n\n";
 
 $savings = strlen($jsonEncoded) - strlen($toonEncoded);
 $savingsPercent = ($savings / strlen($jsonEncoded)) * 100;
@@ -85,13 +85,13 @@ EOT
     echo $response->content[0]->text."\n";
 } catch (Exception $e) {
     echo "Note: Set ANTHROPIC_API_KEY environment variable to run this example\n";
-    echo "Error: ".$e->getMessage()."\n";
+    echo 'Error: '.$e->getMessage()."\n";
 }
 
 // Context window utilization comparison
 echo "\n=== Context Window Utilization ===\n\n";
 echo "If you were sending this data 100 times in a conversation:\n";
-echo "JSON:  ".number_format(ceil(strlen($jsonEncoded) / 4) * 100)." tokens\n";
-echo "TOON:  ".number_format(ceil(strlen($toonEncoded) / 4) * 100)." tokens\n";
-echo "Saved: ".number_format((ceil(strlen($jsonEncoded) / 4) - ceil(strlen($toonEncoded) / 4)) * 100)." tokens\n\n";
-echo "With TOON, you can fit ".number_format($savingsPercent, 1)."% more data in the same context window!\n";
+echo 'JSON:  '.number_format(ceil(strlen($jsonEncoded) / 4) * 100)." tokens\n";
+echo 'TOON:  '.number_format(ceil(strlen($toonEncoded) / 4) * 100)." tokens\n";
+echo 'Saved: '.number_format((ceil(strlen($jsonEncoded) / 4) - ceil(strlen($toonEncoded) / 4)) * 100)." tokens\n\n";
+echo 'With TOON, you can fit '.number_format($savingsPercent, 1)."% more data in the same context window!\n";
