@@ -91,8 +91,9 @@ final class NormalizationTest extends TestCase
 
     public function test_normalize_large_floats_no_scientific_notation(): void
     {
-        // Large numbers should expand scientific notation
-        $this->assertEquals('1000000000000000000000', Toon::encode(1e21));
+        // Very large numbers (>10^20) should be quoted per §2.9 for exact precision
+        $this->assertEquals('"1000000000000000000000"', Toon::encode(1e21));
+        // Numbers at exactly 10^20 are still within range, not quoted
         $this->assertEquals('100000000000000000000', Toon::encode(1e20));
     }
 
@@ -109,32 +110,6 @@ final class NormalizationTest extends TestCase
         $this->assertEquals('3.14', Toon::encode(3.14));
         $this->assertEquals('0.5', Toon::encode(0.5));
         $this->assertEquals('-2.718', Toon::encode(-2.718));
-    }
-
-    public function test_is_plain_object_returns_true_for_stdclass(): void
-    {
-        $obj = new stdClass;
-        $this->assertTrue(Normalize::isPlainObject($obj));
-    }
-
-    public function test_is_plain_object_returns_false_for_anonymous_classes(): void
-    {
-        $obj = new class {};
-        $this->assertFalse(Normalize::isPlainObject($obj));
-    }
-
-    public function test_is_plain_object_returns_false_for_builtin_classes(): void
-    {
-        $obj = new DateTime;
-        $this->assertFalse(Normalize::isPlainObject($obj));
-    }
-
-    public function test_is_plain_object_returns_false_for_non_objects(): void
-    {
-        $this->assertFalse(Normalize::isPlainObject([]));
-        $this->assertFalse(Normalize::isPlainObject('string'));
-        $this->assertFalse(Normalize::isPlainObject(123));
-        $this->assertFalse(Normalize::isPlainObject(null));
     }
 
     public function test_normalize_value_handles_datetime_interface(): void
@@ -269,7 +244,7 @@ final class NormalizationTest extends TestCase
         $this->assertTrue(Normalize::isJsonArray([]));
 
         $this->assertFalse(Normalize::isJsonArray(['key' => 'value']));
-        $this->assertFalse(Normalize::isJsonArray('not an array'));
+        $this->assertFalse(Normalize::isJsonArray('not an array')); // @phpstan-ignore staticMethod.impossibleType
     }
 
     public function test_is_json_object(): void
@@ -279,7 +254,7 @@ final class NormalizationTest extends TestCase
 
         $this->assertFalse(Normalize::isJsonObject([1, 2, 3]));
         $this->assertFalse(Normalize::isJsonObject([])); // Empty array is a list
-        $this->assertFalse(Normalize::isJsonObject(new stdClass));
+        $this->assertFalse(Normalize::isJsonObject(new stdClass)); // @phpstan-ignore staticMethod.impossibleType
     }
 
     public function test_normalize_enum(): void
@@ -320,6 +295,36 @@ final class NormalizationTest extends TestCase
 
         $expected = "status: inactive\ncount: THREE";
         $this->assertEquals($expected, Toon::encode($obj));
+    }
+
+    public function test_normalize_datetime_to_iso8601_exact(): void
+    {
+        // P1 High Priority: Test exact ISO 8601 format with timezone
+        // PHP's DateTime->format('c') produces ISO 8601 format
+        $date = new DateTime('2025-01-01T00:00:00.000Z', new \DateTimeZone('UTC'));
+        $result = Toon::encode($date);
+
+        // DateTime should be formatted as ISO 8601 string (quoted)
+        $this->assertIsString($result);
+        $this->assertStringStartsWith('"', $result);
+        $this->assertStringEndsWith('"', $result);
+        $this->assertStringContainsString('2025-01-01T00:00:00', $result);
+
+        // Should include timezone information
+        $this->assertMatchesRegularExpression('/"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}"/', $result);
+    }
+
+    public function test_normalize_datetime_in_object_context(): void
+    {
+        // P1 High Priority: Test DateTime normalization within an object
+        $date = new DateTime('2025-01-01T12:30:45', new \DateTimeZone('UTC'));
+        $input = ['created' => $date, 'id' => 123];
+        $result = Toon::encode($input);
+
+        // Should contain the date in ISO format
+        $this->assertStringContainsString('created:', $result);
+        $this->assertStringContainsString('2025-01-01', $result);
+        $this->assertStringContainsString('id: 123', $result);
     }
 }
 

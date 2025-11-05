@@ -274,4 +274,92 @@ final class DelimitersTest extends TestCase
         $expected = 'items[1|]: only';
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
+
+    public function test_tab_delimiter_does_not_quote_commas_in_tabular_values(): void
+    {
+        // P0 Critical: When tab is delimiter, commas in tabular row values are not quoted
+        // This tests delimiter context awareness - non-active delimiters should not trigger quoting
+        $input = [
+            ['id' => 1, 'note' => 'a,b'],
+            ['id' => 2, 'note' => 'c,d'],
+        ];
+        $options = new EncodeOptions(delimiter: "\t");
+        $expected = "[2\t]{id\tnote}:\n  1\ta,b\n  2\tc,d";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_ambiguous_strings_quoted_with_non_comma_delimiter(): void
+    {
+        // P0 Critical: Reserved words and numeric strings are quoted even with non-comma delimiters
+        // Ambiguity rules are orthogonal to delimiter choice - this is a core spec requirement
+        $input = ['items' => ['true', '42', '-3.14']];
+        $options = new EncodeOptions(delimiter: '|');
+        $expected = 'items[3|]: "true"|"42"|"-3.14"';
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_comma_in_object_value_with_tab_delimiter(): void
+    {
+        // P1 High Priority: Commas in object values should not be quoted with tab delimiter
+        // Tests document-level delimiter context
+        $input = ['note' => 'a,b', 'items' => ['x', 'y']];
+        $options = new EncodeOptions(delimiter: "\t");
+        $expected = "note: a,b\nitems[2\t]: x\ty";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    // Phase 1.2: Delimiter Quoting Completeness
+
+    public function test_encode_value_with_multiple_delimiters_quoted(): void
+    {
+        // Values with multiple occurrences of the active delimiter must be quoted
+        $input = ['tags' => ['a,b,c', 'x,y,z']];
+        $expected = 'tags[2]: "a,b,c","x,y,z"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_value_starting_with_delimiter_quoted(): void
+    {
+        // Values starting with the active delimiter must be quoted
+        $input = ['items' => [',start', 'normal']];
+        $expected = 'items[2]: ",start",normal';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_value_ending_with_delimiter_quoted(): void
+    {
+        // Values ending with the active delimiter must be quoted
+        $input = ['items' => ['normal', 'end,']];
+        $expected = 'items[2]: normal,"end,"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_delimiter_in_nested_array_context(): void
+    {
+        // Nested arrays can have different delimiters; inner context uses its own delimiter
+        $input = [
+            'data' => [
+                ['items' => ['a', 'b']],
+                ['items' => ['c,d', 'e']],  // Comma in value should be quoted
+            ],
+        ];
+        $expected = "data[2]:\n  - items[2]: a,b\n  - items[2]: \"c,d\",e";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_delimiter_context_switching_in_deep_nesting(): void
+    {
+        // Test delimiter inheritance: document delimiter applies to all arrays without explicit delimiter
+        $input = [
+            'outer' => [
+                ['inner' => ['a,b', 'c']],  // Nested inline array inherits document delimiter (tab)
+                ['inner' => ['d', 'e']],
+            ],
+        ];
+        $options = new EncodeOptions(delimiter: "\t");
+        // Document delimiter is tab, so inner arrays also use tab
+        // The comma in "a,b" doesn't need quoting because tab is the active delimiter
+        $expected = "outer[2]:\n  - inner[2\t]: a,b\tc\n  - inner[2\t]: d\te";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
 }

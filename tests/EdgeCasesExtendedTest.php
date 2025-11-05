@@ -372,4 +372,214 @@ final class EdgeCasesExtendedTest extends TestCase
 
         $this->assertStringContainsString('        b: value', $result);
     }
+
+    public function test_encode_full_floating_point_precision(): void
+    {
+        // P1 High Priority: Test that full floating point precision is preserved
+        // TOON preserves full PHP float precision (16 decimal places for 1/3)
+        $value = 1 / 3;
+        $result = Toon::encode($value);
+
+        // Verify high precision is preserved (16 decimal places = 18 chars total)
+        $this->assertIsString($result);
+        $this->assertEquals('0.3333333333333333', $result);
+
+        // Also test with another precision value
+        $value2 = 1 / 7;
+        $result2 = Toon::encode($value2);
+        $this->assertStringStartsWith('0.142857', $result2);
+        $this->assertGreaterThanOrEqual(15, strlen($result2));
+    }
+
+    // Phase 2.1: Float Precision Validation
+
+    public function test_encode_preserves_float_precision_in_string(): void
+    {
+        // Verify that precision is maintained in the string representation
+        // Test various significant digit scenarios
+        $result1 = Toon::encode(\M_PI);
+        $this->assertEquals('3.141592653589793', $result1);
+
+        $result2 = Toon::encode(\M_E);
+        $this->assertEquals('2.718281828459045', $result2);
+
+        $result3 = Toon::encode(sqrt(2));
+        $this->assertEquals('1.4142135623730951', $result3);
+    }
+
+    public function test_encode_float_precision_15_significant_digits(): void
+    {
+        // Spec requires sufficient precision for round-trip fidelity
+        // IEEE 754 double precision provides 15-17 significant digits
+        $value = 1.23456789012345;  // 15 significant digits
+        $result = Toon::encode($value);
+
+        // Should preserve all digits
+        $this->assertStringContainsString('1.23456789012345', $result);
+        $this->assertIsNumeric($result);
+
+        // Verify no scientific notation
+        $this->assertStringNotContainsString('e', strtolower($result));
+        $this->assertStringNotContainsString('E', $result);
+    }
+
+    public function test_encode_does_not_truncate_precision(): void
+    {
+        // Test that precision isn't artificially limited
+        // Classic floating point quirk
+        $value1 = 0.1 + 0.2;
+        $result1 = Toon::encode($value1);
+        $this->assertEquals('0.30000000000000004', $result1);
+
+        // Beyond precision limit
+        $value2 = 0.123456789123456789;
+        $result2 = Toon::encode($value2);
+        $this->assertEquals('0.12345678912345678', $result2);
+
+        // Large number with decimals (within representable range)
+        $value3 = 9999999999.123456;
+        $result3 = Toon::encode($value3);
+        $this->assertStringStartsWith('9999999999.123', $result3);
+    }
+
+    public function test_encode_repeating_decimals_precision(): void
+    {
+        // Test various repeating decimal scenarios
+        $value1 = 1 / 3;
+        $result1 = Toon::encode($value1);
+        $this->assertEquals('0.3333333333333333', $result1);
+        $this->assertGreaterThanOrEqual(17, strlen($result1)); // "0." + 15+ digits
+
+        $value2 = 2 / 3;
+        $result2 = Toon::encode($value2);
+        $this->assertEquals('0.6666666666666666', $result2);
+
+        $value3 = 1 / 6;
+        $result3 = Toon::encode($value3);
+        $this->assertEquals('0.16666666666666666', $result3);
+
+        $value4 = 5 / 7;
+        $result4 = Toon::encode($value4);
+        $this->assertEquals('0.7142857142857143', $result4);
+    }
+
+    // Phase 4.1: Boundary Values
+
+    public function test_encode_php_int_max_and_min(): void
+    {
+        // Test PHP integer boundaries (platform-dependent)
+        $data = [
+            'max' => PHP_INT_MAX,
+            'min' => PHP_INT_MIN,
+        ];
+
+        $result = Toon::encode($data);
+
+        // Verify max value is encoded correctly
+        $this->assertStringContainsString('max: '.PHP_INT_MAX, $result);
+        // Verify min value is encoded correctly (negative)
+        $this->assertStringContainsString('min: '.PHP_INT_MIN, $result);
+
+        // Ensure no scientific notation for integers
+        $this->assertStringNotContainsString('e', strtolower($result));
+        $this->assertStringNotContainsString('E', $result);
+    }
+
+    public function test_encode_php_float_epsilon(): void
+    {
+        // Test smallest representable positive float difference
+        $data = [
+            'epsilon' => PHP_FLOAT_EPSILON,
+            'one_plus_epsilon' => 1.0 + PHP_FLOAT_EPSILON,
+        ];
+
+        $result = Toon::encode($data);
+
+        // Verify epsilon is preserved with full precision
+        $this->assertStringContainsString('epsilon:', $result);
+        // PHP_FLOAT_EPSILON is approximately 2.220446049250313e-16
+        // TOON encodes this in decimal notation with full precision
+        $this->assertIsString($result);
+        $this->assertStringContainsString('0.00000000000000022204', $result);
+
+        // Verify 1.0 + epsilon shows the precision difference
+        $this->assertStringContainsString('one_plus_epsilon: 1.0000000000000002', $result);
+    }
+
+    public function test_encode_subnormal_floats(): void
+    {
+        // Test very small floats near zero (subnormal/denormal numbers)
+        // PHP converts these extremely small values to 0 during normalization
+        $data = [
+            'tiny1' => 1.0e-308,  // Near smallest normal float
+            'tiny2' => 5.0e-324,  // Smallest positive subnormal
+            'tiny3' => PHP_FLOAT_MIN, // PHP constant for smallest positive normalized float
+        ];
+
+        $result = Toon::encode($data);
+
+        // Verify keys are present
+        $this->assertStringContainsString('tiny1:', $result);
+        $this->assertStringContainsString('tiny2:', $result);
+        $this->assertStringContainsString('tiny3:', $result);
+
+        // These subnormal values are so small they underflow to 0 in PHP
+        // Verify they encode as 0
+        $this->assertStringContainsString('tiny1: 0', $result);
+        $this->assertStringContainsString('tiny2: 0', $result);
+        $this->assertStringContainsString('tiny3: 0', $result);
+    }
+
+    public function test_encode_object_with_reserved_php_keywords_as_keys(): void
+    {
+        // Test object keys that are reserved PHP keywords
+        $data = [
+            'class' => 'MyClass',
+            'function' => 'myFunc',
+            'return' => 'value',
+            'if' => 'condition',
+            'else' => 'alternative',
+            'while' => 'loop',
+            'foreach' => 'iteration',
+            'namespace' => 'App',
+            'use' => 'import',
+            'trait' => 'Serializable',
+        ];
+
+        $result = Toon::encode($data);
+
+        // PHP keywords should be treated as normal identifiers in TOON
+        // They don't need quoting since they're used as keys, not PHP code
+        $this->assertStringContainsString('class: MyClass', $result);
+        $this->assertStringContainsString('function: myFunc', $result);
+        $this->assertStringContainsString('return: value', $result);
+        $this->assertStringContainsString('if: condition', $result);
+        $this->assertStringContainsString('namespace: App', $result);
+    }
+
+    public function test_encode_object_with_toon_syntax_tokens_as_keys(): void
+    {
+        // Test object keys that are TOON reserved words/syntax tokens
+        $data = [
+            'null' => 'not null',
+            'true' => 'boolean true',
+            'false' => 'boolean false',
+        ];
+
+        $result = Toon::encode($data);
+
+        // In TOON, reserved words as object keys are allowed without quoting
+        // because the context (key position) makes them unambiguous
+        $this->assertStringContainsString('null: not null', $result);
+        $this->assertStringContainsString('true: boolean true', $result);
+        $this->assertStringContainsString('false: boolean false', $result);
+
+        // Verify the values themselves are unquoted strings
+        $this->assertStringNotContainsString('"not null"', $result);
+        $this->assertStringNotContainsString('"boolean true"', $result);
+        $this->assertStringNotContainsString('"boolean false"', $result);
+
+        // This tests that TOON correctly handles reserved words in key positions
+        // The key context provides sufficient disambiguation
+    }
 }

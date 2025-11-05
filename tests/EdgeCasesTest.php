@@ -181,4 +181,55 @@ final class EdgeCasesTest extends TestCase
         $expected = '[3]: "","",""';
         $this->assertEquals($expected, Toon::encode($input));
     }
+
+    // Phase 2.4: Indentation tests
+
+    public function test_encode_zero_indentation_consistent_across_levels(): void
+    {
+        // Zero indentation should produce no spaces at all nesting levels
+        $input = ['a' => ['b' => ['c' => 'd']]];
+        $options = new EncodeOptions(indent: 0);
+        $expected = "a:\nb:\nc: d";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_encode_custom_indentation_applied_to_all_levels(): void
+    {
+        // Custom indent: 4 should apply 4 spaces per level
+        $input = ['level1' => ['level2' => ['level3' => 'value']]];
+        $options = new EncodeOptions(indent: 4);
+        $expected = "level1:\n    level2:\n        level3: value";
+        $this->assertEquals($expected, Toon::encode($input, $options));
+    }
+
+    public function test_encode_key_value_spacing_in_list_item_objects(): void
+    {
+        // List items should have consistent spacing after colons
+        // Use non-uniform objects to force list format (not tabular)
+        $input = [
+            'items' => [
+                ['id' => 1, 'active' => true],
+                ['id' => 2], // Missing 'active' field forces list format
+            ],
+        ];
+        $encoded = Toon::encode($input);
+        $lines = explode("\n", $encoded);
+        // Each property line should have format "  - key: value" with single space after colon
+        $foundIdLine = false;
+        $foundActiveLine = false;
+        foreach ($lines as $line) {
+            if (str_contains($line, '- id:')) {
+                $this->assertStringContainsString('- id: ', $line);
+                $this->assertStringNotContainsString('- id:  ', $line); // no double space
+                $foundIdLine = true;
+            }
+            if (str_contains($line, 'active:')) {
+                $this->assertStringContainsString('active: ', $line);
+                $this->assertStringNotContainsString('active:  ', $line); // no double space
+                $foundActiveLine = true;
+            }
+        }
+        $this->assertTrue($foundIdLine, 'Should have found id line with list marker');
+        $this->assertTrue($foundActiveLine, 'Should have found active line');
+    }
 }

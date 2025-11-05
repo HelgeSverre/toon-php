@@ -215,4 +215,97 @@ final class TabularArraysTest extends TestCase
         $expected = "user:\n  id: 123\n  name: Ada\n  tags[2]: reading,gaming\n  active: true\n  prefs[0]:";
         $this->assertEquals($expected, Toon::encode($input));
     }
+
+    // Phase 1.1: Tabular Detection Edge Cases
+
+    public function test_encode_tabular_array_with_boolean_values(): void
+    {
+        $input = [
+            'flags' => [
+                ['active' => true, 'verified' => false],
+                ['active' => false, 'verified' => true],
+                ['active' => true, 'verified' => true],
+            ],
+        ];
+        $expected = "flags[3]{active,verified}:\n  true,false\n  false,true\n  true,true";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_list_format_with_empty_objects(): void
+    {
+        $input = [
+            'items' => [
+                (object) [],
+                (object) [],
+            ],
+        ];
+        // Empty objects encode as empty arrays [0]:
+        $expected = "items[2]:\n  - [0]:\n  - [0]:";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_single_object_array_uses_tabular_format(): void
+    {
+        $input = [
+            'item' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+        ];
+        $expected = "item[1]{id,name}:\n  1,Alice";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_array_with_identical_empty_arrays(): void
+    {
+        $input = [
+            'items' => [
+                [],
+                [],
+                [],
+            ],
+        ];
+        // Empty arrays should use list format since they have no keys to be uniform about
+        $expected = "items[3]:\n  - [0]:\n  - [0]:\n  - [0]:";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_tabular_all_primitive_types_mixed(): void
+    {
+        $input = [
+            'records' => [
+                ['id' => 1, 'name' => 'Alice', 'active' => true, 'score' => 95.5, 'tag' => null],
+                ['id' => 2, 'name' => 'Bob', 'active' => false, 'score' => 87.3, 'tag' => 'vip'],
+            ],
+        ];
+        $expected = "records[2]{id,name,active,score,tag}:\n  1,Alice,true,95.5,null\n  2,Bob,false,87.3,vip";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_tabular_with_numeric_zero_values(): void
+    {
+        $input = [
+            'data' => [
+                ['id' => 0, 'value' => 0, 'score' => 0.0],
+                ['id' => 1, 'value' => 10, 'score' => 10.5],
+            ],
+        ];
+        $expected = "data[2]{id,value,score}:\n  0,0,0\n  1,10,10.5";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_tabular_detection_with_various_key_orders(): void
+    {
+        // Objects with same keys but different order should still be detected as tabular
+        // First object's key order determines the field order
+        $input = [
+            'items' => [
+                ['name' => 'Alice', 'id' => 1, 'age' => 30],
+                ['age' => 25, 'name' => 'Bob', 'id' => 2],
+                ['id' => 3, 'age' => 35, 'name' => 'Carol'],
+            ],
+        ];
+        // First object's order (name, id, age) is used
+        $expected = "items[3]{name,id,age}:\n  Alice,1,30\n  Bob,2,25\n  Carol,3,35";
+        $this->assertEquals($expected, Toon::encode($input));
+    }
 }

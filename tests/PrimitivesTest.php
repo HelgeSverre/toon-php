@@ -336,4 +336,68 @@ final class PrimitivesTest extends TestCase
     {
         $this->assertEquals('0', Primitives::encodePrimitive(0.0, ','));
     }
+
+    public function test_encode_standalone_hyphen(): void
+    {
+        // P0 Critical: Standalone hyphen must be quoted to avoid list marker confusion
+        $this->assertEquals('"-"', Toon::encode('-'));
+    }
+
+    public function test_encode_hyphen_in_array_context(): void
+    {
+        // P0 Critical: Hyphen strings in arrays must be quoted
+        $input = ['items' => ['-', 'normal', '- spaced']];
+        $expected = 'items[3]: "-",normal,"- spaced"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    // Phase 2.2: String quoting edge cases
+
+    public function test_encode_string_looking_like_header(): void
+    {
+        // String that looks like a TOON header must be quoted
+        $input = 'key[3]: value';
+        $expected = '"key[3]: value"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_string_with_brackets_and_colon(): void
+    {
+        // String with brackets and colon must be quoted
+        $input = '[test]: data';
+        $expected = '"[test]: data"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_string_with_delimiter_and_colon(): void
+    {
+        // String with delimiter and colon must be quoted
+        $input = 'a:b,c';
+        $expected = '"a:b,c"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_string_with_bracket_and_delimiter(): void
+    {
+        // String with bracket and delimiter must be quoted
+        $input = '[a,b]';
+        $expected = '"[a,b]"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_string_with_hyphen_and_colon(): void
+    {
+        // String with hyphen and colon must be quoted to avoid list marker confusion
+        $input = '- item: value';
+        $expected = '"- item: value"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_string_with_tab_character_escaped(): void
+    {
+        // Tab character in string content must be escaped
+        $input = "text\twith\ttabs";
+        $expected = '"text\\twith\\ttabs"';
+        $this->assertEquals($expected, Toon::encode($input));
+    }
 }
