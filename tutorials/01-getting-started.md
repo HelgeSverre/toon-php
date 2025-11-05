@@ -9,7 +9,7 @@
 A complete PHP script that:
 - Encodes various data structures using TOON
 - Compares token consumption with JSON
-- Sends data to OpenAI's API to demonstrate real savings
+- Processes real-world receipt data for LLM validation
 - Measures actual token usage and cost reduction
 
 ## What You'll Learn
@@ -18,14 +18,13 @@ A complete PHP script that:
 - How to install and configure TOON
 - Encoding different data types (strings, arrays, objects)
 - Comparing token savings versus JSON
-- Integrating TOON with a real LLM API
+- Processing structured data for LLM analysis
 
 ## Prerequisites
 
 - PHP 8.1 or higher installed
 - Composer package manager
 - Basic understanding of PHP arrays and objects
-- OpenAI API key (free tier is sufficient)
 
 ## Introduction
 
@@ -51,9 +50,8 @@ Verify the installation by creating a test file:
 // test.php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
-
-echo Toon::encode('Hello TOON!');
+// Use the helper function
+echo toon('Hello TOON!');
 ```
 
 Run it:
@@ -75,31 +73,29 @@ Let's explore how TOON encodes different data types. Create a new file `basic-en
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
-
 // Primitive values
 echo "=== Primitive Values ===\n";
-echo "String: " . Toon::encode('hello world') . "\n";        // hello world
-echo "Number: " . Toon::encode(42) . "\n";                   // 42
-echo "Float: " . Toon::encode(3.14) . "\n";                  // 3.14
-echo "Boolean: " . Toon::encode(true) . "\n";                // true
-echo "Null: " . Toon::encode(null) . "\n";                   // null
+echo "String: " . toon('hello world') . "\n";        // hello world
+echo "Number: " . toon(42) . "\n";                   // 42
+echo "Float: " . toon(3.14) . "\n";                  // 3.14
+echo "Boolean: " . toon(true) . "\n";                // true
+echo "Null: " . toon(null) . "\n";                   // null
 
 // Special string cases (automatic quoting)
 echo "\n=== String Quoting ===\n";
-echo "Regular: " . Toon::encode('hello') . "\n";             // hello
-echo "Looks like bool: " . Toon::encode('true') . "\n";      // "true"
-echo "Looks like number: " . Toon::encode('42') . "\n";      // "42"
-echo "Has colon: " . Toon::encode('key:value') . "\n";       // "key:value"
-echo "Empty string: " . Toon::encode('') . "\n";             // ""
+echo "Regular: " . toon('hello') . "\n";             // hello
+echo "Looks like bool: " . toon('true') . "\n";      // "true"
+echo "Looks like number: " . toon('42') . "\n";      // "42"
+echo "Has colon: " . toon('key:value') . "\n";       // "key:value"
+echo "Empty string: " . toon('') . "\n";             // ""
 
 // Simple arrays
 echo "\n=== Simple Arrays ===\n";
 $fruits = ['apple', 'banana', 'orange'];
-echo "Fruits: " . Toon::encode($fruits) . "\n";              // [3]: apple,banana,orange
+echo "Fruits: " . toon($fruits) . "\n";              // [3]: apple,banana,orange
 
 $numbers = [10, 20, 30, 40, 50];
-echo "Numbers: " . Toon::encode($numbers) . "\n";            // [5]: 10,20,30,40,50
+echo "Numbers: " . toon($numbers) . "\n";            // [5]: 10,20,30,40,50
 
 // Simple objects (associative arrays)
 echo "\n=== Objects ===\n";
@@ -108,7 +104,7 @@ $person = [
     'age' => 30,
     'active' => true
 ];
-echo "Person:\n" . Toon::encode($person) . "\n";
+echo "Person:\n" . toon($person) . "\n";
 ```
 
 Run it:
@@ -152,8 +148,6 @@ Now let's handle more complex, nested data structures. Create `nested-structures
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
-
 // Nested object
 $user = [
     'id' => 1001,
@@ -177,7 +171,7 @@ $user = [
 ];
 
 echo "=== Nested User Object ===\n";
-echo Toon::encode($user) . "\n\n";
+echo toon($user) . "\n\n";
 
 // Array of uniform objects (tabular format)
 $products = [
@@ -187,7 +181,7 @@ $products = [
 ];
 
 echo "=== Tabular Product Data ===\n";
-echo "products:\n" . Toon::encode($products) . "\n\n";
+echo "products:\n" . toon($products) . "\n\n";
 
 // Non-uniform array (list format)
 $events = [
@@ -211,7 +205,7 @@ $events = [
 ];
 
 echo "=== Non-uniform Event Log ===\n";
-echo "events:\n" . Toon::encode($events) . "\n";
+echo "events:\n" . toon($events) . "\n";
 ```
 
 Run it:
@@ -270,7 +264,6 @@ TOON provides configuration options to customize the output. Create `configurati
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
 use HelgeSverre\Toon\EncodeOptions;
 
 $data = [
@@ -283,26 +276,26 @@ $data = [
 ];
 
 echo "=== Default Configuration ===\n";
-echo Toon::encode($data) . "\n\n";
+echo toon($data) . "\n\n";
 
-echo "=== Custom Indentation (4 spaces) ===\n";
-$options = new EncodeOptions(indent: 4);
-echo Toon::encode($data, $options) . "\n\n";
+echo "=== Compact Format ===\n";
+echo toon_compact($data) . "\n\n";
 
-echo "=== Tab Delimiter ===\n";
-$options = new EncodeOptions(delimiter: "\t");
+echo "=== Readable Format (4 spaces) ===\n";
+echo toon_readable($data) . "\n\n";
+
+echo "=== Tabular Format (tab delimiters) ===\n";
 $tabData = ['tags' => ['php', 'javascript', 'python', 'ruby']];
-echo Toon::encode($tabData, $options) . "\n\n";
+echo toon_tabular($tabData) . "\n\n";
 
-echo "=== Pipe Delimiter ===\n";
-$options = new EncodeOptions(delimiter: '|');
-$pipeData = ['colors' => ['red', 'green', 'blue', 'yellow']];
-echo Toon::encode($pipeData, $options) . "\n\n";
-
-echo "=== Length Marker Prefix ===\n";
-$options = new EncodeOptions(lengthMarker: '#');
-$markerData = ['items' => ['apple', 'banana', 'cherry']];
-echo Toon::encode($markerData, $options) . "\n";
+echo "=== Custom Options ===\n";
+$options = new EncodeOptions(
+    indent: 3,
+    delimiter: '|',
+    lengthMarker: '#'
+);
+$customData = ['items' => ['apple', 'banana', 'cherry']];
+echo toon($customData, $options) . "\n";
 ```
 
 Run it:
@@ -320,21 +313,25 @@ server:
   ssl: true
   endpoints[3]: users,posts,comments
 
-=== Custom Indentation (4 spaces) ===
+=== Compact Format ===
+server:
+ host: api.example.com
+ port: 8080
+ ssl: true
+ endpoints[3]: users,posts,comments
+
+=== Readable Format (4 spaces) ===
 server:
     host: api.example.com
     port: 8080
     ssl: true
     endpoints[3]: users,posts,comments
 
-=== Tab Delimiter ===
+=== Tabular Format (tab delimiters) ===
 tags[4	]: php	javascript	python	ruby
 
-=== Pipe Delimiter ===
-colors[4|]: red|green|blue|yellow
-
-=== Length Marker Prefix ===
-items[#3]: apple,banana,cherry
+=== Custom Options ===
+items[#3|]: apple|banana|cherry
 ```
 
 ## Step 5: Token Comparison with JSON
@@ -345,26 +342,22 @@ Let's measure the actual token savings. Create `token-comparison.php`:
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
-
-function estimateTokens(string $text): int {
-    // Rough estimation: ~4 characters per token (GPT-3/4 average)
-    // For production, use tiktoken or API tokenizer
-    return (int) ceil(strlen($text) / 4);
-}
-
 function compareFormats(array $data, string $label): void {
-    $json = json_encode($data, JSON_PRETTY_PRINT);
-    $toon = Toon::encode($data);
+    // Get comparison stats using the helper function
+    $stats = toon_compare($data);
 
-    $jsonTokens = estimateTokens($json);
-    $toonTokens = estimateTokens($toon);
-    $savings = round((1 - $toonTokens / $jsonTokens) * 100, 1);
+    // Generate the actual outputs
+    $json = json_encode($data, JSON_PRETTY_PRINT);
+    $toon = toon($data);
+
+    // Estimate tokens for each format
+    $jsonTokens = toon_estimate_tokens($data);  // This estimates TOON tokens
+    $jsonActualTokens = (int) ceil(strlen($json) / 4);  // Estimate JSON tokens
 
     echo "=== $label ===\n";
-    echo "JSON: $jsonTokens tokens (" . strlen($json) . " chars)\n";
-    echo "TOON: $toonTokens tokens (" . strlen($toon) . " chars)\n";
-    echo "Savings: {$savings}%\n\n";
+    echo "JSON: {$stats['json']} chars (~$jsonActualTokens tokens)\n";
+    echo "TOON: {$stats['toon']} chars (~" . toon_estimate_tokens($data) . " tokens)\n";
+    echo "Savings: {$stats['savings']} chars ({$stats['savings_percent']})\n\n";
 
     echo "JSON Format:\n$json\n\n";
     echo "TOON Format:\n$toon\n\n";
@@ -446,108 +439,137 @@ Run it:
 php token-comparison.php
 ```
 
-## Step 6: Real-World LLM Integration
+## Step 6: Real-World Receipt Processing
 
-Now let's use TOON with OpenAI's API to see real token savings. Create `openai-integration.php`:
+Now let's use TOON to process receipt data that could be sent to an LLM for validation. Create `receipt-processor.php`:
 
 ```php
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
-
-// You'll need to install the OpenAI client
-// composer require openai-php/client
-
-// Set your OpenAI API key
-$apiKey = getenv('OPENAI_API_KEY') ?: 'your-api-key-here';
-
-if ($apiKey === 'your-api-key-here') {
-    echo "Please set your OpenAI API key in the OPENAI_API_KEY environment variable\n";
-    echo "Example: export OPENAI_API_KEY='sk-...'\n";
-    exit(1);
-}
-
-// Sample customer support data
-$customerData = [
-    'ticket_id' => 'SUP-2025-4521',
-    'customer' => [
-        'name' => 'Sarah Johnson',
-        'email' => 'sarah.j@example.com',
-        'account_type' => 'premium',
-        'member_since' => '2023-03-15'
+// Simulate OCR-extracted receipt data
+$receipt = [
+    'merchant' => [
+        'name' => 'Corner Market',
+        'address' => '123 Main St, Portland, OR',
+        'phone' => '555-0123'
     ],
-    'issue' => [
-        'category' => 'billing',
-        'priority' => 'high',
-        'description' => 'Charged twice for monthly subscription',
-        'reported_at' => '2025-01-20T14:30:00Z'
+    'transaction' => [
+        'date' => '2025-01-20',
+        'time' => '14:32',
+        'register' => '3',
+        'transaction_id' => 'TXN-20250120-0432'
     ],
-    'history' => [
-        ['date' => '2024-12-15', 'type' => 'payment', 'amount' => 29.99, 'status' => 'success'],
-        ['date' => '2025-01-15', 'type' => 'payment', 'amount' => 29.99, 'status' => 'success'],
-        ['date' => '2025-01-15', 'type' => 'payment', 'amount' => 29.99, 'status' => 'success']
+    'items' => [
+        ['name' => 'Organic Bananas', 'qty' => 3, 'unit_price' => 0.79, 'total' => 2.37],
+        ['name' => 'Whole Milk', 'qty' => 1, 'unit_price' => 4.29, 'total' => 4.29],
+        ['name' => 'Sourdough Bread', 'qty' => 1, 'unit_price' => 5.99, 'total' => 5.99],
+        ['name' => 'Free Range Eggs', 'qty' => 2, 'unit_price' => 6.49, 'total' => 12.98]
+    ],
+    'subtotal' => 25.63,
+    'tax' => 2.05,
+    'total' => 27.68,
+    'payment' => [
+        'method' => 'credit_card',
+        'last_four' => '4532'
     ]
 ];
 
-// Create prompts with JSON and TOON
-$jsonData = json_encode($customerData, JSON_PRETTY_PRINT);
-$toonData = Toon::encode($customerData);
+echo "=== Receipt Data Processing Example ===\n\n";
+echo "This example shows how TOON can optimize receipt data for LLM processing.\n";
+echo "Use cases: validation, categorization, anomaly detection.\n\n";
 
-$jsonPrompt = "Analyze this customer support ticket and suggest a resolution:\n\n$jsonData";
-$toonPrompt = "Analyze this customer support ticket and suggest a resolution:\n\n$toonData";
+// Show JSON encoding
+$jsonEncoded = json_encode($receipt, JSON_PRETTY_PRINT);
+echo "=== JSON Format (" . strlen($jsonEncoded) . " characters) ===\n";
+echo $jsonEncoded . "\n\n";
 
-echo "=== Data Formats Comparison ===\n\n";
-echo "JSON Format (" . strlen($jsonData) . " characters):\n";
-echo substr($jsonData, 0, 300) . "...\n\n";
+// Show TOON encoding (compact for LLM usage)
+$toonEncoded = toon_compact($receipt);
+echo "=== TOON Compact Format (" . strlen($toonEncoded) . " characters) ===\n";
+echo $toonEncoded . "\n\n";
 
-echo "TOON Format (" . strlen($toonData) . " characters):\n";
-echo $toonData . "\n\n";
+// Show comparison statistics
+$comparison = toon_compare($receipt);
+echo "=== Format Comparison ===\n";
+echo "JSON size: {$comparison['json']} characters\n";
+echo "TOON size: {$comparison['toon']} characters\n";
+echo "Characters saved: {$comparison['savings']}\n";
+echo "Reduction: {$comparison['savings_percent']}\n\n";
 
-$savings = round((1 - strlen($toonData) / strlen($jsonData)) * 100, 1);
-echo "Character reduction: {$savings}%\n\n";
+// Estimate token counts
+$jsonTokens = (int) ceil(strlen($jsonEncoded) / 4);
+$toonTokens = toon_estimate_tokens($receipt);
+$tokenSavings = $jsonTokens - $toonTokens;
+$tokenSavingsPercent = round(($tokenSavings / $jsonTokens) * 100, 1);
 
-// Example API call structure (uncomment to use with real API key)
-/*
-$client = OpenAI::client($apiKey);
+echo "=== Token Estimates ===\n";
+echo "JSON: ~$jsonTokens tokens\n";
+echo "TOON: ~$toonTokens tokens\n";
+echo "Tokens saved: ~$tokenSavings ({$tokenSavingsPercent}%)\n\n";
 
-// JSON version
-$jsonResponse = $client->chat()->create([
-    'model' => 'gpt-3.5-turbo',
-    'messages' => [
-        ['role' => 'user', 'content' => $jsonPrompt],
-    ],
-]);
+// Show readable format for debugging
+echo "=== TOON Readable Format (for debugging) ===\n";
+echo toon_readable($receipt) . "\n\n";
 
-// TOON version
-$toonResponse = $client->chat()->create([
-    'model' => 'gpt-3.5-turbo',
-    'messages' => [
-        ['role' => 'user', 'content' => $toonPrompt],
-    ],
-]);
+// Demonstrate LLM prompt construction
+echo "=== Sample LLM Prompt ===\n";
+echo "Here's how you would use this data with an LLM:\n\n";
 
-echo "=== Token Usage Comparison ===\n";
-echo "JSON tokens: {$jsonResponse->usage->promptTokens}\n";
-echo "TOON tokens: {$toonResponse->usage->promptTokens}\n";
+$prompt = <<<PROMPT
+Analyze the following receipt data and perform these validations:
+1. Verify that item totals (qty * unit_price) match the stated totals
+2. Confirm the subtotal equals the sum of all item totals
+3. Check that subtotal + tax equals the final total
+4. Identify the purchase category (grocery, restaurant, retail, etc.)
+5. Flag any anomalies or unusual patterns
 
-$tokenSavings = $jsonResponse->usage->promptTokens - $toonResponse->usage->promptTokens;
-$tokenSavingsPercent = round($tokenSavings / $jsonResponse->usage->promptTokens * 100, 1);
+Receipt data in TOON format:
+$toonEncoded
 
-echo "Tokens saved: $tokenSavings ({$tokenSavingsPercent}%)\n\n";
+Please provide:
+- Validation results for each check
+- Purchase category with confidence level
+- Any detected anomalies or concerns
+PROMPT;
 
-// Cost calculation (GPT-3.5-turbo: $0.0015 per 1K input tokens)
-$costPerToken = 0.0015 / 1000;
-$moneySaved = $tokenSavings * $costPerToken;
+echo "```\n$prompt\n```\n\n";
 
-echo "=== Cost Analysis ===\n";
-echo "Cost savings per request: $" . number_format($moneySaved, 4) . "\n";
-echo "Savings for 10,000 requests: $" . number_format($moneySaved * 10000, 2) . "\n";
-echo "Savings for 100,000 requests: $" . number_format($moneySaved * 100000, 2) . "\n";
-*/
+// Cost analysis
+$costPerThousandTokens = 0.01; // Example rate (Claude Haiku)
+$jsonCost = ($jsonTokens / 1000) * $costPerThousandTokens;
+$toonCost = ($toonTokens / 1000) * $costPerThousandTokens;
+$costSavings = $jsonCost - $toonCost;
 
-echo "=== Testing with Mock Data ===\n";
-echo "To see real token counts, uncomment the API section and add your OpenAI key\n";
+echo "=== Cost Analysis (at $0.01 per 1K tokens) ===\n";
+echo "JSON cost: $" . number_format($jsonCost, 4) . "\n";
+echo "TOON cost: $" . number_format($toonCost, 4) . "\n";
+echo "Savings per request: $" . number_format($costSavings, 4) . "\n";
+echo "Savings for 10,000 requests: $" . number_format($costSavings * 10000, 2) . "\n";
+echo "Savings for 100,000 requests: $" . number_format($costSavings * 100000, 2) . "\n\n";
+
+// Data validation example
+echo "=== Quick Validation Check ===\n";
+$calculatedSubtotal = 0;
+foreach ($receipt['items'] as $item) {
+    $itemTotal = $item['qty'] * $item['unit_price'];
+    $match = abs($itemTotal - $item['total']) < 0.01 ? 'OK' : 'MISMATCH';
+    echo "{$item['name']}: {$item['qty']} × \${$item['unit_price']} = \$$itemTotal ($match)\n";
+    $calculatedSubtotal += $item['total'];
+}
+
+echo "\nSubtotal check: \$$calculatedSubtotal ";
+echo abs($calculatedSubtotal - $receipt['subtotal']) < 0.01 ? "(OK)\n" : "(MISMATCH)\n";
+
+$calculatedTotal = $receipt['subtotal'] + $receipt['tax'];
+echo "Total check: \${$receipt['subtotal']} + \${$receipt['tax']} = \$$calculatedTotal ";
+echo abs($calculatedTotal - $receipt['total']) < 0.01 ? "(OK)\n" : "(MISMATCH)\n";
+```
+
+Run it:
+
+```bash
+php receipt-processor.php
 ```
 
 ## Step 7: Building a Complete Example
@@ -558,7 +580,6 @@ Let's build a complete example that processes log data. Create `log-processor.ph
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
 use HelgeSverre\Toon\EncodeOptions;
 
 class LogProcessor {
@@ -587,7 +608,7 @@ class LogProcessor {
     }
 
     public function exportAsToon(): string {
-        return Toon::encode($this->logs, $this->options);
+        return toon($this->logs, $this->options);
     }
 
     public function getSummary(): array {
@@ -634,17 +655,17 @@ $summary = $processor->getSummary();
 echo "Total logs collected: " . count($logs) . "\n\n";
 
 echo "=== Summary in TOON Format ===\n";
-echo Toon::encode($summary) . "\n\n";
+echo toon($summary) . "\n\n";
 
 echo "=== Full Logs Comparison ===\n";
 $jsonLogs = $processor->exportAsJson();
 $toonLogs = $processor->exportAsToon();
 
-echo "JSON size: " . strlen($jsonLogs) . " characters\n";
-echo "TOON size: " . strlen($toonLogs) . " characters\n";
-
-$reduction = round((1 - strlen($toonLogs) / strlen($jsonLogs)) * 100, 1);
-echo "Size reduction: {$reduction}%\n\n";
+// Use the compare helper
+$comparison = toon_compare($logs);
+echo "JSON size: {$comparison['json']} characters\n";
+echo "TOON size: {$comparison['toon']} characters\n";
+echo "Size reduction: {$comparison['savings_percent']}\n\n";
 
 // Show sample output
 echo "=== TOON Format Sample (first 500 chars) ===\n";
@@ -655,7 +676,7 @@ $llmPrompt = "Analyze these application logs and identify any critical issues:\n
 
 echo "=== LLM Prompt ===\n";
 echo "Prompt size: " . strlen($llmPrompt) . " characters\n";
-echo "Estimated tokens: " . ceil(strlen($llmPrompt) / 4) . "\n\n";
+echo "Estimated tokens: " . toon_estimate_tokens($logs) . "\n\n";
 
 echo "With JSON, this would be " . strlen($jsonLogs) . " characters\n";
 echo "TOON saves approximately " . (strlen($jsonLogs) - strlen($toonLogs)) . " characters\n";
@@ -692,8 +713,6 @@ Create a test file `validate-toon.php` to ensure everything works:
 <?php
 require_once 'vendor/autoload.php';
 
-use HelgeSverre\Toon\Toon;
-
 $tests = [
     'Simple string' => 'hello',
     'Number' => 42,
@@ -715,11 +734,11 @@ $failed = 0;
 
 foreach ($tests as $name => $value) {
     try {
-        $encoded = Toon::encode($value);
-        echo "✓ $name: " . substr(str_replace("\n", "\\n", $encoded), 0, 50) . "\n";
+        $encoded = toon($value);
+        echo "OK $name: " . substr(str_replace("\n", "\\n", $encoded), 0, 50) . "\n";
         $passed++;
     } catch (Exception $e) {
-        echo "✗ $name: " . $e->getMessage() . "\n";
+        echo "FAIL $name: " . $e->getMessage() . "\n";
         $failed++;
     }
 }
@@ -755,7 +774,7 @@ You've learned how to:
 - Encode various data types efficiently
 - Compare token consumption with JSON
 - Configure TOON for different use cases
-- Integrate with real-world scenarios
+- Process real-world data for LLM analysis
 
 TOON typically reduces token consumption by 30-60%, which directly translates to:
 - Lower API costs

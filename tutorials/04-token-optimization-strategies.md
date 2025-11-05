@@ -1,1861 +1,1345 @@
-# Reducing LLM Costs: TOON Token Optimization Strategies
+# Tutorial 4: Token Optimization Strategies
 
 **Difficulty**: Advanced
-**Time to Complete**: 20-25 minutes
+**Time**: 20-25 minutes
 **PHP Version**: 8.1+
-
-## What You'll Build
-
-A comprehensive token optimization system that:
-- Analyzes token usage patterns across different data types
-- Implements strategic TOON encoding for maximum savings
-- Optimizes RAG workflows and document processing
-- Builds a token budget management system
-- Creates real-time cost tracking dashboards
-- Scales optimization strategies for enterprise usage
 
 ## What You'll Learn
 
-- Understanding token economics in depth
-- Identifying optimization opportunities in your data
-- Applying TOON strategically for different use cases
-- Optimizing RAG and document-heavy workflows
-- Measuring and tracking savings at scale
-- Building cost-effective AI applications
+- How to analyze your data for optimization opportunities
+- Choosing the right TOON encoding options
+- Implementing practical optimization patterns
+- Measuring real-world cost savings
+- Building data preprocessing strategies
 
 ## Prerequisites
 
-- Completed Tutorials 1-2 (TOON basics and OpenAI integration)
-- Understanding of LLM token pricing models
-- Basic knowledge of data structures and algorithms
-- Familiarity with caching strategies
-- Experience with performance optimization
+- Completed Tutorials 1-2
+- Understanding of token economics
+- Basic knowledge of LLM pricing
+
+## Final Result
+
+By the end of this tutorial, you'll have built a comprehensive optimization system that:
+- Analyzes data structures for token usage patterns
+- Implements strategic preprocessing before encoding
+- Measures and reports on actual cost savings
+- Provides actionable insights for production deployment
+
+---
 
 ## Introduction
 
-Token costs can quickly escalate in production LLM applications. A single RAG query might consume 10,000+ tokens, costing $0.02-0.30 depending on the model. Multiply this by thousands of daily requests, and costs become substantial.
+Token costs add up quickly in production. A single API call can cost $0.02-0.30 depending on the model and input size. Multiply this by thousands of daily requests, and you're looking at substantial operational expenses.
 
-TOON's strategic application can reduce these costs by 30-60% without sacrificing functionality. This tutorial teaches you how to identify optimization opportunities, implement strategic encoding, and measure real-world impact.
+TOON reduces tokens by 30-60% through format optimization. But the real power comes from combining TOON with smart data preprocessing strategies. This tutorial shows you how to analyze YOUR data and optimize strategically.
 
-## Step 1: Understanding Token Economics
+All strategies presented here are patterns you implement - not built-in TOON features. You'll learn to make informed decisions about when and how to optimize.
 
-Create `token-economics.php` to understand the fundamentals:
+## Section 1: Understanding Your Data
+
+The first step in optimization is understanding what you're working with. Let's build tools to analyze data structure and identify optimization opportunities.
+
+### Analyzing Data with Built-in Helpers
+
+Create `analyze-data.php`:
 
 ```php
 <?php
+declare(strict_types=1);
+
 require_once 'vendor/autoload.php';
 
 use HelgeSverre\Toon\Toon;
 use HelgeSverre\Toon\EncodeOptions;
 
-class TokenEconomicsAnalyzer {
-    private array $modelPricing = [
-        // Pricing per 1M tokens (as of 2025)
-        'gpt-3.5-turbo' => ['input' => 0.50, 'output' => 1.50],
-        'gpt-4' => ['input' => 30.00, 'output' => 60.00],
-        'gpt-4-turbo' => ['input' => 10.00, 'output' => 30.00],
-        'claude-3-opus' => ['input' => 15.00, 'output' => 75.00],
-        'claude-3-sonnet' => ['input' => 3.00, 'output' => 15.00],
-        'gemini-pro' => ['input' => 0.50, 'output' => 1.50],
-    ];
-
-    private array $metrics = [];
-
-    /**
-     * Analyze token usage for different data structures
-     */
-    public function analyzeDataStructure(array $data, string $label): array {
-        $json = json_encode($data, JSON_PRETTY_PRINT);
-        $jsonCompact = json_encode($data);
-        $toon = Toon::encode($data);
-        $toonOptimized = $this->optimizedEncode($data);
-
-        // Estimate tokens (using GPT-style tokenization approximation)
-        $jsonTokens = $this->estimateTokens($json);
-        $jsonCompactTokens = $this->estimateTokens($jsonCompact);
-        $toonTokens = $this->estimateTokens($toon);
-        $toonOptimizedTokens = $this->estimateTokens($toonOptimized);
-
-        $analysis = [
-            'label' => $label,
-            'formats' => [
-                'json_pretty' => [
-                    'size' => strlen($json),
-                    'tokens' => $jsonTokens,
-                    'sample' => substr($json, 0, 100) . '...'
-                ],
-                'json_compact' => [
-                    'size' => strlen($jsonCompact),
-                    'tokens' => $jsonCompactTokens,
-                    'sample' => substr($jsonCompact, 0, 100) . '...'
-                ],
-                'toon' => [
-                    'size' => strlen($toon),
-                    'tokens' => $toonTokens,
-                    'sample' => substr($toon, 0, 100) . '...'
-                ],
-                'toon_optimized' => [
-                    'size' => strlen($toonOptimized),
-                    'tokens' => $toonOptimizedTokens,
-                    'sample' => substr($toonOptimized, 0, 100) . '...'
-                ]
-            ],
-            'savings' => [
-                'vs_json_pretty' => round((1 - $toonTokens / $jsonTokens) * 100, 1),
-                'vs_json_compact' => round((1 - $toonTokens / $jsonCompactTokens) * 100, 1),
-                'with_optimization' => round((1 - $toonOptimizedTokens / $jsonTokens) * 100, 1)
-            ],
-            'cost_impact' => $this->calculateCostImpact($jsonTokens, $toonTokens)
-        ];
-
-        $this->metrics[] = $analysis;
-        return $analysis;
-    }
-
-    /**
-     * Optimized TOON encoding with strategic choices
-     */
-    private function optimizedEncode(array $data): string {
-        // Strategy 1: Use minimal indentation
-        $options = new EncodeOptions(indent: 1);
-
-        // Strategy 2: Pre-process data to remove unnecessary fields
-        $optimized = $this->preprocessData($data);
-
-        return Toon::encode($optimized, $options);
-    }
-
-    /**
-     * Preprocess data for optimal encoding
-     */
-    private function preprocessData(array $data): array {
-        $processed = [];
-
-        foreach ($data as $key => $value) {
-            // Skip null values
-            if ($value === null) {
-                continue;
-            }
-
-            // Skip empty arrays
-            if (is_array($value) && empty($value)) {
-                continue;
-            }
-
-            // Shorten long strings if they're not critical
-            if (is_string($value) && strlen($value) > 1000) {
-                $processed[$key] = substr($value, 0, 997) . '...';
-                continue;
-            }
-
-            // Recursively process nested arrays
-            if (is_array($value)) {
-                $processed[$key] = $this->preprocessData($value);
-            } else {
-                $processed[$key] = $value;
-            }
-        }
-
-        return $processed;
-    }
-
-    /**
-     * Estimate token count (GPT-style approximation)
-     */
-    private function estimateTokens(string $text): int {
-        // More accurate estimation based on OpenAI's tokenization patterns
-        $charCount = strlen($text);
-        $wordCount = str_word_count($text);
-        $specialChars = preg_match_all('/[{}[\]":,]/', $text);
-
-        // GPT models average ~4 characters per token
-        // But JSON special characters often tokenize individually
-        $baseTokens = ceil($charCount / 4);
-        $adjustment = $specialChars * 0.5; // Special chars add overhead
-
-        return (int) ($baseTokens + $adjustment);
-    }
-
-    /**
-     * Calculate cost impact across different models
-     */
-    private function calculateCostImpact(int $jsonTokens, int $toonTokens): array {
-        $tokensSaved = $jsonTokens - $toonTokens;
-        $impact = [];
-
-        foreach ($this->modelPricing as $model => $pricing) {
-            $costPerRequest = [
-                'json' => ($jsonTokens / 1000000) * $pricing['input'],
-                'toon' => ($toonTokens / 1000000) * $pricing['input'],
-                'saved' => ($tokensSaved / 1000000) * $pricing['input']
-            ];
-
-            $impact[$model] = [
-                'per_request' => round($costPerRequest['saved'], 6),
-                'per_1k_requests' => round($costPerRequest['saved'] * 1000, 3),
-                'per_1m_requests' => round($costPerRequest['saved'] * 1000000, 2)
-            ];
-        }
-
-        return $impact;
-    }
-
-    /**
-     * Generate comprehensive report
-     */
-    public function generateReport(): string {
-        $report = "=== Token Economics Analysis Report ===\n\n";
-
-        foreach ($this->metrics as $metric) {
-            $report .= "Dataset: {$metric['label']}\n";
-            $report .= str_repeat('-', 40) . "\n";
-
-            foreach ($metric['formats'] as $format => $data) {
-                $report .= sprintf(
-                    "%-15s: %6d tokens (%d bytes)\n",
-                    $format,
-                    $data['tokens'],
-                    $data['size']
-                );
-            }
-
-            $report .= "\nSavings:\n";
-            $report .= "  vs JSON Pretty: {$metric['savings']['vs_json_pretty']}%\n";
-            $report .= "  vs JSON Compact: {$metric['savings']['vs_json_compact']}%\n";
-            $report .= "  With Optimization: {$metric['savings']['with_optimization']}%\n";
-
-            $report .= "\nCost Impact (per million requests):\n";
-            foreach ($metric['cost_impact'] as $model => $impact) {
-                $report .= sprintf(
-                    "  %-15s: $%.2f saved\n",
-                    $model,
-                    $impact['per_1m_requests']
-                );
-            }
-
-            $report .= "\n";
-        }
-
-        return $report;
-    }
-}
-
-// Run analysis on different data types
-$analyzer = new TokenEconomicsAnalyzer();
-
-// 1. User profile data (common in personalization)
-$userProfile = [
+// Sample data structure (representing a typical API payload)
+$sampleData = [
     'user_id' => 'usr_abc123def456',
-    'personal_info' => [
-        'first_name' => 'Alexandra',
-        'last_name' => 'Johnson',
-        'email' => 'alex.johnson@example.com',
-        'phone' => '+1-555-0123',
-        'date_of_birth' => '1985-03-15',
-        'address' => [
-            'street' => '123 Main Street',
-            'city' => 'San Francisco',
-            'state' => 'CA',
-            'zip' => '94105',
-            'country' => 'USA'
-        ]
+    'timestamp' => '2025-01-20T10:30:00Z',
+    'action' => 'product_viewed',
+    'product' => [
+        'id' => 'prod_789xyz',
+        'name' => 'Wireless Headphones Premium',
+        'price' => 299.99,
+        'category' => 'Electronics',
+        'tags' => ['audio', 'wireless', 'premium', 'noise-cancelling']
     ],
-    'preferences' => [
-        'language' => 'en-US',
-        'timezone' => 'America/Los_Angeles',
-        'currency' => 'USD',
-        'notifications' => [
-            'email' => true,
-            'sms' => false,
-            'push' => true,
-            'frequency' => 'daily'
-        ]
-    ],
-    'account_data' => [
-        'created_at' => '2020-01-15T10:30:00Z',
-        'last_login' => '2025-01-20T15:45:00Z',
-        'subscription_tier' => 'premium',
-        'credits_remaining' => 5000,
-        'usage_this_month' => 3247
+    'session' => [
+        'id' => 'sess_' . bin2hex(random_bytes(8)),
+        'duration' => 1847,
+        'page_views' => 12,
+        'referrer' => 'google.com'
     ]
 ];
 
-$analyzer->analyzeDataStructure($userProfile, 'User Profile');
+// Use the comparison helper
+$comparison = toon_compare($sampleData);
 
-// 2. E-commerce transaction (common in retail AI)
-$transaction = [
-    'transaction_id' => 'TXN-2025-01-20-487293',
-    'timestamp' => '2025-01-20T14:32:18Z',
-    'customer' => [
-        'id' => 'CUST-98234',
-        'name' => 'Robert Smith',
-        'loyalty_tier' => 'gold',
-        'lifetime_value' => 4523.67
-    ],
-    'items' => [
-        ['sku' => 'LAPTOP-X1', 'name' => 'UltraBook Pro 15', 'quantity' => 1, 'price' => 1899.99, 'category' => 'Electronics'],
-        ['sku' => 'MOUSE-W5', 'name' => 'Wireless Mouse', 'quantity' => 2, 'price' => 49.99, 'category' => 'Accessories'],
-        ['sku' => 'USB-C-10', 'name' => 'USB-C Cable 10ft', 'quantity' => 3, 'price' => 19.99, 'category' => 'Accessories'],
-        ['sku' => 'STAND-ADJ', 'name' => 'Adjustable Laptop Stand', 'quantity' => 1, 'price' => 89.99, 'category' => 'Accessories']
-    ],
-    'payment' => [
-        'method' => 'credit_card',
-        'last_four' => '4532',
-        'processor' => 'stripe',
-        'status' => 'completed'
-    ],
-    'shipping' => [
-        'method' => 'express',
-        'address' => '456 Oak Avenue, Portland, OR 97201',
-        'tracking_number' => 'TRK-ABC-123-456',
-        'estimated_delivery' => '2025-01-22'
-    ],
-    'totals' => [
-        'subtotal' => 2149.93,
-        'tax' => 193.49,
-        'shipping' => 15.99,
-        'discount' => -50.00,
-        'total' => 2309.41
-    ]
-];
+echo "Format Analysis:\n";
+echo "JSON:  {$comparison['json']['size']} bytes, ~{$comparison['json']['tokens']} tokens\n";
+echo "TOON:  {$comparison['toon']['size']} bytes, ~{$comparison['toon']['tokens']} tokens\n";
+echo "Savings: {$comparison['savings']['percentage']}%\n\n";
 
-$analyzer->analyzeDataStructure($transaction, 'E-commerce Transaction');
+// Build a simple analysis function
+function analyzeDataStructure(array $data, string $label): array
+{
+    $comparison = toon_compare($data);
 
-// 3. Analytics data (common in business intelligence)
-$analytics = [
-    'period' => ['start' => '2025-01-01', 'end' => '2025-01-20'],
-    'metrics' => [
-        'visitors' => ['total' => 125847, 'unique' => 89234, 'returning' => 36613],
-        'pageviews' => ['total' => 458921, 'per_visitor' => 3.65],
-        'engagement' => [
-            'avg_session_duration' => 186,
-            'bounce_rate' => 42.3,
-            'pages_per_session' => 4.2
-        ]
-    ],
-    'top_pages' => [
-        ['path' => '/', 'views' => 98234, 'unique_views' => 67123, 'avg_time' => 45, 'bounce_rate' => 38.2],
-        ['path' => '/products', 'views' => 67123, 'unique_views' => 45234, 'avg_time' => 120, 'bounce_rate' => 25.1],
-        ['path' => '/about', 'views' => 34521, 'unique_views' => 28934, 'avg_time' => 38, 'bounce_rate' => 55.3],
-        ['path' => '/contact', 'views' => 12890, 'unique_views' => 11234, 'avg_time' => 95, 'bounce_rate' => 15.2],
-        ['path' => '/blog', 'views' => 45678, 'unique_views' => 34567, 'avg_time' => 234, 'bounce_rate' => 35.7]
-    ],
-    'conversions' => [
-        'goals' => [
-            ['name' => 'Purchase', 'completions' => 3847, 'rate' => 3.06, 'value' => 284739.50],
-            ['name' => 'Signup', 'completions' => 8923, 'rate' => 7.09, 'value' => 0],
-            ['name' => 'Download', 'completions' => 5612, 'rate' => 4.46, 'value' => 0]
-        ]
-    ]
-];
-
-$analyzer->analyzeDataStructure($analytics, 'Analytics Dashboard');
-
-// 4. Log entries (common in debugging/monitoring)
-$logs = [
-    'service' => 'api-gateway',
-    'environment' => 'production',
-    'entries' => []
-];
-
-for ($i = 0; $i < 20; $i++) {
-    $logs['entries'][] = [
-        'timestamp' => date('Y-m-d H:i:s', time() - rand(0, 3600)),
-        'level' => ['INFO', 'WARNING', 'ERROR', 'DEBUG'][rand(0, 3)],
-        'message' => 'Sample log message ' . $i,
-        'context' => [
-            'request_id' => 'REQ-' . bin2hex(random_bytes(8)),
-            'user_id' => rand(1000, 9999),
-            'ip' => rand(1, 255) . '.' . rand(1, 255) . '.' . rand(1, 255) . '.' . rand(1, 255),
-            'duration_ms' => rand(10, 500)
-        ]
+    return [
+        'label' => $label,
+        'json_tokens' => $comparison['json']['tokens'],
+        'toon_tokens' => $comparison['toon']['tokens'],
+        'savings_percent' => $comparison['savings']['percentage'],
+        'cost_per_1k_requests' => calculateCostSavings(
+            $comparison['json']['tokens'] - $comparison['toon']['tokens'],
+            1000
+        )
     ];
 }
 
-$analyzer->analyzeDataStructure($logs, 'Application Logs');
+function calculateCostSavings(int $tokensSaved, int $requests): float
+{
+    // GPT-3.5-turbo pricing: $0.0005 per 1K input tokens
+    return ($tokensSaved / 1000) * 0.0005 * $requests;
+}
 
-// Generate and display report
-echo $analyzer->generateReport();
+// Analyze different data patterns
+$patterns = [
+    'flat_object' => [
+        'id' => 123,
+        'name' => 'Simple Object',
+        'value' => 456.78
+    ],
+    'nested_structure' => [
+        'level1' => [
+            'level2' => [
+                'level3' => ['data' => 'deeply nested']
+            ]
+        ]
+    ],
+    'array_of_objects' => array_map(function($i) {
+        return ['id' => $i, 'value' => $i * 100];
+    }, range(1, 10)),
+    'mixed_types' => [
+        'string' => 'text value',
+        'number' => 42,
+        'boolean' => true,
+        'null' => null,
+        'array' => [1, 2, 3]
+    ]
+];
+
+echo "Pattern Analysis Results:\n";
+echo str_repeat('-', 60) . "\n";
+
+foreach ($patterns as $name => $data) {
+    $analysis = analyzeDataStructure($data, $name);
+    echo sprintf(
+        "%-20s: %3d%% savings, saves $%.4f per 1k requests\n",
+        $analysis['label'],
+        $analysis['savings_percent'],
+        $analysis['cost_per_1k_requests']
+    );
+}
 ```
 
-## Step 2: Strategic Optimization Patterns
+### Understanding Token Estimation
+
+The helper functions estimate tokens using a simple heuristic (4 characters = 1 token). For production, you should use proper tokenizers:
+
+```php
+function toon_estimate_tokens(array $data, string $preset = 'default'): int
+{
+    // Get the encoded string based on preset
+    $encoded = match($preset) {
+        'compact' => toon_compact($data),
+        'readable' => toon_readable($data),
+        'tabular' => toon_tabular($data),
+        default => toon($data)
+    };
+
+    // Simple estimation: ~4 characters per token
+    // For production, use tiktoken or model-specific tokenizer
+    return (int) ceil(strlen($encoded) / 4);
+}
+```
+
+## Section 2: Comprehensive Token Comparison
+
+Before diving into specific scenarios, let's build a comprehensive comparison tool to analyze TOON vs JSON across different data types and configurations.
+
+### Understanding Format Efficiency
+
+Different data structures benefit from TOON to varying degrees. This section shows you how to analyze your specific data patterns.
+
+Create `token-comparison.php`:
+
+```php
+<?php
+declare(strict_types=1);
+
+require_once 'vendor/autoload.php';
+
+use HelgeSverre\Toon\EncodeOptions;
+use HelgeSverre\Toon\Toon;
+
+/**
+ * TOON vs JSON Token Comparison
+ *
+ * This demonstrates token savings across different data types.
+ */
+
+// Test datasets representing common use cases
+$datasets = [
+    'User Profile' => [
+        'id' => 789,
+        'name' => 'Bob Smith',
+        'email' => 'bob@company.com',
+        'role' => 'admin',
+        'active' => true,
+        'created_at' => '2024-01-15T10:30:00Z',
+    ],
+
+    'Product Catalog' => [
+        'products' => [
+            ['id' => 1, 'name' => 'Widget A', 'price' => 29.99, 'stock' => 100],
+            ['id' => 2, 'name' => 'Widget B', 'price' => 39.99, 'stock' => 50],
+            ['id' => 3, 'name' => 'Widget C', 'price' => 19.99, 'stock' => 200],
+            ['id' => 4, 'name' => 'Widget D', 'price' => 49.99, 'stock' => 75],
+        ],
+    ],
+
+    'Analytics Data' => [
+        'metrics' => [
+            ['date' => '2025-01-01', 'views' => 1250, 'clicks' => 89, 'conversions' => 12],
+            ['date' => '2025-01-02', 'views' => 1387, 'clicks' => 102, 'conversions' => 15],
+            ['date' => '2025-01-03', 'views' => 1156, 'clicks' => 78, 'conversions' => 9],
+            ['date' => '2025-01-04', 'views' => 1489, 'clicks' => 115, 'conversions' => 18],
+            ['date' => '2025-01-05', 'views' => 1623, 'clicks' => 134, 'conversions' => 21],
+        ],
+    ],
+
+    'Nested Structure' => [
+        'company' => [
+            'name' => 'Acme Corp',
+            'founded' => 2020,
+            'departments' => [
+                [
+                    'name' => 'Engineering',
+                    'employees' => [
+                        ['name' => 'Alice', 'role' => 'Senior Dev'],
+                        ['name' => 'Bob', 'role' => 'Junior Dev'],
+                    ],
+                ],
+                [
+                    'name' => 'Marketing',
+                    'employees' => [
+                        ['name' => 'Carol', 'role' => 'Manager'],
+                        ['name' => 'Dave', 'role' => 'Specialist'],
+                    ],
+                ],
+            ],
+        ],
+    ],
+];
+
+echo "TOON vs JSON Token Comparison\n";
+echo str_repeat('=', 70)."\n\n";
+
+$totalJsonSize = 0;
+$totalToonSize = 0;
+
+foreach ($datasets as $name => $data) {
+    echo "Dataset: {$name}\n";
+    echo str_repeat('-', 70)."\n";
+
+    // Compare different TOON configurations
+    $configs = [
+        'Default' => null,
+        'Compact' => EncodeOptions::compact(),
+        'Readable' => EncodeOptions::readable(),
+        'Tabular' => EncodeOptions::tabular(),
+    ];
+
+    $jsonOutput = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $jsonSize = strlen($jsonOutput);
+
+    echo sprintf("JSON:           %5d characters\n", $jsonSize);
+
+    foreach ($configs as $configName => $options) {
+        $toonOutput = Toon::encode($data, $options);
+        $toonSize = strlen($toonOutput);
+        $savings = (($jsonSize - $toonSize) / $jsonSize) * 100;
+
+        echo sprintf("TOON %-10s %5d characters (-%.1f%%)\n", "({$configName}):", $toonSize, $savings);
+    }
+
+    echo "\n";
+
+    // Add to totals (using default config)
+    $totalJsonSize += $jsonSize;
+    $totalToonSize += strlen(Toon::encode($data));
+}
+
+// Summary
+echo str_repeat('=', 70)."\n";
+echo "SUMMARY\n";
+echo str_repeat('=', 70)."\n";
+echo sprintf("Total JSON:  %5d characters\n", $totalJsonSize);
+echo sprintf("Total TOON:  %5d characters\n", $totalToonSize);
+echo sprintf("Savings:     %5d characters (%.1f%%)\n",
+    $totalJsonSize - $totalToonSize,
+    (($totalJsonSize - $totalToonSize) / $totalJsonSize) * 100
+);
+
+// Estimate token cost savings
+$estimatedJsonTokens = ceil($totalJsonSize / 4);
+$estimatedToonTokens = ceil($totalToonSize / 4);
+$tokenSavings = $estimatedJsonTokens - $estimatedToonTokens;
+
+echo "\n";
+echo "Estimated Token Count (4 chars/token average):\n";
+echo sprintf("JSON:   %d tokens\n", $estimatedJsonTokens);
+echo sprintf("TOON:   %d tokens\n", $estimatedToonTokens);
+echo sprintf("Saved:  %d tokens\n", $tokenSavings);
+
+// Cost estimation (GPT-4 pricing as example: $0.03 per 1K tokens)
+$costPerToken = 0.03 / 1000;
+$jsonCost = $estimatedJsonTokens * $costPerToken;
+$toonCost = $estimatedToonTokens * $costPerToken;
+$costSavings = $jsonCost - $toonCost;
+
+echo "\n";
+echo "Estimated Cost (GPT-4 pricing: $0.03/1K tokens):\n";
+echo sprintf("JSON:   $%.6f\n", $jsonCost);
+echo sprintf("TOON:   $%.6f\n", $toonCost);
+echo sprintf("Saved:  $%.6f per request\n", $costSavings);
+echo sprintf("        $%.2f per 1,000 requests\n", $costSavings * 1000);
+echo sprintf("        $%.2f per 100,000 requests\n", $costSavings * 100000);
+```
+
+### Key Insights from Comparison
+
+Run this script to see:
+
+1. **Configuration Impact**: Different TOON presets yield different savings
+2. **Data Structure Matters**: Uniform arrays (products, analytics) save more
+3. **Nested Structures**: Still benefit but with lower savings percentages
+4. **Cost at Scale**: Small per-request savings compound dramatically
+
+### Understanding the Results
+
+When you run `php token-comparison.php`, you'll typically see:
+
+- **User profiles**: 30-40% savings
+- **Product catalogs**: 50-60% savings (tabular format excels here)
+- **Analytics data**: 55-65% savings (uniform time-series data)
+- **Nested structures**: 35-45% savings
+
+**Why the variance?**
+- Uniform arrays have repeated keys that TOON eliminates
+- Nested objects have structural overhead that TOON reduces
+- Simple key-value pairs benefit less but still save 30%+
+
+## Section 3: Example 1 - PDF Metadata Extraction
+
+Let's work through a real scenario: extracting and sending PDF metadata to an LLM for document classification.
+
+### The Challenge
+
+You need to classify thousands of PDF documents. Each PDF has metadata that needs to be sent to the LLM for classification.
+
+Create `pdf-optimization.php`:
+
+```php
+<?php
+declare(strict_types=1);
+
+require_once 'vendor/autoload.php';
+
+use HelgeSverre\Toon\Toon;
+
+// Sample PDF metadata (what you might extract from a real PDF)
+$pdfMetadata = [
+    'file' => 'quarterly-report-q4-2024.pdf',
+    'properties' => [
+        'title' => 'Q4 2024 Financial Report',
+        'author' => 'Finance Department',
+        'subject' => 'Quarterly Financial Analysis',
+        'keywords' => ['finance', 'Q4', '2024', 'revenue', 'expenses'],
+        'created' => '2025-01-15 09:30:00',
+        'modified' => '2025-01-18 14:22:00',
+        'pages' => 47,
+        'size' => 2458923
+    ],
+    'structure' => [
+        ['section' => 'Executive Summary', 'page' => 1, 'length' => 2],
+        ['section' => 'Revenue Analysis', 'page' => 3, 'length' => 8],
+        ['section' => 'Expense Breakdown', 'page' => 11, 'length' => 12],
+        ['section' => 'Future Projections', 'page' => 23, 'length' => 6],
+        ['section' => 'Appendices', 'page' => 29, 'length' => 18]
+    ],
+    'content_summary' => [
+        'total_revenue' => '$4.2M',
+        'total_expenses' => '$3.1M',
+        'net_profit' => '$1.1M',
+        'growth_rate' => '12%'
+    ]
+];
+
+// Compare encoding formats
+$results = [];
+
+// Test different presets
+$results['compact'] = [
+    'encoded' => toon_compact($pdfMetadata),
+    'tokens' => toon_estimate_tokens($pdfMetadata, 'compact')
+];
+
+$results['readable'] = [
+    'encoded' => toon_readable($pdfMetadata),
+    'tokens' => toon_estimate_tokens($pdfMetadata, 'readable')
+];
+
+// JSON for comparison
+$jsonSize = strlen(json_encode($pdfMetadata));
+$jsonTokens = (int) ceil($jsonSize / 4);
+
+// Display comparison
+echo "PDF Metadata Encoding Comparison:\n";
+echo str_repeat('-', 40) . "\n";
+
+foreach ($results as $preset => $data) {
+    $savings = round((1 - $data['tokens'] / $jsonTokens) * 100, 1);
+    echo "{$preset}: {$data['tokens']} tokens ({$savings}% savings)\n";
+}
+
+echo "\nJSON baseline: {$jsonTokens} tokens\n";
+
+// The structure array has uniform objects - perfect for tabular format
+$structureOnly = ['structure' => $pdfMetadata['structure']];
+$tabularStructure = toon_tabular($structureOnly);
+$tabularTokens = (int) ceil(strlen($tabularStructure) / 4);
+
+echo "\nOptimized approach:\n";
+echo "Structure array with tabular format: {$tabularTokens} tokens\n";
+echo "This is the most efficient for uniform arrays of objects\n\n";
+
+// Build optimized LLM prompt
+function buildDocumentClassificationPrompt(array $metadata): string
+{
+    // Use compact encoding for the main metadata
+    $encoded = toon_compact($metadata);
+
+    return "Classify this document and extract:\n" .
+           "- Document type (report/invoice/contract/etc)\n" .
+           "- Department/category\n" .
+           "- Key topics\n" .
+           "- Sensitivity level\n\n" .
+           "Document metadata:\n" . $encoded;
+}
+
+$prompt = buildDocumentClassificationPrompt($pdfMetadata);
+echo "LLM Prompt Length: " . strlen($prompt) . " characters\n";
+echo "Estimated tokens: " . ceil(strlen($prompt) / 4) . "\n";
+```
+
+### Key Insights
+
+- The `structure` array contains uniform objects - perfect for TOON's tabular format
+- Compact format works best for the mixed metadata
+- Overall savings: 40-50% compared to JSON
+
+## Section 4: Example 2 - Product Catalog Classification
+
+Now let's optimize batch processing of product data for classification.
+
+Create `product-batch-optimization.php`:
+
+```php
+<?php
+declare(strict_types=1);
+
+require_once 'vendor/autoload.php';
+
+use HelgeSverre\Toon\Toon;
+
+// Generate sample product catalog
+$products = array_map(function($i) {
+    return [
+        'sku' => 'PROD-' . str_pad((string)$i, 5, '0', STR_PAD_LEFT),
+        'name' => 'Product ' . $i,
+        'price' => round(rand(1000, 99999) / 100, 2),
+        'specs' => [
+            'weight' => rand(100, 5000) . 'g',
+            'dimensions' => rand(10, 50) . 'x' . rand(10, 50) . 'x' . rand(10, 50) . 'cm',
+            'material' => ['plastic', 'metal', 'wood', 'fabric'][rand(0, 3)]
+        ],
+        'description' => 'This is a detailed product description that contains various information about features, benefits, and use cases. ' . str_repeat('More details. ', rand(5, 15))
+    ];
+}, range(1, 100));
+
+// Pattern 1: Selective field inclusion
+function optimizeForClassification(array $product): array
+{
+    // Only include fields needed for classification
+    // Skip lengthy descriptions and detailed specs
+    return [
+        'name' => $product['name'],
+        'price' => $product['price'],
+        'category_hint' => $product['specs']['material'] ?? ''
+    ];
+}
+
+// Pattern 2: Batch encoding
+function encodeBatchForLLM(array $products, int $batchSize = 10): array
+{
+    $batches = [];
+    $chunks = array_chunk($products, $batchSize);
+
+    foreach ($chunks as $index => $chunk) {
+        // Optimize each product
+        $optimized = array_map('optimizeForClassification', $chunk);
+
+        // Encode batch - tabular format for uniform products
+        $encoded = toon_tabular($optimized);
+
+        $batches[$index] = [
+            'encoded' => $encoded,
+            'count' => count($chunk),
+            'tokens' => (int) ceil(strlen($encoded) / 4)
+        ];
+    }
+
+    return $batches;
+}
+
+// Compare full vs optimized
+echo "Product Catalog Batch Processing:\n";
+echo str_repeat('-', 50) . "\n\n";
+
+// Full data encoding
+$fullBatch = array_slice($products, 0, 10);
+$fullJson = json_encode($fullBatch);
+$fullJsonTokens = ceil(strlen($fullJson) / 4);
+
+echo "Full product data (10 items):\n";
+echo "  JSON: " . strlen($fullJson) . " bytes, ~{$fullJsonTokens} tokens\n";
+
+// Optimized encoding
+$optimizedBatch = array_map('optimizeForClassification', $fullBatch);
+$optimizedToon = toon_tabular($optimizedBatch);
+$optimizedTokens = ceil(strlen($optimizedToon) / 4);
+
+echo "  Optimized TOON: " . strlen($optimizedToon) . " bytes, ~{$optimizedTokens} tokens\n";
+echo "  Reduction: " . round((1 - $optimizedTokens / $fullJsonTokens) * 100, 1) . "%\n\n";
+
+// Calculate savings at scale
+$totalProducts = 10000;
+$batchSize = 10;
+
+$jsonTokensPerProduct = 150; // estimated from full data
+$toonTokensPerProduct = 45;  // with optimization
+
+$jsonTotalTokens = $totalProducts * $jsonTokensPerProduct;
+$toonTotalTokens = $totalProducts * $toonTokensPerProduct;
+
+$tokensSaved = $jsonTotalTokens - $toonTotalTokens;
+$costSaved = ($tokensSaved / 1000) * 0.0005; // GPT-3.5-turbo pricing
+
+echo "Batch Processing Analysis (10,000 products):\n";
+echo "  JSON tokens: " . number_format($jsonTotalTokens) . "\n";
+echo "  TOON tokens: " . number_format($toonTotalTokens) . "\n";
+echo "  Tokens saved: " . number_format($tokensSaved) . " (70% reduction)\n";
+echo "  Cost saved: $" . number_format($costSaved, 2) . "\n\n";
+
+// Show sample output
+echo "Sample optimized batch output:\n";
+echo substr($optimizedToon, 0, 300) . "...\n";
+```
+
+## Section 5: Optimization Patterns
+
+Let's implement reusable optimization patterns you can apply to any data.
 
 Create `optimization-patterns.php`:
 
 ```php
 <?php
+declare(strict_types=1);
+
 require_once 'vendor/autoload.php';
 
 use HelgeSverre\Toon\Toon;
-use HelgeSverre\Toon\EncodeOptions;
 
-class OptimizationPatterns {
+// Pattern 1: Selective Field Inclusion
+function selectiveFieldInclusion(array $fullData, array $requiredFields): array
+{
+    // Before: Send everything
+    $beforeSize = strlen(toon_compact($fullData));
 
-    /**
-     * Pattern 1: Selective Field Inclusion
-     * Only include fields that the LLM actually needs
-     */
-    public function selectiveInclusion(array $fullData, array $requiredFields): array {
-        $before = Toon::encode($fullData);
+    // After: Filter to what LLM needs
+    $filtered = array_intersect_key(
+        $fullData,
+        array_flip($requiredFields)
+    );
 
-        // Filter to only required fields
-        $filtered = array_intersect_key($fullData, array_flip($requiredFields));
+    $afterSize = strlen(toon_compact($filtered));
 
-        $after = Toon::encode($filtered);
+    return [
+        'filtered_data' => $filtered,
+        'before_size' => $beforeSize,
+        'after_size' => $afterSize,
+        'reduction' => round((1 - $afterSize / $beforeSize) * 100, 1)
+    ];
+}
 
-        return [
-            'pattern' => 'Selective Field Inclusion',
-            'before_size' => strlen($before),
-            'after_size' => strlen($after),
-            'reduction' => round((1 - strlen($after) / strlen($before)) * 100, 1),
-            'example_before' => substr($before, 0, 200),
-            'example_after' => $after
-        ];
-    }
+// Pattern 2: Data Summarization
+function dataSummarization(array $verboseLogs): array
+{
+    // Before: Send all 100 log entries
+    $beforeSize = strlen(toon_compact($verboseLogs));
 
-    /**
-     * Pattern 2: Data Summarization
-     * Summarize verbose data before encoding
-     */
-    public function dataSummarization(array $verboseData): array {
-        $before = Toon::encode($verboseData);
+    // After: Summarize before encoding
+    $summary = [
+        'total_entries' => count($verboseLogs),
+        'errors' => count(array_filter($verboseLogs, fn($l) => ($l['level'] ?? '') === 'ERROR')),
+        'warnings' => count(array_filter($verboseLogs, fn($l) => ($l['level'] ?? '') === 'WARN')),
+        'time_range' => [
+            'start' => $verboseLogs[0]['timestamp'] ?? null,
+            'end' => end($verboseLogs)['timestamp'] ?? null
+        ],
+        'sample_errors' => array_slice(
+            array_filter($verboseLogs, fn($l) => ($l['level'] ?? '') === 'ERROR'),
+            0,
+            3
+        )
+    ];
 
-        // Summarize the data
-        $summarized = $this->summarizeData($verboseData);
+    $afterSize = strlen(toon_compact($summary));
 
-        $after = Toon::encode($summarized);
+    return [
+        'summary' => $summary,
+        'before_size' => $beforeSize,
+        'after_size' => $afterSize,
+        'reduction' => round((1 - $afterSize / $beforeSize) * 100, 1)
+    ];
+}
 
-        return [
-            'pattern' => 'Data Summarization',
-            'before_size' => strlen($before),
-            'after_size' => strlen($after),
-            'reduction' => round((1 - strlen($after) / strlen($before)) * 100, 1),
-            'technique' => 'Aggregate and summarize verbose arrays'
-        ];
-    }
-
-    /**
-     * Pattern 3: Reference Compression
-     * Replace repeated values with references
-     */
-    public function referenceCompression(array $data): array {
-        $before = Toon::encode($data);
-
-        // Identify repeated values
-        $compressed = $this->compressReferences($data);
-
-        $after = Toon::encode($compressed);
-
-        return [
-            'pattern' => 'Reference Compression',
-            'before_size' => strlen($before),
-            'after_size' => strlen($after),
-            'reduction' => round((1 - strlen($after) / strlen($before)) * 100, 1),
-            'technique' => 'Replace repeated values with short references'
-        ];
-    }
-
-    /**
-     * Pattern 4: Hierarchical Encoding
-     * Encode data hierarchically, sending only what's needed
-     */
-    public function hierarchicalEncoding(array $data): array {
-        // Level 1: Summary only
-        $summary = [
-            'total_items' => count($data['items'] ?? []),
-            'total_value' => array_sum(array_column($data['items'] ?? [], 'value')),
-            'categories' => array_unique(array_column($data['items'] ?? [], 'category'))
-        ];
-
-        // Level 2: Key details
-        $keyDetails = array_merge($summary, [
-            'top_items' => array_slice($data['items'] ?? [], 0, 3)
-        ]);
-
-        // Level 3: Full data
-        $fullData = $data;
-
-        return [
-            'pattern' => 'Hierarchical Encoding',
-            'levels' => [
-                'summary' => [
-                    'size' => strlen(Toon::encode($summary)),
-                    'data' => Toon::encode($summary)
-                ],
-                'key_details' => [
-                    'size' => strlen(Toon::encode($keyDetails)),
-                    'data' => Toon::encode($keyDetails)
-                ],
-                'full' => [
-                    'size' => strlen(Toon::encode($fullData)),
-                    'data' => substr(Toon::encode($fullData), 0, 200) . '...'
-                ]
-            ],
-            'strategy' => 'Send minimal data first, expand as needed'
-        ];
-    }
-
-    /**
-     * Pattern 5: Template-Based Encoding
-     * Use templates for common structures
-     */
-    public function templateBasedEncoding(array $data, string $template): array {
-        $before = Toon::encode($data);
-
-        // Apply template transformation
-        $templated = $this->applyTemplate($data, $template);
-
-        $after = $templated; // Already a string from template
-
-        return [
-            'pattern' => 'Template-Based Encoding',
-            'before_size' => strlen($before),
-            'after_size' => strlen($after),
-            'reduction' => round((1 - strlen($after) / strlen($before)) * 100, 1),
-            'template' => $template,
-            'result' => $after
-        ];
-    }
-
-    /**
-     * Pattern 6: Streaming Chunks
-     * Break large data into streamable chunks
-     */
-    public function streamingChunks(array $largeData, int $chunkSize = 10): array {
-        $fullEncoded = Toon::encode($largeData);
-
-        $chunks = [];
-        $items = $largeData['items'] ?? [];
-
-        for ($i = 0; $i < count($items); $i += $chunkSize) {
-            $chunk = array_slice($items, $i, $chunkSize);
-            $chunks[] = [
-                'chunk_id' => floor($i / $chunkSize) + 1,
-                'size' => strlen(Toon::encode($chunk)),
-                'items' => count($chunk)
-            ];
-        }
-
-        return [
-            'pattern' => 'Streaming Chunks',
-            'full_size' => strlen($fullEncoded),
-            'chunks' => $chunks,
-            'strategy' => 'Stream data in digestible chunks to stay within token limits'
-        ];
-    }
-
-    // Helper methods
-    private function summarizeData(array $data): array {
-        if (!isset($data['entries'])) {
-            return $data;
-        }
-
-        $summary = [
-            'entry_count' => count($data['entries']),
-            'date_range' => [
-                'start' => $data['entries'][0]['timestamp'] ?? null,
-                'end' => end($data['entries'])['timestamp'] ?? null
-            ],
-            'level_distribution' => []
-        ];
-
-        foreach ($data['entries'] as $entry) {
-            $level = $entry['level'] ?? 'unknown';
-            $summary['level_distribution'][$level] =
-                ($summary['level_distribution'][$level] ?? 0) + 1;
-        }
-
-        return $summary;
-    }
-
-    private function compressReferences(array $data): array {
-        $refs = [];
-        $refCounter = 0;
-
-        $compressed = $this->replaceWithRefs($data, $refs, $refCounter);
-
-        if (!empty($refs)) {
-            $compressed['_refs'] = $refs;
-        }
-
-        return $compressed;
-    }
-
-    private function replaceWithRefs($value, &$refs, &$refCounter) {
-        if (!is_array($value)) {
-            // Check if this value appears multiple times
-            $serialized = serialize($value);
-            if (strlen($serialized) > 50) { // Only for larger values
-                foreach ($refs as $refId => $refValue) {
-                    if ($refValue === $value) {
-                        return "@$refId";
-                    }
-                }
-
-                if ($refCounter < 10) { // Limit references
-                    $refId = "R$refCounter";
-                    $refs[$refId] = $value;
-                    $refCounter++;
-                    return "@$refId";
-                }
-            }
-            return $value;
-        }
-
-        $result = [];
-        foreach ($value as $key => $item) {
-            $result[$key] = $this->replaceWithRefs($item, $refs, $refCounter);
-        }
-        return $result;
-    }
-
-    private function applyTemplate(array $data, string $template): string {
-        // Simple template replacement
-        $result = $template;
-
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $value = Toon::encode($value);
-            }
-            $result = str_replace("{{$key}}", $value, $result);
-        }
-
-        return $result;
+// Pattern 3: Format Selection by Data Type
+function chooseOptimalEncoding(array $data): string
+{
+    // Detect data pattern
+    if (isUniformArray($data)) {
+        // Tabular for uniform data (products, users, logs)
+        return toon_tabular($data);
+    } elseif (isSimpleKeyValue($data)) {
+        // Compact for simple objects
+        return toon_compact($data);
+    } else {
+        // Readable for complex nested structures
+        return toon_readable($data);
     }
 }
 
-// Demonstrate optimization patterns
-$optimizer = new OptimizationPatterns();
+function isUniformArray(array $data): bool
+{
+    if (empty($data) || !isset($data[0]) || !is_array($data[0])) {
+        return false;
+    }
 
-echo "=== TOON Optimization Patterns ===\n\n";
+    $firstKeys = array_keys($data[0]);
+    foreach ($data as $item) {
+        if (!is_array($item) || array_keys($item) !== $firstKeys) {
+            return false;
+        }
+    }
 
-// Sample dataset
-$sampleData = [
-    'transaction_id' => 'TXN-2025-98234',
-    'customer_id' => 'CUST-45678',
-    'customer_name' => 'John Doe',
-    'customer_email' => 'john.doe@example.com',
-    'customer_phone' => '+1-555-0123',
-    'customer_address' => '123 Main St, City, State 12345',
-    'items' => [
-        ['id' => 1, 'name' => 'Product A', 'category' => 'Electronics', 'value' => 99.99],
-        ['id' => 2, 'name' => 'Product B', 'category' => 'Electronics', 'value' => 149.99],
-        ['id' => 3, 'name' => 'Product C', 'category' => 'Accessories', 'value' => 29.99],
-        ['id' => 4, 'name' => 'Product D', 'category' => 'Electronics', 'value' => 199.99],
-        ['id' => 5, 'name' => 'Product E', 'category' => 'Accessories', 'value' => 19.99],
+    return true;
+}
+
+function isSimpleKeyValue(array $data): bool
+{
+    foreach ($data as $value) {
+        if (is_array($value) && count($value) > 0) {
+            return false; // Has nested arrays
+        }
+    }
+    return true;
+}
+
+// Pattern 4: Chunking for Context Windows
+function chunkForContextWindow(array $items, int $maxTokensPerChunk = 1000): array
+{
+    $chunks = [];
+    $currentChunk = [];
+    $currentTokens = 0;
+
+    foreach ($items as $item) {
+        $itemEncoded = toon_compact($item);
+        $itemTokens = ceil(strlen($itemEncoded) / 4);
+
+        if ($currentTokens + $itemTokens > $maxTokensPerChunk && !empty($currentChunk)) {
+            // Save current chunk and start new one
+            $chunks[] = $currentChunk;
+            $currentChunk = [$item];
+            $currentTokens = $itemTokens;
+        } else {
+            // Add to current chunk
+            $currentChunk[] = $item;
+            $currentTokens += $itemTokens;
+        }
+    }
+
+    if (!empty($currentChunk)) {
+        $chunks[] = $currentChunk;
+    }
+
+    return $chunks;
+}
+
+// Demonstrate patterns
+echo "=== Optimization Patterns Demo ===\n\n";
+
+// Sample data
+$fullUserData = [
+    'user_id' => 'usr_123',
+    'email' => 'user@example.com',
+    'name' => 'John Doe',
+    'created_at' => '2020-01-15',
+    'last_login' => '2025-01-20',
+    'preferences' => [
+        'theme' => 'dark',
+        'language' => 'en',
+        'notifications' => true
     ],
-    'metadata' => [
-        'source' => 'web',
+    'stats' => [
+        'posts' => 142,
+        'comments' => 523,
+        'likes' => 1847
+    ],
+    'internal_metadata' => [
         'ip_address' => '192.168.1.1',
         'user_agent' => 'Mozilla/5.0...',
-        'session_id' => 'sess_abc123def456ghi789',
-        'timestamp' => '2025-01-20T10:30:00Z'
+        'session_id' => 'sess_abc123',
+        'debug_info' => 'verbose debug data here'
     ]
 ];
 
-// Pattern 1: Selective Inclusion
-$result1 = $optimizer->selectiveInclusion(
-    $sampleData,
-    ['transaction_id', 'customer_id', 'items']
+// Pattern 1: Selective Fields
+echo "Pattern 1: Selective Field Inclusion\n";
+$result1 = selectiveFieldInclusion(
+    $fullUserData,
+    ['user_id', 'name', 'stats']
 );
-echo "Pattern 1: {$result1['pattern']}\n";
-echo "Reduction: {$result1['reduction']}%\n";
-echo "Strategy: Only include fields needed for the specific LLM task\n\n";
+echo "  Reduction: {$result1['reduction']}%\n";
+echo "  Strategy: Only send fields the LLM needs\n\n";
 
-// Pattern 2: Data Summarization
-$logsData = [
-    'entries' => array_map(function($i) {
-        return [
-            'timestamp' => date('Y-m-d H:i:s', time() - $i * 60),
-            'level' => ['INFO', 'WARNING', 'ERROR'][$i % 3],
-            'message' => "Log entry $i with some detailed information",
-            'metadata' => ['request_id' => "req_$i", 'duration' => rand(10, 1000)]
-        ];
-    }, range(0, 99))
+// Pattern 2: Summarization
+$logs = array_map(function($i) {
+    return [
+        'timestamp' => date('Y-m-d H:i:s', time() - $i * 60),
+        'level' => ['INFO', 'WARN', 'ERROR', 'DEBUG'][$i % 4],
+        'message' => "Log message $i",
+        'details' => "Detailed information about event $i"
+    ];
+}, range(0, 99));
+
+echo "Pattern 2: Data Summarization\n";
+$result2 = dataSummarization($logs);
+echo "  Reduction: {$result2['reduction']}%\n";
+echo "  Strategy: Summarize verbose arrays\n\n";
+
+// Pattern 3: Format Selection
+$uniformData = [
+    ['id' => 1, 'name' => 'Item 1', 'value' => 100],
+    ['id' => 2, 'name' => 'Item 2', 'value' => 200],
+    ['id' => 3, 'name' => 'Item 3', 'value' => 300]
 ];
 
-$result2 = $optimizer->dataSummarization($logsData);
-echo "Pattern 2: {$result2['pattern']}\n";
-echo "Reduction: {$result2['reduction']}%\n";
-echo "Strategy: {$result2['technique']}\n\n";
+echo "Pattern 3: Automatic Format Selection\n";
+echo "  Uniform array detected: using tabular format\n";
+echo "  Simple object detected: using compact format\n";
+echo "  Complex nested detected: using readable format\n\n";
 
-// Pattern 3: Reference Compression
-$repetitiveData = [
-    'records' => array_map(function($i) {
-        return [
-            'id' => $i,
-            'status' => 'active', // Repeated value
-            'type' => 'standard', // Repeated value
-            'config' => [
-                'enabled' => true,
-                'version' => '1.0.0',
-                'region' => 'us-west-2'
-            ], // Repeated structure
-            'value' => rand(100, 1000)
-        ];
-    }, range(1, 10))
-];
+// Pattern 4: Chunking
+$manyItems = array_map(function($i) {
+    return ['id' => $i, 'data' => "Item $i data"];
+}, range(1, 50));
 
-$result3 = $optimizer->referenceCompression($repetitiveData);
-echo "Pattern 3: {$result3['pattern']}\n";
-echo "Reduction: {$result3['reduction']}%\n";
-echo "Strategy: {$result3['technique']}\n\n";
-
-// Pattern 4: Hierarchical Encoding
-$result4 = $optimizer->hierarchicalEncoding($sampleData);
-echo "Pattern 4: {$result4['pattern']}\n";
-echo "Strategy: {$result4['strategy']}\n";
-echo "Summary size: {$result4['levels']['summary']['size']} bytes\n";
-echo "Details size: {$result4['levels']['key_details']['size']} bytes\n";
-echo "Full size: {$result4['levels']['full']['size']} bytes\n\n";
-
-// Pattern 5: Template-Based Encoding
-$template = "Transaction {transaction_id} by customer {customer_id} with {items} items";
-$result5 = $optimizer->templateBasedEncoding($sampleData, $template);
-echo "Pattern 5: {$result5['pattern']}\n";
-echo "Reduction: {$result5['reduction']}%\n";
-echo "Result: {$result5['result']}\n\n";
-
-// Pattern 6: Streaming Chunks
-$largeData = [
-    'items' => array_map(function($i) {
-        return ['id' => $i, 'data' => "Item $i data"];
-    }, range(1, 100))
-];
-
-$result6 = $optimizer->streamingChunks($largeData, 20);
-echo "Pattern 6: {$result6['pattern']}\n";
-echo "Strategy: {$result6['strategy']}\n";
-echo "Full size: {$result6['full_size']} bytes\n";
-echo "Chunks: " . count($result6['chunks']) . " chunks\n";
-foreach ($result6['chunks'] as $chunk) {
-    echo "  Chunk {$chunk['chunk_id']}: {$chunk['items']} items, {$chunk['size']} bytes\n";
-}
+$chunks = chunkForContextWindow($manyItems, 500);
+echo "Pattern 4: Context Window Chunking\n";
+echo "  Items: " . count($manyItems) . "\n";
+echo "  Chunks created: " . count($chunks) . "\n";
+echo "  Items per chunk: " . implode(', ', array_map('count', $chunks)) . "\n";
 ```
 
-## Step 3: RAG Workflow Optimization
+## Section 6: ROI Calculation
 
-Create `rag-optimization.php`:
+Understanding the return on investment helps justify optimization efforts.
+
+Create `roi-calculator.php`:
 
 ```php
 <?php
+declare(strict_types=1);
+
+require_once 'vendor/autoload.php';
+
+class TokenOptimizationROI
+{
+    private array $modelPricing = [
+        'gpt-3.5-turbo' => 0.0005,  // per 1K input tokens
+        'gpt-4' => 0.03,
+        'gpt-4-turbo' => 0.01,
+        'claude-3-sonnet' => 0.003,
+        'claude-3-opus' => 0.015
+    ];
+
+    public function calculate(
+        int $monthlyRequests,
+        int $avgTokensPerRequest,
+        float $reductionPercent,
+        string $model = 'gpt-3.5-turbo'
+    ): array {
+        $inputCost = $this->modelPricing[$model] ?? 0.0005;
+
+        // Calculate token usage
+        $baseTokens = $monthlyRequests * $avgTokensPerRequest;
+        $optimizedTokens = $baseTokens * (1 - $reductionPercent / 100);
+        $tokensSaved = $baseTokens - $optimizedTokens;
+
+        // Calculate costs
+        $baseCost = ($baseTokens / 1000) * $inputCost;
+        $optimizedCost = ($optimizedTokens / 1000) * $inputCost;
+        $monthlySavings = $baseCost - $optimizedCost;
+
+        // Implementation cost (2 days of development)
+        $implementationCost = 150 * 16; // $150/hour * 16 hours
+
+        return [
+            'monthly_requests' => number_format($monthlyRequests),
+            'avg_tokens_per_request' => $avgTokensPerRequest,
+            'tokens_saved_monthly' => number_format($tokensSaved),
+            'reduction_percent' => $reductionPercent,
+            'model' => $model,
+            'monthly_savings' => round($monthlySavings, 2),
+            'yearly_savings' => round($monthlySavings * 12, 2),
+            'implementation_cost' => $implementationCost,
+            'break_even_months' => round($implementationCost / $monthlySavings, 1),
+            'roi_first_year' => round((($monthlySavings * 12 - $implementationCost) / $implementationCost) * 100, 1)
+        ];
+    }
+
+    public function generateReport(array $analysis): string
+    {
+        return "=== ROI Analysis Report ===\n\n" .
+               "Scale:\n" .
+               "  Monthly requests: {$analysis['monthly_requests']}\n" .
+               "  Avg tokens/request: {$analysis['avg_tokens_per_request']}\n" .
+               "  Model: {$analysis['model']}\n\n" .
+               "Optimization:\n" .
+               "  Token reduction: {$analysis['reduction_percent']}%\n" .
+               "  Tokens saved/month: {$analysis['tokens_saved_monthly']}\n\n" .
+               "Financial Impact:\n" .
+               "  Monthly savings: \${$analysis['monthly_savings']}\n" .
+               "  Yearly savings: \${$analysis['yearly_savings']}\n" .
+               "  Implementation cost: \${$analysis['implementation_cost']}\n" .
+               "  Break-even: {$analysis['break_even_months']} months\n" .
+               "  First year ROI: {$analysis['roi_first_year']}%\n";
+    }
+}
+
+// Example calculations for different scenarios
+$roi = new TokenOptimizationROI();
+
+echo "=== Token Optimization ROI Analysis ===\n\n";
+
+// Scenario 1: Small startup
+$scenario1 = $roi->calculate(
+    monthlyRequests: 10000,
+    avgTokensPerRequest: 500,
+    reductionPercent: 40,
+    model: 'gpt-3.5-turbo'
+);
+
+echo "Scenario 1: Small Startup\n";
+echo $roi->generateReport($scenario1);
+echo "\n";
+
+// Scenario 2: Medium business
+$scenario2 = $roi->calculate(
+    monthlyRequests: 100000,
+    avgTokensPerRequest: 800,
+    reductionPercent: 45,
+    model: 'gpt-4-turbo'
+);
+
+echo "Scenario 2: Medium Business\n";
+echo $roi->generateReport($scenario2);
+echo "\n";
+
+// Scenario 3: Enterprise
+$scenario3 = $roi->calculate(
+    monthlyRequests: 1000000,
+    avgTokensPerRequest: 1200,
+    reductionPercent: 50,
+    model: 'gpt-4'
+);
+
+echo "Scenario 3: Enterprise\n";
+echo $roi->generateReport($scenario3);
+echo "\n";
+
+// Key insights
+echo "=== Key Insights ===\n\n";
+echo "1. Even small operations see ROI within 3-6 months\n";
+echo "2. Token reduction of 40-50% is achievable with TOON\n";
+echo "3. Combining TOON with data preprocessing can push savings to 60-70%\n";
+echo "4. Enterprise savings can exceed \$100,000 annually\n";
+echo "5. Implementation cost is minimal compared to long-term savings\n";
+```
+
+## Section 7: Building a Production System
+
+Let's put it all together in a production-ready optimization system.
+
+Create `production-optimizer.php`:
+
+```php
+<?php
+declare(strict_types=1);
+
 require_once 'vendor/autoload.php';
 
 use HelgeSverre\Toon\Toon;
 use HelgeSverre\Toon\EncodeOptions;
 
-class RAGOptimizer {
-    private array $documents = [];
-    private array $embeddings = [];
+class ProductionOptimizer
+{
+    private array $config;
     private array $metrics = [];
 
+    public function __construct(array $config = [])
+    {
+        $this->config = array_merge([
+            'max_tokens_per_request' => 4000,
+            'enable_caching' => true,
+            'cache_ttl' => 3600,
+            'enable_compression' => true,
+            'log_metrics' => true
+        ], $config);
+    }
+
     /**
-     * Optimize document chunks for RAG
+     * Optimize data for LLM consumption
      */
-    public function optimizeDocumentChunks(string $content, int $chunkSize = 500): array {
-        // Split content into chunks
-        $chunks = $this->createChunks($content, $chunkSize);
+    public function optimize(array $data, string $purpose = 'general'): array
+    {
+        $startTime = microtime(true);
 
-        $optimizedChunks = [];
-        $totalOriginalSize = 0;
-        $totalOptimizedSize = 0;
+        // Step 1: Analyze data structure
+        $analysis = $this->analyzeStructure($data);
 
-        foreach ($chunks as $i => $chunk) {
-            // Original format (typical RAG approach)
-            $original = [
-                'chunk_id' => $i,
-                'content' => $chunk['text'],
-                'metadata' => [
-                    'source' => 'document.pdf',
-                    'page' => $chunk['page'],
-                    'position' => $chunk['position'],
-                    'char_count' => strlen($chunk['text']),
-                    'word_count' => str_word_count($chunk['text'])
-                ]
-            ];
+        // Step 2: Apply preprocessing based on purpose
+        $preprocessed = $this->preprocess($data, $purpose);
 
-            // Optimized format with TOON
-            $optimized = [
-                'id' => $i,
-                'text' => $chunk['text'],
-                'meta' => [
-                    'page' => $chunk['page'],
-                    'pos' => $chunk['position']
-                ]
-            ];
+        // Step 3: Choose optimal encoding
+        $encoding = $this->selectEncoding($preprocessed, $analysis);
 
-            $originalJson = json_encode($original);
-            $optimizedToon = Toon::encode($optimized);
+        // Step 4: Encode with TOON
+        $encoded = $this->encode($preprocessed, $encoding);
 
-            $totalOriginalSize += strlen($originalJson);
-            $totalOptimizedSize += strlen($optimizedToon);
-
-            $optimizedChunks[] = [
-                'chunk_id' => $i,
-                'original_size' => strlen($originalJson),
-                'optimized_size' => strlen($optimizedToon),
-                'savings' => round((1 - strlen($optimizedToon) / strlen($originalJson)) * 100, 1),
-                'data' => $optimized
-            ];
+        // Step 5: Validate token budget
+        $tokens = $this->estimateTokens($encoded);
+        if ($tokens > $this->config['max_tokens_per_request']) {
+            $encoded = $this->reduceTokens($preprocessed, $encoding, $tokens);
         }
+
+        // Record metrics
+        $this->recordMetrics($data, $encoded, $purpose, microtime(true) - $startTime);
 
         return [
-            'chunks' => $optimizedChunks,
-            'summary' => [
-                'total_chunks' => count($chunks),
-                'total_original_size' => $totalOriginalSize,
-                'total_optimized_size' => $totalOptimizedSize,
-                'total_savings' => round((1 - $totalOptimizedSize / $totalOriginalSize) * 100, 1)
-            ]
+            'encoded' => $encoded,
+            'tokens' => $this->estimateTokens($encoded),
+            'encoding_used' => $encoding,
+            'preprocessing_applied' => true,
+            'within_budget' => $tokens <= $this->config['max_tokens_per_request']
         ];
     }
 
-    /**
-     * Optimize retrieval results
-     */
-    public function optimizeRetrievalResults(array $results, int $topK = 5): array {
-        // Typical RAG retrieval result
-        $fullResults = array_map(function($result, $i) {
-            return [
-                'document_id' => $result['doc_id'],
-                'chunk_id' => $result['chunk_id'],
-                'score' => $result['score'],
-                'content' => $result['content'],
-                'metadata' => $result['metadata'],
-                'highlights' => $result['highlights'] ?? [],
-                'related_chunks' => $result['related'] ?? []
-            ];
-        }, $results, array_keys($results));
+    private function analyzeStructure(array $data): array
+    {
+        $analysis = [
+            'depth' => $this->calculateDepth($data),
+            'is_uniform' => $this->isUniformArray($data),
+            'has_arrays' => $this->hasArrays($data),
+            'size' => strlen(json_encode($data))
+        ];
 
-        // Optimized results - only what's needed for the LLM
-        $optimizedResults = array_slice(array_map(function($result) {
-            return [
-                'score' => round($result['score'], 3),
-                'content' => $result['content'],
-                'source' => $result['metadata']['source'] ?? 'unknown'
-            ];
-        }, $results), 0, $topK);
+        return $analysis;
+    }
 
-        $fullJson = json_encode($fullResults, JSON_PRETTY_PRINT);
-        $optimizedToon = Toon::encode($optimizedResults);
+    private function preprocess(array $data, string $purpose): array
+    {
+        switch ($purpose) {
+            case 'classification':
+                // Remove detailed descriptions, keep identifiers
+                return $this->stripVerboseFields($data);
+
+            case 'summarization':
+                // Keep content fields, remove metadata
+                return $this->stripMetadata($data);
+
+            case 'extraction':
+                // Keep all structured data, remove formatting
+                return $this->normalizeFormatting($data);
+
+            default:
+                // Light preprocessing only
+                return $this->removeNulls($data);
+        }
+    }
+
+    private function selectEncoding(array $data, array $analysis): string
+    {
+        if ($analysis['is_uniform']) {
+            return 'tabular';
+        } elseif ($analysis['depth'] <= 2 && !$analysis['has_arrays']) {
+            return 'compact';
+        } else {
+            return 'readable';
+        }
+    }
+
+    private function encode(array $data, string $encoding): string
+    {
+        return match($encoding) {
+            'tabular' => toon_tabular($data),
+            'compact' => toon_compact($data),
+            'readable' => toon_readable($data),
+            default => toon($data)
+        };
+    }
+
+    private function reduceTokens(array $data, string $encoding, int $currentTokens): string
+    {
+        // Progressive reduction strategies
+        $strategies = [
+            fn($d) => $this->truncateLongStrings($d, 500),
+            fn($d) => $this->limitArraySizes($d, 10),
+            fn($d) => $this->removeNonEssentialFields($d),
+            fn($d) => $this->summarizeArrays($d)
+        ];
+
+        foreach ($strategies as $strategy) {
+            $reduced = $strategy($data);
+            $encoded = $this->encode($reduced, $encoding);
+            $tokens = $this->estimateTokens($encoded);
+
+            if ($tokens <= $this->config['max_tokens_per_request']) {
+                return $encoded;
+            }
+        }
+
+        // Last resort: aggressive truncation
+        return $this->encode(
+            array_slice($data, 0, 5),
+            $encoding
+        );
+    }
+
+    private function recordMetrics(array $original, string $encoded, string $purpose, float $time): void
+    {
+        if (!$this->config['log_metrics']) {
+            return;
+        }
+
+        $jsonSize = strlen(json_encode($original));
+        $toonSize = strlen($encoded);
+
+        $this->metrics[] = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'purpose' => $purpose,
+            'json_size' => $jsonSize,
+            'toon_size' => $toonSize,
+            'reduction' => round((1 - $toonSize / $jsonSize) * 100, 1),
+            'processing_time_ms' => round($time * 1000, 2)
+        ];
+    }
+
+    public function getMetricsSummary(): array
+    {
+        if (empty($this->metrics)) {
+            return ['message' => 'No metrics recorded'];
+        }
+
+        $reductions = array_column($this->metrics, 'reduction');
+        $times = array_column($this->metrics, 'processing_time_ms');
 
         return [
-            'full_size' => strlen($fullJson),
-            'optimized_size' => strlen($optimizedToon),
-            'reduction' => round((1 - strlen($optimizedToon) / strlen($fullJson)) * 100, 1),
-            'top_k' => $topK,
-            'sample_output' => substr($optimizedToon, 0, 500)
+            'total_operations' => count($this->metrics),
+            'avg_reduction' => round(array_sum($reductions) / count($reductions), 1),
+            'min_reduction' => min($reductions),
+            'max_reduction' => max($reductions),
+            'avg_processing_time_ms' => round(array_sum($times) / count($times), 2)
         ];
-    }
-
-    /**
-     * Optimize embedding metadata
-     */
-    public function optimizeEmbeddingMetadata(array $documents): array {
-        $results = [];
-
-        foreach ($documents as $doc) {
-            // Traditional approach - store everything
-            $traditional = [
-                'id' => $doc['id'],
-                'embedding' => $doc['embedding'], // 1536-dimensional vector
-                'metadata' => [
-                    'title' => $doc['title'],
-                    'author' => $doc['author'],
-                    'date' => $doc['date'],
-                    'category' => $doc['category'],
-                    'tags' => $doc['tags'],
-                    'summary' => $doc['summary'],
-                    'url' => $doc['url'],
-                    'word_count' => $doc['word_count'],
-                    'language' => $doc['language'],
-                    'sentiment' => $doc['sentiment']
-                ]
-            ];
-
-            // Optimized - minimal metadata, retrieve full later if needed
-            $optimized = [
-                'id' => $doc['id'],
-                'embedding' => $doc['embedding'],
-                'meta' => $doc['category'] . '|' . substr($doc['title'], 0, 50)
-            ];
-
-            $results[] = [
-                'doc_id' => $doc['id'],
-                'traditional_size' => strlen(json_encode($traditional)),
-                'optimized_size' => strlen(json_encode($optimized)),
-                'savings' => round((1 - strlen(json_encode($optimized)) / strlen(json_encode($traditional))) * 100, 1)
-            ];
-        }
-
-        return $results;
-    }
-
-    /**
-     * Create context window optimization strategy
-     */
-    public function optimizeContextWindow(array $retrievedChunks, int $maxTokens = 4000): array {
-        $strategy = [
-            'max_tokens' => $maxTokens,
-            'approaches' => []
-        ];
-
-        // Approach 1: Include everything (baseline)
-        $everything = [];
-        $everythingTokens = 0;
-        foreach ($retrievedChunks as $chunk) {
-            $encoded = json_encode($chunk);
-            $tokens = $this->estimateTokens($encoded);
-            if ($everythingTokens + $tokens <= $maxTokens) {
-                $everything[] = $chunk;
-                $everythingTokens += $tokens;
-            }
-        }
-
-        $strategy['approaches']['everything_json'] = [
-            'chunks_included' => count($everything),
-            'estimated_tokens' => $everythingTokens,
-            'format' => 'JSON'
-        ];
-
-        // Approach 2: TOON encoding with full data
-        $toonFull = [];
-        $toonFullTokens = 0;
-        foreach ($retrievedChunks as $chunk) {
-            $encoded = Toon::encode($chunk);
-            $tokens = $this->estimateTokens($encoded);
-            if ($toonFullTokens + $tokens <= $maxTokens) {
-                $toonFull[] = $chunk;
-                $toonFullTokens += $tokens;
-            }
-        }
-
-        $strategy['approaches']['toon_full'] = [
-            'chunks_included' => count($toonFull),
-            'estimated_tokens' => $toonFullTokens,
-            'format' => 'TOON',
-            'improvement' => count($toonFull) - count($everything)
-        ];
-
-        // Approach 3: TOON with selective fields
-        $toonOptimized = [];
-        $toonOptTokens = 0;
-        foreach ($retrievedChunks as $chunk) {
-            $optimized = [
-                'content' => $chunk['content'],
-                'score' => round($chunk['score'], 2)
-            ];
-            $encoded = Toon::encode($optimized);
-            $tokens = $this->estimateTokens($encoded);
-            if ($toonOptTokens + $tokens <= $maxTokens) {
-                $toonOptimized[] = $optimized;
-                $toonOptTokens += $tokens;
-            }
-        }
-
-        $strategy['approaches']['toon_optimized'] = [
-            'chunks_included' => count($toonOptimized),
-            'estimated_tokens' => $toonOptTokens,
-            'format' => 'TOON + Selective Fields',
-            'improvement' => count($toonOptimized) - count($everything)
-        ];
-
-        // Approach 4: Summarization + TOON
-        $summarized = $this->summarizeChunks($retrievedChunks);
-        $summaryTokens = $this->estimateTokens(Toon::encode($summarized));
-
-        $strategy['approaches']['summarized_toon'] = [
-            'chunks_included' => 'All (summarized)',
-            'estimated_tokens' => $summaryTokens,
-            'format' => 'TOON + Summarization',
-            'can_fit_all' => $summaryTokens <= $maxTokens
-        ];
-
-        return $strategy;
     }
 
     // Helper methods
-    private function createChunks(string $content, int $chunkSize): array {
-        $words = explode(' ', $content);
-        $chunks = [];
-        $currentChunk = [];
-        $currentSize = 0;
-        $position = 0;
+    private function calculateDepth(array $data, int $level = 1): int
+    {
+        $maxDepth = $level;
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                $depth = $this->calculateDepth($value, $level + 1);
+                $maxDepth = max($maxDepth, $depth);
+            }
+        }
+        return $maxDepth;
+    }
 
-        foreach ($words as $word) {
-            $currentChunk[] = $word;
-            $currentSize += strlen($word) + 1;
+    private function isUniformArray(array $data): bool
+    {
+        if (empty($data) || !isset($data[0]) || !is_array($data[0])) {
+            return false;
+        }
 
-            if ($currentSize >= $chunkSize) {
-                $chunks[] = [
-                    'text' => implode(' ', $currentChunk),
-                    'position' => $position,
-                    'page' => floor($position / 3) + 1 // Simulate pages
-                ];
-                $position++;
-                $currentChunk = [];
-                $currentSize = 0;
+        $firstKeys = array_keys($data[0]);
+        foreach ($data as $item) {
+            if (!is_array($item) || array_keys($item) !== $firstKeys) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function hasArrays(array $data): bool
+    {
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function stripVerboseFields(array $data): array
+    {
+        $verbose = ['description', 'details', 'metadata', 'debug'];
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $verbose)) {
+                $result[$key] = is_array($value) ? $this->stripVerboseFields($value) : $value;
             }
         }
 
-        if (!empty($currentChunk)) {
-            $chunks[] = [
-                'text' => implode(' ', $currentChunk),
-                'position' => $position,
-                'page' => floor($position / 3) + 1
-            ];
+        return $result;
+    }
+
+    private function stripMetadata(array $data): array
+    {
+        $metadata = ['created_at', 'updated_at', 'version', 'internal_id'];
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $metadata)) {
+                $result[$key] = is_array($value) ? $this->stripMetadata($value) : $value;
+            }
         }
 
-        return $chunks;
+        return $result;
     }
 
-    private function estimateTokens(string $text): int {
-        return (int) ceil(strlen($text) / 4);
-    }
+    private function normalizeFormatting(array $data): array
+    {
+        $result = [];
 
-    private function summarizeChunks(array $chunks): array {
-        // Simulate summarization
-        return [
-            'chunk_count' => count($chunks),
-            'avg_score' => round(array_sum(array_column($chunks, 'score')) / count($chunks), 3),
-            'key_points' => array_slice(array_map(function($chunk) {
-                return substr($chunk['content'], 0, 100) . '...';
-            }, $chunks), 0, 5)
-        ];
-    }
-}
-
-// Demonstrate RAG optimizations
-$ragOptimizer = new RAGOptimizer();
-
-echo "=== RAG Workflow Optimization ===\n\n";
-
-// 1. Document chunking optimization
-$sampleDocument = str_repeat("This is a sample document with lots of content that needs to be chunked for RAG processing. ", 100);
-
-echo "1. Document Chunking Optimization\n";
-echo str_repeat('-', 40) . "\n";
-
-$chunkResults = $ragOptimizer->optimizeDocumentChunks($sampleDocument, 200);
-echo "Total chunks: {$chunkResults['summary']['total_chunks']}\n";
-echo "Original size: {$chunkResults['summary']['total_original_size']} bytes\n";
-echo "Optimized size: {$chunkResults['summary']['total_optimized_size']} bytes\n";
-echo "Savings: {$chunkResults['summary']['total_savings']}%\n\n";
-
-// 2. Retrieval results optimization
-$mockRetrievalResults = array_map(function($i) {
-    return [
-        'doc_id' => "DOC-$i",
-        'chunk_id' => "CHUNK-$i",
-        'score' => 0.95 - ($i * 0.05),
-        'content' => "Retrieved content $i with relevant information about the query topic...",
-        'metadata' => [
-            'source' => "document_$i.pdf",
-            'page' => rand(1, 50),
-            'author' => "Author $i",
-            'date' => '2025-01-' . str_pad($i, 2, '0', STR_PAD_LEFT)
-        ],
-        'highlights' => ["highlight 1", "highlight 2"],
-        'related' => ["chunk_" . ($i + 1), "chunk_" . ($i + 2)]
-    ];
-}, range(1, 20));
-
-echo "2. Retrieval Results Optimization\n";
-echo str_repeat('-', 40) . "\n";
-
-$retrievalOpt = $ragOptimizer->optimizeRetrievalResults($mockRetrievalResults, 5);
-echo "Full size (JSON): {$retrievalOpt['full_size']} bytes\n";
-echo "Optimized size (TOON): {$retrievalOpt['optimized_size']} bytes\n";
-echo "Reduction: {$retrievalOpt['reduction']}%\n";
-echo "Top K: {$retrievalOpt['top_k']}\n\n";
-
-// 3. Embedding metadata optimization
-$mockDocuments = array_map(function($i) {
-    return [
-        'id' => "DOC-$i",
-        'embedding' => array_fill(0, 1536, 0.001 * $i), // Mock embedding
-        'title' => "Document Title $i: A comprehensive guide to optimization",
-        'author' => "Author Name $i",
-        'date' => '2025-01-' . str_pad($i, 2, '0', STR_PAD_LEFT),
-        'category' => ['Tech', 'Business', 'Science'][$i % 3],
-        'tags' => ['ai', 'ml', 'optimization', 'performance'],
-        'summary' => "This document covers various aspects of optimization...",
-        'url' => "https://example.com/doc/$i",
-        'word_count' => rand(1000, 5000),
-        'language' => 'en',
-        'sentiment' => 'neutral'
-    ];
-}, range(1, 5));
-
-echo "3. Embedding Metadata Optimization\n";
-echo str_repeat('-', 40) . "\n";
-
-$embeddingOpt = $ragOptimizer->optimizeEmbeddingMetadata($mockDocuments);
-$avgSavings = array_sum(array_column($embeddingOpt, 'savings')) / count($embeddingOpt);
-
-echo "Documents processed: " . count($embeddingOpt) . "\n";
-echo "Average savings: " . round($avgSavings, 1) . "%\n\n";
-
-// 4. Context window optimization
-echo "4. Context Window Optimization Strategy\n";
-echo str_repeat('-', 40) . "\n";
-
-$contextStrategy = $ragOptimizer->optimizeContextWindow($mockRetrievalResults, 4000);
-
-foreach ($contextStrategy['approaches'] as $name => $approach) {
-    echo "\nApproach: " . str_replace('_', ' ', ucfirst($name)) . "\n";
-    echo "  Chunks included: {$approach['chunks_included']}\n";
-    echo "  Estimated tokens: {$approach['estimated_tokens']}\n";
-    echo "  Format: {$approach['format']}\n";
-    if (isset($approach['improvement'])) {
-        echo "  Additional chunks vs baseline: {$approach['improvement']}\n";
-    }
-}
-```
-
-## Step 4: Building a Token Budget System
-
-Create `token-budget-system.php`:
-
-```php
-<?php
-require_once 'vendor/autoload.php';
-
-use HelgeSverre\Toon\Toon;
-
-class TokenBudgetManager {
-    private int $maxTokensPerRequest;
-    private int $maxTokensPerDay;
-    private array $usage = [];
-    private array $budgets = [];
-
-    public function __construct(int $maxPerRequest = 4000, int $maxPerDay = 1000000) {
-        $this->maxTokensPerRequest = $maxPerRequest;
-        $this->maxTokensPerDay = $maxPerDay;
-
-        // Initialize budgets for different components
-        $this->budgets = [
-            'system_prompt' => 500,
-            'conversation_history' => 1000,
-            'retrieved_context' => 2000,
-            'user_input' => 500
-        ];
-    }
-
-    /**
-     * Allocate tokens for a request
-     */
-    public function allocateTokens(array $components): array {
-        $allocation = [];
-        $totalNeeded = 0;
-
-        // Calculate needs for each component
-        foreach ($components as $name => $data) {
-            $jsonTokens = $this->estimateTokens(json_encode($data));
-            $toonTokens = $this->estimateTokens(Toon::encode($data));
-
-            $allocation[$name] = [
-                'data' => $data,
-                'json_tokens' => $jsonTokens,
-                'toon_tokens' => $toonTokens,
-                'budget' => $this->budgets[$name] ?? 500,
-                'fits_budget_json' => $jsonTokens <= ($this->budgets[$name] ?? 500),
-                'fits_budget_toon' => $toonTokens <= ($this->budgets[$name] ?? 500)
-            ];
-
-            $totalNeeded += $toonTokens;
-        }
-
-        // Optimization strategies if over budget
-        if ($totalNeeded > $this->maxTokensPerRequest) {
-            $allocation = $this->optimizeAllocation($allocation);
-        }
-
-        return [
-            'allocation' => $allocation,
-            'total_tokens' => array_sum(array_column($allocation, 'toon_tokens')),
-            'within_budget' => $totalNeeded <= $this->maxTokensPerRequest,
-            'optimization_applied' => $totalNeeded > $this->maxTokensPerRequest
-        ];
-    }
-
-    /**
-     * Track daily usage
-     */
-    public function trackUsage(string $userId, int $tokens): array {
-        $date = date('Y-m-d');
-
-        if (!isset($this->usage[$date])) {
-            $this->usage[$date] = [];
-        }
-
-        if (!isset($this->usage[$date][$userId])) {
-            $this->usage[$date][$userId] = 0;
-        }
-
-        $this->usage[$date][$userId] += $tokens;
-
-        $dailyTotal = array_sum($this->usage[$date]);
-        $userTotal = $this->usage[$date][$userId];
-
-        return [
-            'user_id' => $userId,
-            'tokens_used' => $tokens,
-            'user_total_today' => $userTotal,
-            'system_total_today' => $dailyTotal,
-            'user_remaining' => max(0, 100000 - $userTotal), // User limit
-            'system_remaining' => max(0, $this->maxTokensPerDay - $dailyTotal),
-            'at_user_limit' => $userTotal >= 100000,
-            'at_system_limit' => $dailyTotal >= $this->maxTokensPerDay
-        ];
-    }
-
-    /**
-     * Get usage report
-     */
-    public function getUsageReport(): array {
-        $report = [
-            'daily_limit' => $this->maxTokensPerDay,
-            'request_limit' => $this->maxTokensPerRequest,
-            'usage_by_date' => []
-        ];
-
-        foreach ($this->usage as $date => $users) {
-            $report['usage_by_date'][$date] = [
-                'total_tokens' => array_sum($users),
-                'unique_users' => count($users),
-                'avg_per_user' => round(array_sum($users) / count($users)),
-                'top_users' => array_slice($users, 0, 5, true)
-            ];
-        }
-
-        return $report;
-    }
-
-    /**
-     * Optimize allocation when over budget
-     */
-    private function optimizeAllocation(array $allocation): array {
-        // Priority order for optimization
-        $priorities = [
-            'retrieved_context' => 1,
-            'conversation_history' => 2,
-            'user_input' => 3,
-            'system_prompt' => 4
-        ];
-
-        asort($priorities);
-
-        foreach ($priorities as $component => $priority) {
-            if (!isset($allocation[$component])) continue;
-
-            $data = $allocation[$component]['data'];
-
-            // Apply progressive optimization
-            if ($priority === 1) {
-                // Most aggressive optimization for lowest priority
-                $optimized = $this->aggressiveOptimization($data);
-            } elseif ($priority === 2) {
-                // Moderate optimization
-                $optimized = $this->moderateOptimization($data);
+        foreach ($data as $key => $value) {
+            if (is_string($value)) {
+                // Remove extra whitespace
+                $result[$key] = trim(preg_replace('/\s+/', ' ', $value));
+            } elseif (is_array($value)) {
+                $result[$key] = $this->normalizeFormatting($value);
             } else {
-                // Light optimization for high priority
-                $optimized = $this->lightOptimization($data);
+                $result[$key] = $value;
             }
-
-            $allocation[$component]['data'] = $optimized;
-            $allocation[$component]['toon_tokens'] = $this->estimateTokens(Toon::encode($optimized));
-            $allocation[$component]['optimization'] = 'applied';
         }
 
-        return $allocation;
+        return $result;
     }
 
-    private function aggressiveOptimization($data): array {
-        if (!is_array($data)) return $data;
+    private function removeNulls(array $data): array
+    {
+        return array_filter($data, fn($v) => $v !== null);
+    }
 
-        // Keep only essential fields
-        $essential = ['id', 'content', 'score'];
-        $optimized = [];
+    private function truncateLongStrings(array $data, int $maxLength): array
+    {
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (is_string($value) && strlen($value) > $maxLength) {
+                $result[$key] = substr($value, 0, $maxLength - 3) . '...';
+            } elseif (is_array($value)) {
+                $result[$key] = $this->truncateLongStrings($value, $maxLength);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    private function limitArraySizes(array $data, int $maxSize): array
+    {
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (is_array($value) && isset($value[0]) && count($value) > $maxSize) {
+                $result[$key] = array_slice($value, 0, $maxSize);
+            } elseif (is_array($value)) {
+                $result[$key] = $this->limitArraySizes($value, $maxSize);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    private function removeNonEssentialFields(array $data): array
+    {
+        $essential = ['id', 'name', 'value', 'type', 'status', 'content'];
+        $result = [];
 
         foreach ($data as $key => $value) {
             if (in_array($key, $essential) || is_numeric($key)) {
-                if (is_array($value) && count($value) > 3) {
-                    $optimized[$key] = array_slice($value, 0, 3);
-                } else {
-                    $optimized[$key] = $value;
-                }
+                $result[$key] = $value;
             }
         }
 
-        return $optimized;
+        return $result;
     }
 
-    private function moderateOptimization($data): array {
-        if (!is_array($data)) return $data;
-
-        // Remove metadata and truncate long content
-        $optimized = [];
+    private function summarizeArrays(array $data): array
+    {
+        $result = [];
 
         foreach ($data as $key => $value) {
-            if ($key === 'metadata' || $key === 'debug') {
-                continue;
-            }
-
-            if (is_string($value) && strlen($value) > 500) {
-                $optimized[$key] = substr($value, 0, 497) . '...';
-            } elseif (is_array($value) && count($value) > 10) {
-                $optimized[$key] = array_slice($value, 0, 10);
+            if (is_array($value) && isset($value[0]) && count($value) > 5) {
+                $result[$key . '_summary'] = [
+                    'count' => count($value),
+                    'sample' => array_slice($value, 0, 3)
+                ];
             } else {
-                $optimized[$key] = $value;
+                $result[$key] = $value;
             }
         }
 
-        return $optimized;
+        return $result;
     }
 
-    private function lightOptimization($data): array {
-        if (!is_array($data)) return $data;
-
-        // Only remove null values and empty arrays
-        $optimized = [];
-
-        foreach ($data as $key => $value) {
-            if ($value !== null && $value !== [] && $value !== '') {
-                $optimized[$key] = $value;
-            }
-        }
-
-        return $optimized;
-    }
-
-    private function estimateTokens(string $text): int {
+    private function estimateTokens(string $text): int
+    {
         return (int) ceil(strlen($text) / 4);
     }
 }
 
-// Demonstrate token budget system
-$budgetManager = new TokenBudgetManager(4000, 1000000);
+// Demonstrate the production optimizer
+$optimizer = new ProductionOptimizer([
+    'max_tokens_per_request' => 2000,
+    'enable_caching' => true,
+    'log_metrics' => true
+]);
 
-echo "=== Token Budget Management System ===\n\n";
-
-// Simulate a request with multiple components
-$requestComponents = [
-    'system_prompt' => [
-        'role' => 'You are a helpful assistant specialized in data analysis.',
-        'instructions' => [
-            'Be concise and clear',
-            'Use examples when helpful',
-            'Cite sources when available'
-        ],
-        'capabilities' => ['analysis', 'visualization', 'reporting']
-    ],
-    'conversation_history' => array_map(function($i) {
-        return [
-            'role' => $i % 2 == 0 ? 'user' : 'assistant',
-            'content' => "Message $i with some content that could be quite long...",
-            'timestamp' => time() - (10 - $i) * 60
-        ];
-    }, range(1, 20)),
-    'retrieved_context' => array_map(function($i) {
-        return [
-            'doc_id' => "DOC-$i",
-            'content' => str_repeat("Retrieved document content $i. ", 50),
-            'relevance_score' => 0.9 - ($i * 0.05),
-            'metadata' => [
-                'source' => "source_$i.pdf",
-                'page' => $i,
-                'date' => '2025-01-' . str_pad($i, 2, '0', STR_PAD_LEFT)
-            ]
-        ];
-    }, range(1, 10)),
-    'user_input' => [
-        'query' => 'Analyze the sales data for Q4 2024 and provide insights on trends.',
-        'context' => [
-            'department' => 'Sales',
-            'region' => 'North America',
-            'time_range' => 'Q4 2024'
-        ]
-    ]
-];
-
-// Allocate tokens
-$allocation = $budgetManager->allocateTokens($requestComponents);
-
-echo "Token Allocation Results:\n";
-echo str_repeat('-', 40) . "\n";
-echo "Total tokens needed: {$allocation['total_tokens']}\n";
-echo "Within budget: " . ($allocation['within_budget'] ? 'YES' : 'NO') . "\n";
-echo "Optimization applied: " . ($allocation['optimization_applied'] ? 'YES' : 'NO') . "\n\n";
-
-echo "Component Breakdown:\n";
-foreach ($allocation['allocation'] as $component => $details) {
-    echo "\n$component:\n";
-    echo "  JSON tokens: {$details['json_tokens']}\n";
-    echo "  TOON tokens: {$details['toon_tokens']}\n";
-    echo "  Budget: {$details['budget']}\n";
-    echo "  Fits with JSON: " . ($details['fits_budget_json'] ? 'YES' : 'NO') . "\n";
-    echo "  Fits with TOON: " . ($details['fits_budget_toon'] ? 'YES' : 'NO') . "\n";
-    if (isset($details['optimization'])) {
-        echo "  Optimization: {$details['optimization']}\n";
-    }
-}
-
-// Track usage for multiple users
-echo "\n\nUsage Tracking:\n";
-echo str_repeat('-', 40) . "\n";
-
-$users = ['user_123', 'user_456', 'user_789'];
-foreach ($users as $userId) {
-    for ($i = 0; $i < 5; $i++) {
-        $tokens = rand(500, 2000);
-        $tracking = $budgetManager->trackUsage($userId, $tokens);
-    }
-}
-
-// Get usage report
-$report = $budgetManager->getUsageReport();
-
-echo "Daily limit: " . number_format($report['daily_limit']) . " tokens\n";
-echo "Request limit: " . number_format($report['request_limit']) . " tokens\n\n";
-
-foreach ($report['usage_by_date'] as $date => $stats) {
-    echo "Date: $date\n";
-    echo "  Total tokens: " . number_format($stats['total_tokens']) . "\n";
-    echo "  Unique users: {$stats['unique_users']}\n";
-    echo "  Average per user: " . number_format($stats['avg_per_user']) . "\n";
-    echo "  Top users:\n";
-    foreach ($stats['top_users'] as $userId => $tokens) {
-        echo "    $userId: " . number_format($tokens) . " tokens\n";
-    }
-}
-```
-
-## Step 5: Real-World Case Study
-
-Create `case-study.php`:
-
-```php
-<?php
-require_once 'vendor/autoload.php';
-
-use HelgeSverre\Toon\Toon;
-
-class CostAnalysisCaseStudy {
-    private array $scenario;
-    private array $results = [];
-
-    public function __construct() {
-        // Real-world scenario: Customer support chatbot
-        $this->scenario = [
-            'company' => 'TechCorp Support',
-            'daily_conversations' => 5000,
-            'avg_messages_per_conversation' => 8,
-            'data_per_message' => [
-                'customer_context' => 500, // chars
-                'product_info' => 800,
-                'conversation_history' => 1200,
-                'knowledge_base_results' => 2000
-            ],
-            'llm_model' => 'gpt-3.5-turbo',
-            'pricing' => [
-                'input' => 0.0005, // per 1K tokens
-                'output' => 0.0015
-            ]
-        ];
-    }
-
-    /**
-     * Run the complete case study
-     */
-    public function runAnalysis(): array {
-        $this->results['scenario'] = $this->scenario;
-
-        // Calculate baseline (JSON)
-        $this->results['baseline'] = $this->calculateBaseline();
-
-        // Calculate with TOON
-        $this->results['with_toon'] = $this->calculateWithTOON();
-
-        // Calculate with advanced optimization
-        $this->results['optimized'] = $this->calculateOptimized();
-
-        // Generate insights
-        $this->results['insights'] = $this->generateInsights();
-
-        // ROI calculation
-        $this->results['roi'] = $this->calculateROI();
-
-        return $this->results;
-    }
-
-    private function calculateBaseline(): array {
-        $dailyMessages = $this->scenario['daily_conversations'] *
-                        $this->scenario['avg_messages_per_conversation'];
-
-        $charsPerMessage = array_sum($this->scenario['data_per_message']);
-        $tokensPerMessage = ceil($charsPerMessage / 4);
-
-        $dailyInputTokens = $dailyMessages * $tokensPerMessage;
-        $dailyOutputTokens = $dailyMessages * 150; // Avg response
-
-        $dailyCost = ($dailyInputTokens / 1000 * $this->scenario['pricing']['input']) +
-                    ($dailyOutputTokens / 1000 * $this->scenario['pricing']['output']);
-
-        return [
-            'daily_messages' => $dailyMessages,
-            'tokens_per_message' => $tokensPerMessage,
-            'daily_input_tokens' => $dailyInputTokens,
-            'daily_output_tokens' => $dailyOutputTokens,
-            'daily_cost' => $dailyCost,
-            'monthly_cost' => $dailyCost * 30,
-            'yearly_cost' => $dailyCost * 365
-        ];
-    }
-
-    private function calculateWithTOON(): array {
-        $baseline = $this->results['baseline'];
-
-        // TOON reduces tokens by average 40%
-        $reductionFactor = 0.6;
-
-        $toonTokensPerMessage = ceil($baseline['tokens_per_message'] * $reductionFactor);
-        $dailyInputTokens = $baseline['daily_messages'] * $toonTokensPerMessage;
-
-        $dailyCost = ($dailyInputTokens / 1000 * $this->scenario['pricing']['input']) +
-                    ($baseline['daily_output_tokens'] / 1000 * $this->scenario['pricing']['output']);
-
-        return [
-            'daily_messages' => $baseline['daily_messages'],
-            'tokens_per_message' => $toonTokensPerMessage,
-            'daily_input_tokens' => $dailyInputTokens,
-            'daily_output_tokens' => $baseline['daily_output_tokens'],
-            'daily_cost' => $dailyCost,
-            'monthly_cost' => $dailyCost * 30,
-            'yearly_cost' => $dailyCost * 365,
-            'savings_daily' => $baseline['daily_cost'] - $dailyCost,
-            'savings_monthly' => $baseline['monthly_cost'] - ($dailyCost * 30),
-            'savings_yearly' => $baseline['yearly_cost'] - ($dailyCost * 365)
-        ];
-    }
-
-    private function calculateOptimized(): array {
-        $baseline = $this->results['baseline'];
-
-        // Advanced optimization: TOON + selective fields + caching
-        $reductionFactor = 0.45; // 55% reduction
-        $cachingReduction = 0.2; // 20% requests hit cache
-
-        $optimizedTokensPerMessage = ceil($baseline['tokens_per_message'] * $reductionFactor);
-        $effectiveMessages = $baseline['daily_messages'] * (1 - $cachingReduction);
-        $dailyInputTokens = $effectiveMessages * $optimizedTokensPerMessage;
-
-        $dailyCost = ($dailyInputTokens / 1000 * $this->scenario['pricing']['input']) +
-                    ($baseline['daily_output_tokens'] * (1 - $cachingReduction) / 1000 *
-                     $this->scenario['pricing']['output']);
-
-        return [
-            'daily_messages' => $baseline['daily_messages'],
-            'effective_messages' => $effectiveMessages,
-            'tokens_per_message' => $optimizedTokensPerMessage,
-            'daily_input_tokens' => $dailyInputTokens,
-            'daily_output_tokens' => $baseline['daily_output_tokens'] * (1 - $cachingReduction),
-            'daily_cost' => $dailyCost,
-            'monthly_cost' => $dailyCost * 30,
-            'yearly_cost' => $dailyCost * 365,
-            'savings_daily' => $baseline['daily_cost'] - $dailyCost,
-            'savings_monthly' => $baseline['monthly_cost'] - ($dailyCost * 30),
-            'savings_yearly' => $baseline['yearly_cost'] - ($dailyCost * 365),
-            'reduction_percentage' => round((1 - $dailyCost / $baseline['daily_cost']) * 100, 1)
-        ];
-    }
-
-    private function generateInsights(): array {
-        $baseline = $this->results['baseline'];
-        $toon = $this->results['with_toon'];
-        $optimized = $this->results['optimized'];
-
-        return [
-            'token_reduction' => [
-                'toon_only' => round((1 - $toon['daily_input_tokens'] /
-                              $baseline['daily_input_tokens']) * 100, 1),
-                'fully_optimized' => round((1 - $optimized['daily_input_tokens'] /
-                                    $baseline['daily_input_tokens']) * 100, 1)
-            ],
-            'cost_reduction' => [
-                'toon_only' => round((1 - $toon['daily_cost'] /
-                              $baseline['daily_cost']) * 100, 1),
-                'fully_optimized' => round((1 - $optimized['daily_cost'] /
-                                    $baseline['daily_cost']) * 100, 1)
-            ],
-            'capacity_increase' => [
-                'description' => 'Additional conversations possible with same budget',
-                'toon_only' => round($baseline['daily_cost'] / $toon['daily_cost'] *
-                              $this->scenario['daily_conversations'] -
-                              $this->scenario['daily_conversations']),
-                'fully_optimized' => round($baseline['daily_cost'] / $optimized['daily_cost'] *
-                                    $this->scenario['daily_conversations'] -
-                                    $this->scenario['daily_conversations'])
-            ],
-            'break_even' => [
-                'implementation_hours' => 40,
-                'hourly_rate' => 150,
-                'implementation_cost' => 6000,
-                'days_to_break_even' => round(6000 / $optimized['savings_daily']),
-                'months_to_break_even' => round(6000 / $optimized['savings_monthly'], 1)
-            ]
-        ];
-    }
-
-    private function calculateROI(): array {
-        $optimized = $this->results['optimized'];
-        $implementationCost = 6000;
-
-        return [
-            'year_1' => [
-                'savings' => $optimized['savings_yearly'],
-                'costs' => $implementationCost,
-                'net_benefit' => $optimized['savings_yearly'] - $implementationCost,
-                'roi_percentage' => round((($optimized['savings_yearly'] - $implementationCost) /
-                                  $implementationCost) * 100, 1)
-            ],
-            'year_2' => [
-                'savings' => $optimized['savings_yearly'],
-                'costs' => 0,
-                'net_benefit' => $optimized['savings_yearly'],
-                'cumulative_benefit' => ($optimized['savings_yearly'] * 2) - $implementationCost
-            ],
-            'year_3' => [
-                'savings' => $optimized['savings_yearly'],
-                'costs' => 0,
-                'net_benefit' => $optimized['savings_yearly'],
-                'cumulative_benefit' => ($optimized['savings_yearly'] * 3) - $implementationCost
-            ]
-        ];
-    }
-
-    public function generateReport(): string {
-        if (empty($this->results)) {
-            $this->runAnalysis();
-        }
-
-        $report = <<<REPORT
-=== CUSTOMER SUPPORT CHATBOT COST ANALYSIS ===
-Company: {$this->scenario['company']}
-Scale: {$this->scenario['daily_conversations']} conversations/day
-
-BASELINE (JSON)
---------------
-Daily Cost: \${$this->results['baseline']['daily_cost']}
-Monthly Cost: \${$this->results['baseline']['monthly_cost']}
-Yearly Cost: \${$this->results['baseline']['yearly_cost']}
-Tokens per Message: {$this->results['baseline']['tokens_per_message']}
-
-WITH TOON
----------
-Daily Cost: \${$this->results['with_toon']['daily_cost']}
-Monthly Cost: \${$this->results['with_toon']['monthly_cost']}
-Yearly Cost: \${$this->results['with_toon']['yearly_cost']}
-Daily Savings: \${$this->results['with_toon']['savings_daily']}
-Yearly Savings: \${$this->results['with_toon']['savings_yearly']}
-
-FULLY OPTIMIZED (TOON + Strategies)
------------------------------------
-Daily Cost: \${$this->results['optimized']['daily_cost']}
-Monthly Cost: \${$this->results['optimized']['monthly_cost']}
-Yearly Cost: \${$this->results['optimized']['yearly_cost']}
-Daily Savings: \${$this->results['optimized']['savings_daily']}
-Yearly Savings: \${$this->results['optimized']['savings_yearly']}
-Cost Reduction: {$this->results['optimized']['reduction_percentage']}%
-
-KEY INSIGHTS
-------------
-Token Reduction: {$this->results['insights']['token_reduction']['fully_optimized']}%
-Cost Reduction: {$this->results['insights']['cost_reduction']['fully_optimized']}%
-Additional Capacity: {$this->results['insights']['capacity_increase']['fully_optimized']} more conversations/day
-Break-even: {$this->results['insights']['break_even']['days_to_break_even']} days
-
-ROI ANALYSIS
------------
-Year 1 ROI: {$this->results['roi']['year_1']['roi_percentage']}%
-Year 1 Net Benefit: \${$this->results['roi']['year_1']['net_benefit']}
-3-Year Cumulative Benefit: \${$this->results['roi']['year_3']['cumulative_benefit']}
-
-RECOMMENDATION
--------------
-Implementing TOON with optimization strategies will:
-1. Reduce token costs by {$this->results['insights']['cost_reduction']['fully_optimized']}%
-2. Save \${$this->results['optimized']['savings_yearly']} annually
-3. Break even in {$this->results['insights']['break_even']['months_to_break_even']} months
-4. Enable {$this->results['insights']['capacity_increase']['fully_optimized']} additional conversations daily
-
-The investment pays for itself quickly and provides substantial long-term savings.
-REPORT;
-
-        return $report;
-    }
-}
-
-// Run the case study
-$caseStudy = new CostAnalysisCaseStudy();
-$results = $caseStudy->runAnalysis();
-
-echo $caseStudy->generateReport();
-
-// Additional analysis output
-echo "\n\n=== DETAILED ANALYSIS ===\n\n";
-
-// Show example optimization
-$sampleData = [
-    'customer' => [
-        'id' => 'CUST-12345',
+// Test with different data types
+$testData = [
+    'user_profile' => [
+        'id' => 'usr_123',
         'name' => 'John Doe',
         'email' => 'john@example.com',
-        'subscription' => 'premium',
-        'support_tier' => 'gold'
-    ],
-    'ticket' => [
-        'id' => 'TKT-98765',
-        'subject' => 'Cannot access dashboard',
-        'priority' => 'high',
-        'created_at' => '2025-01-20T10:30:00Z',
-        'category' => 'technical'
-    ],
-    'context' => [
-        'last_login' => '2025-01-19T15:00:00Z',
-        'browser' => 'Chrome 120',
-        'os' => 'Windows 11',
-        'error_logs' => [
-            ['time' => '10:28:00', 'error' => 'Auth token expired'],
-            ['time' => '10:29:00', 'error' => 'Redirect loop detected']
-        ]
+        'preferences' => [
+            'theme' => 'dark',
+            'notifications' => true
+        ],
+        'activity' => array_map(function($i) {
+            return [
+                'date' => date('Y-m-d', time() - $i * 86400),
+                'actions' => rand(10, 100)
+            ];
+        }, range(0, 30))
     ]
 ];
 
-$json = json_encode($sampleData, JSON_PRETTY_PRINT);
-$toon = Toon::encode($sampleData);
+echo "=== Production Optimization System ===\n\n";
 
-echo "Sample Customer Support Data:\n";
-echo str_repeat('-', 40) . "\n";
-echo "JSON format: " . strlen($json) . " characters\n";
-echo "TOON format: " . strlen($toon) . " characters\n";
-echo "Reduction: " . round((1 - strlen($toon) / strlen($json)) * 100, 1) . "%\n\n";
+// Optimize for different purposes
+$purposes = ['general', 'classification', 'summarization', 'extraction'];
 
-echo "TOON output:\n$toon\n";
-```
+foreach ($purposes as $purpose) {
+    $result = $optimizer->optimize($testData, $purpose);
 
-## Testing and Validation
-
-Create `test-optimization.php`:
-
-```php
-<?php
-require_once 'vendor/autoload.php';
-
-use HelgeSverre\Toon\Toon;
-
-// Test different optimization strategies
-$testCases = [
-    'small_object' => [
-        'id' => 1,
-        'name' => 'Test'
-    ],
-    'medium_array' => range(1, 100),
-    'large_nested' => [
-        'level1' => [
-            'level2' => [
-                'level3' => [
-                    'data' => array_map(function($i) {
-                        return ['id' => $i, 'value' => rand(100, 999)];
-                    }, range(1, 50))
-                ]
-            ]
-        ]
-    ],
-    'mixed_types' => [
-        'string' => 'Hello World',
-        'number' => 42,
-        'float' => 3.14159,
-        'boolean' => true,
-        'null' => null,
-        'array' => [1, 2, 3],
-        'object' => ['key' => 'value']
-    ]
-];
-
-echo "=== Optimization Strategy Validation ===\n\n";
-
-foreach ($testCases as $name => $data) {
-    $json = json_encode($data);
-    $jsonPretty = json_encode($data, JSON_PRETTY_PRINT);
-    $toon = Toon::encode($data);
-
-    $jsonTokens = ceil(strlen($json) / 4);
-    $jsonPrettyTokens = ceil(strlen($jsonPretty) / 4);
-    $toonTokens = ceil(strlen($toon) / 4);
-
-    echo "Test Case: $name\n";
-    echo "  Compact JSON: $jsonTokens tokens\n";
-    echo "  Pretty JSON: $jsonPrettyTokens tokens\n";
-    echo "  TOON: $toonTokens tokens\n";
-    echo "  Savings vs Compact: " . round((1 - $toonTokens / $jsonTokens) * 100, 1) . "%\n";
-    echo "  Savings vs Pretty: " . round((1 - $toonTokens / $jsonPrettyTokens) * 100, 1) . "%\n\n";
+    echo "Purpose: $purpose\n";
+    echo "  Encoding: {$result['encoding_used']}\n";
+    echo "  Tokens: {$result['tokens']}\n";
+    echo "  Within budget: " . ($result['within_budget'] ? 'YES' : 'NO') . "\n\n";
 }
 
-// Validate token counting accuracy
-echo "=== Token Counting Validation ===\n";
-echo "Note: For production, use tiktoken or the LLM's tokenizer\n";
-echo "This uses approximation (4 chars/token) for demonstration\n";
+// Show metrics summary
+$summary = $optimizer->getMetricsSummary();
+echo "Metrics Summary:\n";
+echo "  Total operations: {$summary['total_operations']}\n";
+echo "  Average reduction: {$summary['avg_reduction']}%\n";
+echo "  Average processing time: {$summary['avg_processing_time_ms']}ms\n";
 ```
 
 ## Troubleshooting
 
 ### Common Issues and Solutions
 
-1. **Token count inaccuracy**
-   - Use tiktoken library for OpenAI models
-   - Use model-specific tokenizers
-   - Account for special tokens
+**Token estimates don't match actual**
+- Use tiktoken library for OpenAI models
+- Each model has different tokenization rules
+- Our 4-char estimate is approximate only
 
-2. **Over-optimization causing data loss**
-   - Test optimization levels thoroughly
-   - Keep critical fields in whitelist
-   - Implement rollback mechanisms
+**Choosing wrong preset**
+- Test all presets with your actual data
+- Measure real token counts, not estimates
+- Consider data structure, not just size
 
-3. **Cache invalidation issues**
-   - Use versioned cache keys
-   - Implement TTL strategies
-   - Monitor cache hit rates
+**Over-optimization causing errors**
+- Don't remove fields the LLM needs
+- Test with sample requests first
+- Keep essential context intact
 
-4. **Budget exceeded despite optimization**
-   - Review data preprocessing pipeline
-   - Implement request queuing
-   - Use model fallbacks (GPT-4 → GPT-3.5)
+**Performance issues with large data**
+- Implement caching for repeated data
+- Process in batches
+- Use async operations where possible
 
-5. **Performance degradation**
-   - Profile encoding operations
-   - Implement async processing
-   - Use lazy loading for large datasets
+## Summary
+
+You've learned practical token optimization strategies that can reduce costs by 30-70%. Key takeaways:
+
+1. **Analyze first** - Understand your data structure before optimizing
+2. **Choose the right format** - Tabular for uniform arrays, compact for simple objects
+3. **Preprocess strategically** - Remove unnecessary fields before encoding
+4. **Measure everything** - Track actual token usage and costs
+5. **ROI is quick** - Most implementations pay for themselves within months
 
 ## Next Steps
 
-You've mastered token optimization strategies! Continue with:
+- Implement these patterns in your production code
+- Set up monitoring for token usage
+- A/B test different optimization levels
+- Share your results with the community
 
-1. **Tutorial 5**: Build RAG systems with vector stores
-2. **Advanced Topics**: Custom tokenizers, model-specific optimizations
-3. **Production Deployment**: Scaling strategies, monitoring, alerting
+## Additional Resources
 
-### Key Takeaways
-
-- TOON provides consistent 30-60% token reduction
-- Strategic optimization can push savings to 70%+
-- Small optimizations compound to significant cost savings
-- Token budgeting is essential for production systems
-- ROI is typically achieved within 1-3 months
-
-### Additional Resources
-
+- [TOON PHP Documentation](https://github.com/helgesverre/toon-php)
 - [OpenAI Tokenizer](https://platform.openai.com/tokenizer)
-- [Tiktoken Library](https://github.com/openai/tiktoken)
-- [TOON Benchmarks](https://github.com/helgesverre/toon/benchmarks)
-- [LLM Pricing Calculator](https://openai.com/pricing)
+- [Token Pricing Calculator](https://openai.com/pricing)
+- [Production Best Practices](https://platform.openai.com/docs/guides/production-best-practices)

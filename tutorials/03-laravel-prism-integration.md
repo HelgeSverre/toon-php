@@ -1,1936 +1,1142 @@
-# Building a Laravel AI Application with TOON and Prism
+# Tutorial 3: Using TOON in Laravel Applications
 
-**Difficulty**: Intermediate-Advanced
-**Time to Complete**: 20-30 minutes
+**Level**: Intermediate
+**Time**: 20-25 minutes
 **PHP Version**: 8.2+
 **Laravel Version**: 11.x
 
 ## What You'll Build
 
-A complete Laravel customer support chatbot that:
-- Uses Prism for multi-provider LLM support
-- Optimizes all data with TOON format
-- Implements a real-time chat interface
-- Switches between LLM providers dynamically
-- Tracks token usage and costs per provider
-- Includes comprehensive testing with Pest
+In this tutorial, you'll create a support ticket classification system that uses TOON to efficiently send ticket context to LLMs for automatic routing and priority assignment. You'll learn how to use TOON in Laravel applications without any special integration - it's just a library you composer require and use.
 
-## What You'll Learn
+## Learning Objectives
 
-- Installing and configuring TOON in Laravel
-- Setting up Prism for multi-provider support
-- Building service providers and facades
-- Creating API endpoints for AI features
-- Optimizing different LLM providers with TOON
-- Testing AI features with Pest
-- Deploying with environment-specific configs
+By the end of this tutorial, you will:
+- Use TOON directly in Laravel applications
+- Create a simple service class for TOON operations
+- Build a practical ticket classification system
+- Write tests with Pest
+- Optimize TOON encoding with caching
 
 ## Prerequisites
 
-- Laravel 11.x development environment
-- Composer and Node.js installed
-- Basic Laravel knowledge (routes, controllers, models)
-- Completed Tutorial 1 (TOON basics)
-- API keys for at least one LLM provider
+- Laravel 11 basics (models, controllers, migrations)
+- Completed Tutorials 1 and 2
+- Understanding of Eloquent ORM
+- Basic knowledge of API integration
 
-## Introduction
+## Section 1: Introduction
 
-Laravel's ecosystem combined with Prism's multi-provider capabilities and TOON's token optimization creates a powerful stack for AI applications. This tutorial builds a production-ready customer support chatbot that can switch between OpenAI, Anthropic, and other providers while maintaining consistent token optimization.
+TOON is a standalone PHP library that doesn't require any Laravel-specific integration. There are no facades, service providers, or configuration files needed. You simply install it via Composer and use its functions directly in your Laravel code.
 
-## Step 1: Project Setup
+The key insight is that TOON is designed to reduce token consumption when sending data to LLMs. In a Laravel application, this typically happens when:
+- Sending database records to AI for analysis
+- Providing context for AI-powered features
+- Batching multiple records for bulk processing
+- Caching formatted data for repeated API calls
 
-Create a new Laravel project and install dependencies:
+This tutorial demonstrates practical patterns for using TOON in Laravel by building a ticket classification system. The system will:
+1. Accept support tickets through an API
+2. Format ticket data using TOON for efficient token usage
+3. Send the formatted data to OpenAI for classification
+4. Store the classification results back in the database
+
+The approach is straightforward: treat TOON like any other PHP library. Use its functions where you need compact data representation, wrap it in service classes if you want abstraction, and test it like any other code.
+
+## Section 2: Setup
+
+Let's start by creating a new Laravel project and installing the necessary dependencies.
+
+### Create the Laravel Project
 
 ```bash
-# Create Laravel project
-composer create-project laravel/laravel toon-chatbot
-cd toon-chatbot
-
-# Install required packages
-composer require helgesverre/toon
-composer require echolabsdev/laravel-prism
-composer require predis/predis
-composer require pusher/pusher-php-server
-
-# Install development dependencies
-composer require --dev pestphp/pest pestphp/pest-plugin-laravel
-php artisan pest:install
-
-# Install frontend dependencies
-npm install alpinejs axios
-npm install -D @vitejs/plugin-vue
+laravel new ticket-classifier
+cd ticket-classifier
 ```
 
-Configure environment variables in `.env`:
+### Install Dependencies
+
+```bash
+composer require helgesverre/toon
+composer require openai-php/client
+composer require --dev pestphp/pest pestphp/pest-plugin-laravel
+```
+
+### Initialize Pest
+
+```bash
+./vendor/bin/pest --init
+```
+
+### Environment Configuration
+
+Update your `.env` file with the necessary configuration:
 
 ```env
-# LLM Provider Keys
-OPENAI_API_KEY=sk-your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
-GEMINI_API_KEY=your-gemini-key
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your-api-key-here
 
-# Prism Configuration
-PRISM_DEFAULT_PROVIDER=openai
-PRISM_CACHE_RESPONSES=true
-PRISM_CACHE_TTL=3600
-
-# Redis for caching
+# Cache Configuration (for optimizing TOON encoding)
+CACHE_DRIVER=redis
 REDIS_HOST=127.0.0.1
 REDIS_PASSWORD=null
 REDIS_PORT=6379
 
-# Pusher for real-time (optional)
-BROADCAST_DRIVER=pusher
-PUSHER_APP_ID=your-app-id
-PUSHER_APP_KEY=your-app-key
-PUSHER_APP_SECRET=your-app-secret
-PUSHER_APP_CLUSTER=mt1
+# Queue Configuration (for background processing)
+QUEUE_CONNECTION=database
 ```
 
-## Step 2: Create TOON Service Provider
+### Verify Installation
 
-Create `app/Services/ToonService.php`:
+Create a simple test route to verify TOON is working:
+
+```php
+// routes/web.php
+use HelgeSverre\Toon\Toon;
+
+Route::get('/test-toon', function () {
+    $data = [
+        'message' => 'TOON is working',
+        'timestamp' => now()->toDateTimeString(),
+        'features' => ['compact', 'efficient', 'readable']
+    ];
+
+    return response(Toon::encode($data), 200)
+        ->header('Content-Type', 'text/plain');
+});
+```
+
+Visit `http://localhost:8000/test-toon` and you should see TOON-formatted output:
+
+```
+message: TOON is working
+timestamp: 2024-03-15 10:30:00
+features[3]:
+- compact
+- efficient
+- readable
+```
+
+## Section 3: Database Setup
+
+Now let's create the database schema for our ticket system.
+
+### Create the Migration
+
+```bash
+php artisan make:migration create_tickets_table
+```
+
+Edit the migration file:
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tickets', function (Blueprint $table) {
+            $table->id();
+            $table->string('subject');
+            $table->text('description');
+            $table->string('customer_email');
+            $table->string('customer_name');
+            $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->nullable();
+            $table->string('category')->nullable();
+            $table->string('assigned_team')->nullable();
+            $table->text('ai_analysis')->nullable();
+            $table->integer('tokens_used')->nullable();
+            $table->decimal('processing_cost', 8, 4)->nullable();
+            $table->timestamps();
+
+            $table->index('priority');
+            $table->index('category');
+            $table->index('assigned_team');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tickets');
+    }
+};
+```
+
+### Create the Ticket Model
+
+```bash
+php artisan make:model Ticket
+```
+
+Edit `app/Models/Ticket.php`:
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use HelgeSverre\Toon\Toon;
+
+class Ticket extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'subject',
+        'description',
+        'customer_email',
+        'customer_name',
+        'priority',
+        'category',
+        'assigned_team',
+        'ai_analysis',
+        'tokens_used',
+        'processing_cost'
+    ];
+
+    protected $casts = [
+        'tokens_used' => 'integer',
+        'processing_cost' => 'decimal:4',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
+    ];
+
+    /**
+     * Get TOON-encoded ticket data for LLM processing
+     */
+    public function toToonFormat(): string
+    {
+        return Toon::encode([
+            'subject' => $this->subject,
+            'description' => $this->description,
+            'customer' => [
+                'name' => $this->customer_name,
+                'email' => $this->customer_email
+            ],
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'ticket_id' => $this->id
+        ], 'compact');
+    }
+
+    /**
+     * Get ticket context for AI analysis
+     */
+    public function getAiContext(): array
+    {
+        return [
+            'ticket' => $this->toArray(),
+            'formatted' => $this->toToonFormat(),
+            'metadata' => [
+                'age_hours' => $this->created_at->diffInHours(now()),
+                'word_count' => str_word_count($this->description)
+            ]
+        ];
+    }
+}
+```
+
+Run the migration:
+
+```bash
+php artisan migrate
+```
+
+## Section 4: Service Class
+
+Create a simple service class to wrap TOON functionality with Laravel-specific features.
+
+### Create ToonService
+
+Create the file `app/Services/ToonService.php`:
 
 ```php
 <?php
 
 namespace App\Services;
 
-use HelgeSverre\Toon\Toon;
-use HelgeSverre\Toon\EncodeOptions;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+use HelgeSverre\Toon\Toon;
 
 class ToonService
 {
-    private EncodeOptions $defaultOptions;
-    private array $metrics = [];
-
-    public function __construct()
+    /**
+     * Encode data with optional caching
+     */
+    public function encode(array $data, ?string $cacheKey = null, int $ttl = 3600): string
     {
-        $this->defaultOptions = new EncodeOptions(
-            indent: config('toon.indent', 2),
-            delimiter: config('toon.delimiter', ','),
-            lengthMarker: config('toon.length_marker', false)
-        );
+        if ($cacheKey) {
+            return Cache::remember($cacheKey, $ttl, function () use ($data) {
+                return toon_compact($data);
+            });
+        }
+
+        return toon_compact($data);
     }
 
     /**
-     * Encode data to TOON format with caching
+     * Compare JSON vs TOON formats
      */
-    public function encode(mixed $data, ?EncodeOptions $options = null): string
+    public function compare(array $data): array
     {
-        $options ??= $this->defaultOptions;
-
-        // Generate cache key
-        $cacheKey = $this->getCacheKey($data, $options);
-
-        // Check cache
-        if (config('toon.cache_enabled', true)) {
-            $cached = Cache::get($cacheKey);
-            if ($cached !== null) {
-                $this->recordMetric('cache_hits');
-                return $cached;
-            }
-        }
-
-        // Encode data
-        $startTime = microtime(true);
-        $encoded = Toon::encode($data, $options);
-        $duration = microtime(true) - $startTime;
-
-        // Record metrics
-        $this->recordMetric('encodings');
-        $this->recordMetric('encoding_time', $duration);
-        $this->recordMetric('bytes_processed', strlen(json_encode($data)));
-        $this->recordMetric('bytes_output', strlen($encoded));
-
-        // Cache result
-        if (config('toon.cache_enabled', true)) {
-            Cache::put($cacheKey, $encoded, config('toon.cache_ttl', 3600));
-        }
-
-        return $encoded;
-    }
-
-    /**
-     * Compare TOON vs JSON for given data
-     */
-    public function compare(mixed $data): array
-    {
-        $json = json_encode($data, JSON_PRETTY_PRINT);
-        $toon = $this->encode($data);
+        $json = json_encode($data);
+        $toon = toon_compact($data);
 
         $jsonSize = strlen($json);
         $toonSize = strlen($toon);
-
-        // Estimate tokens (rough: 4 chars per token)
-        $jsonTokens = (int) ceil($jsonSize / 4);
-        $toonTokens = (int) ceil($toonSize / 4);
+        $savings = $jsonSize - $toonSize;
+        $percentage = ($savings / $jsonSize) * 100;
 
         return [
             'json' => [
                 'size' => $jsonSize,
-                'tokens' => $jsonTokens,
                 'format' => $json
             ],
             'toon' => [
                 'size' => $toonSize,
-                'tokens' => $toonTokens,
                 'format' => $toon
             ],
             'savings' => [
-                'characters' => $jsonSize - $toonSize,
-                'percentage' => round((1 - $toonSize / $jsonSize) * 100, 1),
-                'tokens' => $jsonTokens - $toonTokens,
-                'token_percentage' => round((1 - $toonTokens / $jsonTokens) * 100, 1)
+                'bytes' => $savings,
+                'percentage' => round($percentage, 2)
             ]
         ];
     }
 
     /**
-     * Format data for LLM consumption
+     * Estimate token count for data
+     * Note: This is a rough estimate based on character count
      */
-    public function formatForLLM(array $data, string $context = ''): string
+    public function estimateTokens(array $data): int
     {
-        $encoded = $this->encode($data);
-
-        if ($context) {
-            return "$context\n\nData (TOON format):\n$encoded";
-        }
-
-        return $encoded;
+        $toonFormat = toon_compact($data);
+        // Rough estimate: 1 token ≈ 4 characters
+        return (int) ceil(strlen($toonFormat) / 4);
     }
 
     /**
-     * Batch encode multiple datasets
+     * Batch encode multiple records
      */
-    public function batchEncode(array $datasets): array
+    public function batchEncode(array $records): string
     {
-        $results = [];
-
-        foreach ($datasets as $key => $data) {
-            $results[$key] = $this->encode($data);
-        }
-
-        return $results;
+        return toon_compact($records);
     }
 
     /**
-     * Get encoding metrics
+     * Clear cached TOON data
      */
-    public function getMetrics(): array
+    public function clearCache(string $pattern): void
     {
-        return $this->metrics;
-    }
-
-    /**
-     * Reset metrics
-     */
-    public function resetMetrics(): void
-    {
-        $this->metrics = [];
-    }
-
-    private function getCacheKey(mixed $data, EncodeOptions $options): string
-    {
-        return 'toon:' . md5(serialize($data) . serialize($options));
-    }
-
-    private function recordMetric(string $key, $value = 1): void
-    {
-        if (!isset($this->metrics[$key])) {
-            $this->metrics[$key] = 0;
+        // Clear all cache keys matching the pattern
+        $keys = Cache::get('toon_cache_keys', []);
+        foreach ($keys as $key) {
+            if (str_contains($key, $pattern)) {
+                Cache::forget($key);
+            }
         }
-
-        $this->metrics[$key] += $value;
     }
 }
 ```
 
-Create the service provider `app/Providers/ToonServiceProvider.php`:
+### Optional: Register as Singleton
+
+If you want to use dependency injection, register the service in `app/Providers/AppServiceProvider.php`:
 
 ```php
-<?php
-
-namespace App\Providers;
-
-use App\Services\ToonService;
-use Illuminate\Support\ServiceProvider;
-
-class ToonServiceProvider extends ServiceProvider
+public function register(): void
 {
-    public function register(): void
-    {
-        $this->app->singleton(ToonService::class, function ($app) {
-            return new ToonService();
-        });
-
-        $this->app->alias(ToonService::class, 'toon');
-    }
-
-    public function boot(): void
-    {
-        $this->publishes([
-            __DIR__.'/../../config/toon.php' => config_path('toon.php'),
-        ], 'config');
-    }
+    $this->app->singleton(ToonService::class);
 }
 ```
 
-Create config file `config/toon.php`:
+## Section 5: Ticket Classification Service
 
-```php
-<?php
+Create the AI-powered ticket classification service that uses TOON for efficient API calls.
 
-return [
-    /*
-    |--------------------------------------------------------------------------
-    | TOON Encoding Options
-    |--------------------------------------------------------------------------
-    */
-
-    'indent' => env('TOON_INDENT', 2),
-    'delimiter' => env('TOON_DELIMITER', ','),
-    'length_marker' => env('TOON_LENGTH_MARKER', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Caching
-    |--------------------------------------------------------------------------
-    */
-
-    'cache_enabled' => env('TOON_CACHE_ENABLED', true),
-    'cache_ttl' => env('TOON_CACHE_TTL', 3600), // 1 hour
-
-    /*
-    |--------------------------------------------------------------------------
-    | Metrics Collection
-    |--------------------------------------------------------------------------
-    */
-
-    'collect_metrics' => env('TOON_COLLECT_METRICS', true),
-];
-```
-
-Create a facade `app/Facades/Toon.php`:
-
-```php
-<?php
-
-namespace App\Facades;
-
-use Illuminate\Support\Facades\Facade;
-
-class Toon extends Facade
-{
-    protected static function getFacadeAccessor(): string
-    {
-        return 'toon';
-    }
-}
-```
-
-Register in `config/app.php`:
-
-```php
-'providers' => ServiceProvider::defaultProviders()->merge([
-    // ...
-    App\Providers\ToonServiceProvider::class,
-])->toArray(),
-
-'aliases' => Facade::defaultAliases()->merge([
-    // ...
-    'Toon' => App\Facades\Toon::class,
-])->toArray(),
-```
-
-## Step 3: Configure Prism with TOON
-
-Create `app/Services/PrismToonService.php`:
+Create the file `app/Services/TicketClassifier.php`:
 
 ```php
 <?php
 
 namespace App\Services;
 
-use App\Facades\Toon;
-use EchoLabs\Prism\Prism;
-use EchoLabs\Prism\Enums\Provider;
+use App\Models\Ticket;
+use OpenAI;
 use Illuminate\Support\Facades\Log;
 
-class PrismToonService
+class TicketClassifier
 {
-    private array $providers;
-    private string $currentProvider;
-    private array $usage = [];
+    private $client;
 
-    public function __construct()
-    {
-        $this->providers = config('prism.providers', ['openai']);
-        $this->currentProvider = config('prism.default_provider', 'openai');
+    public function __construct(
+        private ToonService $toonService
+    ) {
+        $this->client = OpenAI::client(config('services.openai.api_key'));
     }
 
     /**
-     * Send a message to the LLM with TOON-formatted data
+     * Classify a support ticket using AI
      */
-    public function chat(string $message, ?array $data = null, array $options = []): array
+    public function classify(Ticket $ticket): array
     {
-        $prompt = $this->buildPrompt($message, $data);
+        // Get TOON-encoded ticket data
+        $ticketData = $ticket->toToonFormat();
+
+        // Build the classification prompt
+        $prompt = $this->buildPrompt($ticketData);
 
         try {
-            $prism = $this->getPrism($options['provider'] ?? $this->currentProvider);
+            // Call OpenAI API
+            $response = $this->client->chat()->create([
+                'model' => 'gpt-3.5-turbo',
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a support ticket classifier. Analyze tickets and provide priority, category, and team assignment.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ],
+                'response_format' => ['type' => 'json_object'],
+                'temperature' => 0.3,
+                'max_tokens' => 150
+            ]);
 
-            $response = $prism
-                ->using($this->getProvider($options['provider'] ?? $this->currentProvider))
-                ->withSystemPrompt($this->getSystemPrompt())
-                ->withMaxTokens($options['max_tokens'] ?? 1000)
-                ->withTemperature($options['temperature'] ?? 0.7)
-                ->ask($prompt);
+            // Parse the response
+            $analysis = json_decode($response->choices[0]->message->content, true);
 
-            // Track usage
-            $this->trackUsage($response);
+            // Update ticket with classification
+            $ticket->update([
+                'priority' => $analysis['priority'] ?? 'medium',
+                'category' => $analysis['category'] ?? 'general',
+                'assigned_team' => $analysis['team'] ?? 'support',
+                'ai_analysis' => $analysis['analysis'] ?? '',
+                'tokens_used' => $response->usage->totalTokens,
+                'processing_cost' => $this->calculateCost($response->usage->totalTokens)
+            ]);
 
             return [
                 'success' => true,
-                'content' => $response->text,
-                'usage' => $response->usage,
-                'provider' => $this->currentProvider,
-                'response_object' => $response
+                'analysis' => $analysis,
+                'tokens_used' => $response->usage->totalTokens,
+                'cost' => $ticket->processing_cost,
+                'format_savings' => $this->calculateSavings($ticket)
             ];
 
         } catch (\Exception $e) {
-            Log::error('Prism chat error', [
-                'error' => $e->getMessage(),
-                'provider' => $this->currentProvider
+            Log::error('Ticket classification failed', [
+                'ticket_id' => $ticket->id,
+                'error' => $e->getMessage()
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
-                'provider' => $this->currentProvider
+                'error' => $e->getMessage()
             ];
         }
     }
 
     /**
-     * Stream a response from the LLM
+     * Build the classification prompt
      */
-    public function stream(string $message, ?array $data = null, array $options = []): \Generator
-    {
-        $prompt = $this->buildPrompt($message, $data);
-
-        $prism = $this->getPrism($options['provider'] ?? $this->currentProvider);
-
-        $stream = $prism
-            ->using($this->getProvider($options['provider'] ?? $this->currentProvider))
-            ->withSystemPrompt($this->getSystemPrompt())
-            ->withMaxTokens($options['max_tokens'] ?? 1000)
-            ->stream()
-            ->ask($prompt);
-
-        foreach ($stream as $chunk) {
-            yield $chunk;
-        }
-    }
-
-    /**
-     * Process with function calling
-     */
-    public function withTools(string $message, array $tools, ?array $data = null): array
-    {
-        $prompt = $this->buildPrompt($message, $data);
-
-        $prism = $this->getPrism($this->currentProvider);
-
-        // Convert tools to Prism format
-        $prismTools = $this->convertToolsToPrismFormat($tools);
-
-        $response = $prism
-            ->using($this->getProvider($this->currentProvider))
-            ->withSystemPrompt($this->getSystemPrompt())
-            ->withTools($prismTools)
-            ->ask($prompt);
-
-        if ($response->toolCalls) {
-            $toolResults = [];
-
-            foreach ($response->toolCalls as $toolCall) {
-                $result = $this->executeToolCall($toolCall, $tools);
-                $toolResults[] = [
-                    'tool' => $toolCall->name,
-                    'result' => Toon::encode($result) // Encode tool results with TOON
-                ];
-            }
-
-            return [
-                'success' => true,
-                'content' => $response->text,
-                'tool_calls' => $response->toolCalls,
-                'tool_results' => $toolResults,
-                'provider' => $this->currentProvider
-            ];
-        }
-
-        return [
-            'success' => true,
-            'content' => $response->text,
-            'provider' => $this->currentProvider
-        ];
-    }
-
-    /**
-     * Switch provider dynamically
-     */
-    public function useProvider(string $provider): self
-    {
-        if (!in_array($provider, $this->providers)) {
-            throw new \InvalidArgumentException("Provider $provider is not configured");
-        }
-
-        $this->currentProvider = $provider;
-        return $this;
-    }
-
-    /**
-     * Get usage statistics
-     */
-    public function getUsageStats(): array
-    {
-        return $this->usage;
-    }
-
-    /**
-     * Calculate cost for current usage
-     */
-    public function calculateCost(): array
-    {
-        $costs = [];
-        $total = 0;
-
-        foreach ($this->usage as $provider => $usage) {
-            $cost = $this->calculateProviderCost($provider, $usage);
-            $costs[$provider] = $cost;
-            $total += $cost['total'];
-        }
-
-        return [
-            'providers' => $costs,
-            'total' => $total
-        ];
-    }
-
-    private function buildPrompt(string $message, ?array $data): string
-    {
-        if ($data === null) {
-            return $message;
-        }
-
-        $toonData = Toon::encode($data);
-
-        return <<<PROMPT
-$message
-
-Data (TOON format):
-$toonData
-
-Note: The data above is in TOON format - a compact notation where:
-- Objects use "key: value" pairs with indentation for nesting
-- Arrays show "[length]: item1,item2,item3"
-- Tabular data uses "[rows]{fields}: row_values"
-PROMPT;
-    }
-
-    private function getSystemPrompt(): string
+    private function buildPrompt(string $ticketData): string
     {
         return <<<PROMPT
-You are a helpful AI assistant integrated into a Laravel application.
-You will receive data in TOON format, which is more compact than JSON.
-Always provide clear, concise, and helpful responses.
-When referencing data, maintain accuracy to the provided information.
-PROMPT;
+        Analyze this support ticket and provide:
+        1. Priority level (low/medium/high/urgent)
+        2. Category (billing/technical/account/feature/bug/other)
+        3. Suggested team (support/engineering/billing/product)
+        4. Brief analysis (2-3 sentences)
+
+        Respond in JSON format with keys: priority, category, team, analysis
+
+        Ticket data:
+        $ticketData
+        PROMPT;
     }
 
-    private function getPrism(string $provider): Prism
+    /**
+     * Calculate API cost based on tokens
+     */
+    private function calculateCost(int $tokens): float
     {
-        return Prism::text();
+        // GPT-3.5-turbo pricing: $0.002 per 1K tokens
+        return ($tokens / 1000) * 0.002;
     }
 
-    private function getProvider(string $provider): Provider
+    /**
+     * Calculate token savings from using TOON
+     */
+    private function calculateSavings(Ticket $ticket): array
     {
-        return match($provider) {
-            'openai' => Provider::OpenAI,
-            'anthropic' => Provider::Anthropic,
-            'gemini' => Provider::Gemini,
-            'ollama' => Provider::Ollama,
-            default => Provider::OpenAI
-        };
-    }
-
-    private function trackUsage(object $response): void
-    {
-        if (!isset($this->usage[$this->currentProvider])) {
-            $this->usage[$this->currentProvider] = [
-                'requests' => 0,
-                'prompt_tokens' => 0,
-                'completion_tokens' => 0,
-                'total_tokens' => 0
-            ];
-        }
-
-        $this->usage[$this->currentProvider]['requests']++;
-
-        if (isset($response->usage)) {
-            $this->usage[$this->currentProvider]['prompt_tokens'] += $response->usage->promptTokens ?? 0;
-            $this->usage[$this->currentProvider]['completion_tokens'] += $response->usage->completionTokens ?? 0;
-            $this->usage[$this->currentProvider]['total_tokens'] +=
-                ($response->usage->promptTokens ?? 0) + ($response->usage->completionTokens ?? 0);
-        }
-    }
-
-    private function calculateProviderCost(string $provider, array $usage): array
-    {
-        // Pricing per 1K tokens (example rates)
-        $pricing = [
-            'openai' => ['input' => 0.0005, 'output' => 0.0015],
-            'anthropic' => ['input' => 0.008, 'output' => 0.024],
-            'gemini' => ['input' => 0.0005, 'output' => 0.0015],
-            'ollama' => ['input' => 0, 'output' => 0] // Local/free
-        ];
-
-        $rates = $pricing[$provider] ?? $pricing['openai'];
-
-        $inputCost = ($usage['prompt_tokens'] / 1000) * $rates['input'];
-        $outputCost = ($usage['completion_tokens'] / 1000) * $rates['output'];
+        $comparison = $this->toonService->compare([
+            'subject' => $ticket->subject,
+            'description' => $ticket->description,
+            'customer' => [
+                'name' => $ticket->customer_name,
+                'email' => $ticket->customer_email
+            ]
+        ]);
 
         return [
-            'input' => round($inputCost, 4),
-            'output' => round($outputCost, 4),
-            'total' => round($inputCost + $outputCost, 4)
+            'percentage' => $comparison['savings']['percentage'],
+            'tokens_saved' => (int) ceil($comparison['savings']['bytes'] / 4)
         ];
     }
 
-    private function convertToolsToPrismFormat(array $tools): array
+    /**
+     * Batch classify multiple tickets
+     */
+    public function batchClassify(array $ticketIds): array
     {
-        // Convert custom tool format to Prism's expected format
-        return array_map(function ($tool) {
-            return [
-                'name' => $tool['name'],
-                'description' => $tool['description'],
-                'parameters' => $tool['parameters'] ?? []
-            ];
-        }, $tools);
-    }
+        $results = [];
+        $tickets = Ticket::whereIn('id', $ticketIds)->get();
 
-    private function executeToolCall(object $toolCall, array $tools): mixed
-    {
-        foreach ($tools as $tool) {
-            if ($tool['name'] === $toolCall->name) {
-                if (isset($tool['handler']) && is_callable($tool['handler'])) {
-                    return $tool['handler']($toolCall->arguments);
-                }
-            }
+        foreach ($tickets as $ticket) {
+            $results[$ticket->id] = $this->classify($ticket);
         }
 
-        return null;
+        return $results;
     }
 }
 ```
 
-## Step 4: Create the Chatbot Controller
+### Configure OpenAI Service
 
-Create `app/Http/Controllers/ChatbotController.php`:
+Add to `config/services.php`:
+
+```php
+'openai' => [
+    'api_key' => env('OPENAI_API_KEY'),
+],
+```
+
+## Section 6: Controller Implementation
+
+Create controllers to handle ticket submission and classification.
+
+### Create TicketController
+
+```bash
+php artisan make:controller Api/TicketController
+```
+
+Edit `app/Http/Controllers/Api/TicketController.php`:
 
 ```php
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Services\PrismToonService;
-use App\Models\Conversation;
-use App\Models\Message;
+use App\Http\Controllers\Controller;
+use App\Models\Ticket;
+use App\Services\TicketClassifier;
+use App\Services\ToonService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
+
+class TicketController extends Controller
+{
+    public function __construct(
+        private TicketClassifier $classifier,
+        private ToonService $toonService
+    ) {}
+
+    /**
+     * Create and classify a new ticket
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'description' => 'required|string|min:10',
+            'customer_email' => 'required|email',
+            'customer_name' => 'required|string|max:100'
+        ]);
+
+        // Create the ticket
+        $ticket = Ticket::create($validated);
+
+        // Classify the ticket (in production, use a job)
+        $result = $this->classifier->classify($ticket);
+
+        return response()->json([
+            'ticket' => $ticket->fresh(),
+            'classification' => $result
+        ]);
+    }
+
+    /**
+     * Get ticket with TOON format comparison
+     */
+    public function show(Ticket $ticket): JsonResponse
+    {
+        $comparison = $this->toonService->compare($ticket->toArray());
+
+        return response()->json([
+            'ticket' => $ticket,
+            'toon_format' => $ticket->toToonFormat(),
+            'format_comparison' => $comparison
+        ]);
+    }
+
+    /**
+     * Get format statistics for all tickets
+     */
+    public function stats(): JsonResponse
+    {
+        $tickets = Ticket::all();
+
+        $totalTokensUsed = $tickets->sum('tokens_used');
+        $totalCost = $tickets->sum('processing_cost');
+
+        // Calculate potential savings
+        $sampleData = $tickets->take(10)->map(fn($t) => $t->toArray())->toArray();
+
+        if (empty($sampleData)) {
+            return response()->json([
+                'total_tickets' => 0,
+                'message' => 'No tickets found'
+            ]);
+        }
+
+        $comparison = $this->toonService->compare($sampleData);
+
+        return response()->json([
+            'total_tickets' => $tickets->count(),
+            'total_tokens_used' => $totalTokensUsed,
+            'total_cost' => round($totalCost, 4),
+            'average_tokens_per_ticket' => $tickets->avg('tokens_used'),
+            'format_efficiency' => [
+                'sample_size' => 10,
+                'savings_percentage' => $comparison['savings']['percentage'],
+                'estimated_tokens_saved' => (int) ($totalTokensUsed * $comparison['savings']['percentage'] / 100)
+            ]
+        ]);
+    }
+}
+```
+
+### Add Routes
+
+Edit `routes/api.php`:
+
+```php
+use App\Http\Controllers\Api\TicketController;
+
+Route::prefix('tickets')->group(function () {
+    Route::post('/', [TicketController::class, 'store']);
+    Route::get('/{ticket}', [TicketController::class, 'show']);
+    Route::get('/stats/overview', [TicketController::class, 'stats']);
+});
+```
+
+## Section 7: Testing with Pest
+
+Create comprehensive tests for the TOON integration.
+
+### Create Factory
+
+```bash
+php artisan make:factory TicketFactory
+```
+
+Edit `database/factories/TicketFactory.php`:
+
+```php
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Ticket;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class TicketFactory extends Factory
+{
+    protected $model = Ticket::class;
+
+    public function definition(): array
+    {
+        return [
+            'subject' => fake()->sentence(),
+            'description' => fake()->paragraphs(2, true),
+            'customer_email' => fake()->email(),
+            'customer_name' => fake()->name(),
+            'priority' => fake()->randomElement(['low', 'medium', 'high', 'urgent']),
+            'category' => fake()->randomElement(['billing', 'technical', 'general']),
+            'assigned_team' => fake()->randomElement(['support', 'engineering', 'billing']),
+        ];
+    }
+}
+```
+
+### Create Feature Test
+
+Create `tests/Feature/TicketClassificationTest.php`:
+
+```php
+<?php
+
+use App\Models\Ticket;
+use App\Services\ToonService;
+use App\Services\TicketClassifier;
+use HelgeSverre\Toon\Toon;
 use Illuminate\Support\Facades\Cache;
 
-class ChatbotController extends Controller
-{
-    private PrismToonService $prismService;
-
-    public function __construct(PrismToonService $prismService)
-    {
-        $this->prismService = $prismService;
-    }
-
-    /**
-     * Display the chat interface
-     */
-    public function index()
-    {
-        $conversations = Auth::check()
-            ? Auth::user()->conversations()->latest()->get()
-            : [];
-
-        return view('chatbot.index', compact('conversations'));
-    }
-
-    /**
-     * Start a new conversation
-     */
-    public function startConversation(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'context' => 'nullable|array'
-        ]);
-
-        $conversation = Conversation::create([
-            'user_id' => Auth::id(),
-            'title' => $validated['title'] ?? 'New Conversation',
-            'context' => $validated['context'] ?? [],
-            'provider' => config('prism.default_provider'),
-            'status' => 'active'
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'conversation_id' => $conversation->id,
-            'conversation' => $conversation
-        ]);
-    }
-
-    /**
-     * Send a message to the chatbot
-     */
-    public function sendMessage(Request $request, $conversationId)
-    {
-        $validated = $request->validate([
-            'message' => 'required|string|max:4000',
-            'data' => 'nullable|array',
-            'provider' => 'nullable|string|in:openai,anthropic,gemini,ollama'
-        ]);
-
-        $conversation = Conversation::findOrFail($conversationId);
-
-        // Store user message
-        $userMessage = Message::create([
-            'conversation_id' => $conversation->id,
-            'role' => 'user',
-            'content' => $validated['message'],
-            'data' => $validated['data'] ?? null,
-            'tokens' => $this->estimateTokens($validated['message'], $validated['data'] ?? null)
-        ]);
-
-        // Get conversation context
-        $context = $this->buildConversationContext($conversation);
-
-        // Switch provider if requested
-        if (isset($validated['provider'])) {
-            $this->prismService->useProvider($validated['provider']);
-            $conversation->update(['provider' => $validated['provider']]);
-        }
-
-        // Send to LLM with TOON-formatted context
-        $response = $this->prismService->chat(
-            $validated['message'],
-            array_merge($context, $validated['data'] ?? []),
-            ['max_tokens' => 1000]
-        );
-
-        if ($response['success']) {
-            // Store assistant message
-            $assistantMessage = Message::create([
-                'conversation_id' => $conversation->id,
-                'role' => 'assistant',
-                'content' => $response['content'],
-                'tokens' => $response['usage']['total_tokens'] ?? 0,
-                'provider' => $response['provider']
-            ]);
-
-            // Update conversation statistics
-            $conversation->increment('total_messages', 2);
-            $conversation->increment('total_tokens',
-                $userMessage->tokens + $assistantMessage->tokens);
-
-            return response()->json([
-                'success' => true,
-                'message' => $assistantMessage,
-                'usage' => $response['usage'] ?? null,
-                'provider' => $response['provider']
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'error' => $response['error'] ?? 'Unknown error occurred'
-        ], 500);
-    }
-
-    /**
-     * Stream a response
-     */
-    public function streamMessage(Request $request, $conversationId)
-    {
-        $validated = $request->validate([
-            'message' => 'required|string|max:4000',
-            'data' => 'nullable|array'
-        ]);
-
-        $conversation = Conversation::findOrFail($conversationId);
-
-        return response()->stream(function () use ($validated, $conversation) {
-            $context = $this->buildConversationContext($conversation);
-
-            foreach ($this->prismService->stream(
-                $validated['message'],
-                array_merge($context, $validated['data'] ?? [])
-            ) as $chunk) {
-                echo "data: " . json_encode(['chunk' => $chunk]) . "\n\n";
-                ob_flush();
-                flush();
-            }
-
-            echo "data: [DONE]\n\n";
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'X-Accel-Buffering' => 'no'
-        ]);
-    }
-
-    /**
-     * Compare TOON vs JSON for the conversation
-     */
-    public function compareFormats($conversationId)
-    {
-        $conversation = Conversation::findOrFail($conversationId);
-        $messages = $conversation->messages()->get();
-
-        $conversationData = [
-            'conversation_id' => $conversation->id,
-            'title' => $conversation->title,
-            'messages' => $messages->map(function ($msg) {
-                return [
-                    'role' => $msg->role,
-                    'content' => $msg->content,
-                    'timestamp' => $msg->created_at->toIso8601String()
-                ];
-            })->toArray(),
-            'context' => $conversation->context,
-            'statistics' => [
-                'total_messages' => $conversation->total_messages,
-                'total_tokens' => $conversation->total_tokens,
-                'provider' => $conversation->provider
-            ]
-        ];
-
-        $comparison = app(ToonService::class)->compare($conversationData);
-
-        return response()->json([
-            'success' => true,
-            'comparison' => $comparison,
-            'recommendation' => $comparison['savings']['percentage'] > 30
-                ? 'TOON provides significant savings for this conversation'
-                : 'TOON provides moderate savings for this conversation'
-        ]);
-    }
-
-    /**
-     * Get usage statistics
-     */
-    public function getUsageStats()
-    {
-        $stats = $this->prismService->getUsageStats();
-        $costs = $this->prismService->calculateCost();
-
-        $userStats = [];
-        if (Auth::check()) {
-            $userStats = [
-                'total_conversations' => Auth::user()->conversations()->count(),
-                'total_messages' => Message::whereHas('conversation', function ($q) {
-                    $q->where('user_id', Auth::id());
-                })->count(),
-                'total_tokens_used' => Auth::user()->conversations()->sum('total_tokens')
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'provider_usage' => $stats,
-            'costs' => $costs,
-            'user_stats' => $userStats,
-            'toon_metrics' => app(ToonService::class)->getMetrics()
-        ]);
-    }
-
-    private function buildConversationContext(Conversation $conversation): array
-    {
-        // Get last 10 messages for context
-        $recentMessages = $conversation->messages()
-            ->latest()
-            ->limit(10)
-            ->get()
-            ->reverse();
-
-        return [
-            'conversation_history' => $recentMessages->map(function ($msg) {
-                return [
-                    'role' => $msg->role,
-                    'content' => Str::limit($msg->content, 500),
-                    'timestamp' => $msg->created_at->diffForHumans()
-                ];
-            })->toArray(),
-            'conversation_context' => $conversation->context,
-            'user_preferences' => Auth::check() ? [
-                'name' => Auth::user()->name,
-                'preferred_language' => Auth::user()->preferred_language ?? 'en'
-            ] : []
-        ];
-    }
-
-    private function estimateTokens(string $message, ?array $data): int
-    {
-        $totalChars = strlen($message);
-
-        if ($data) {
-            $toonData = app(ToonService::class)->encode($data);
-            $totalChars += strlen($toonData);
-        }
-
-        // Rough estimate: 4 characters per token
-        return (int) ceil($totalChars / 4);
-    }
-}
-```
-
-## Step 5: Create Models and Migrations
-
-Create the Conversation model and migration:
-
-```bash
-php artisan make:model Conversation -m
-```
-
-Migration `database/migrations/xxxx_create_conversations_table.php`:
-
-```php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('conversations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->json('context')->nullable();
-            $table->string('provider')->default('openai');
-            $table->enum('status', ['active', 'archived'])->default('active');
-            $table->integer('total_messages')->default(0);
-            $table->integer('total_tokens')->default(0);
-            $table->decimal('total_cost', 8, 4)->default(0);
-            $table->timestamps();
-
-            $table->index(['user_id', 'status']);
-            $table->index('provider');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('conversations');
-    }
-};
-```
-
-Model `app/Models/Conversation.php`:
-
-```php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class Conversation extends Model
-{
-    use HasFactory;
-
-    protected $fillable = [
-        'user_id',
-        'title',
-        'context',
-        'provider',
-        'status',
-        'total_messages',
-        'total_tokens',
-        'total_cost'
-    ];
-
-    protected $casts = [
-        'context' => 'array',
-        'total_cost' => 'decimal:4'
-    ];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function messages(): HasMany
-    {
-        return $this->hasMany(Message::class);
-    }
-
-    public function getTokenEfficiency(): float
-    {
-        if ($this->total_messages === 0) {
-            return 0;
-        }
-
-        return round($this->total_tokens / $this->total_messages, 1);
-    }
-
-    public function archive(): void
-    {
-        $this->update(['status' => 'archived']);
-    }
-}
-```
-
-Create Message model and migration:
-
-```bash
-php artisan make:model Message -m
-```
-
-Migration `database/migrations/xxxx_create_messages_table.php`:
-
-```php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('conversation_id')->constrained()->cascadeOnDelete();
-            $table->enum('role', ['user', 'assistant', 'system', 'tool']);
-            $table->text('content');
-            $table->json('data')->nullable();
-            $table->integer('tokens')->default(0);
-            $table->string('provider')->nullable();
-            $table->json('metadata')->nullable();
-            $table->timestamps();
-
-            $table->index(['conversation_id', 'role']);
-            $table->index('created_at');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('messages');
-    }
-};
-```
-
-Model `app/Models/Message.php`:
-
-```php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-class Message extends Model
-{
-    use HasFactory;
-
-    protected $fillable = [
-        'conversation_id',
-        'role',
-        'content',
-        'data',
-        'tokens',
-        'provider',
-        'metadata'
-    ];
-
-    protected $casts = [
-        'data' => 'array',
-        'metadata' => 'array'
-    ];
-
-    public function conversation(): BelongsTo
-    {
-        return $this->belongsTo(Conversation::class);
-    }
-
-    public function getToonData(): ?string
-    {
-        if (!$this->data) {
-            return null;
-        }
-
-        return app(ToonService::class)->encode($this->data);
-    }
-
-    public function getEstimatedCost(): float
-    {
-        // Rough cost estimate based on provider
-        $rates = [
-            'openai' => 0.002,
-            'anthropic' => 0.008,
-            'gemini' => 0.001,
-        ];
-
-        $rate = $rates[$this->provider ?? 'openai'] ?? 0.002;
-
-        return ($this->tokens / 1000) * $rate;
-    }
-}
-```
-
-## Step 6: Create the Chat Interface
-
-Create the Blade view `resources/views/chatbot/index.blade.php`:
-
-```blade
-@extends('layouts.app')
-
-@section('content')
-<div class="container mx-auto px-4 py-8" x-data="chatbot()">
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <!-- Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-lg shadow p-4">
-                <h3 class="font-bold text-lg mb-4">Conversations</h3>
-
-                <button @click="startNewConversation()"
-                        class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4">
-                    New Conversation
-                </button>
-
-                <div class="space-y-2">
-                    @foreach($conversations as $conversation)
-                    <div @click="loadConversation({{ $conversation->id }})"
-                         class="p-3 rounded cursor-pointer hover:bg-gray-100"
-                         :class="{ 'bg-blue-50': currentConversationId === {{ $conversation->id }} }">
-                        <div class="font-semibold text-sm">{{ $conversation->title }}</div>
-                        <div class="text-xs text-gray-500">
-                            {{ $conversation->messages_count }} messages
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Provider Selection -->
-            <div class="bg-white rounded-lg shadow p-4 mt-4">
-                <h3 class="font-bold text-lg mb-4">LLM Provider</h3>
-
-                <select x-model="currentProvider"
-                        @change="switchProvider()"
-                        class="w-full border rounded px-3 py-2">
-                    <option value="openai">OpenAI</option>
-                    <option value="anthropic">Anthropic</option>
-                    <option value="gemini">Google Gemini</option>
-                    <option value="ollama">Ollama (Local)</option>
-                </select>
-
-                <div class="mt-4 text-sm">
-                    <div class="flex justify-between">
-                        <span>Tokens Used:</span>
-                        <span x-text="stats.tokens"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Est. Cost:</span>
-                        <span>$<span x-text="stats.cost"></span></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TOON Comparison -->
-            <div class="bg-white rounded-lg shadow p-4 mt-4">
-                <h3 class="font-bold text-lg mb-4">TOON Savings</h3>
-
-                <button @click="compareFormats()"
-                        class="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600">
-                    Compare Formats
-                </button>
-
-                <div x-show="comparison" class="mt-4 text-sm">
-                    <div class="flex justify-between">
-                        <span>JSON Size:</span>
-                        <span x-text="comparison?.json?.size"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>TOON Size:</span>
-                        <span x-text="comparison?.toon?.size"></span>
-                    </div>
-                    <div class="flex justify-between font-bold text-green-600">
-                        <span>Savings:</span>
-                        <span x-text="comparison?.savings?.percentage + '%'"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chat Area -->
-        <div class="lg:col-span-3">
-            <div class="bg-white rounded-lg shadow h-[600px] flex flex-col">
-                <!-- Messages -->
-                <div class="flex-1 overflow-y-auto p-6" id="messagesContainer">
-                    <template x-for="message in messages" :key="message.id">
-                        <div class="mb-4">
-                            <div :class="{
-                                'text-right': message.role === 'user',
-                                'text-left': message.role === 'assistant'
-                            }">
-                                <div class="inline-block max-w-3/4 p-3 rounded-lg"
-                                     :class="{
-                                         'bg-blue-100': message.role === 'user',
-                                         'bg-gray-100': message.role === 'assistant'
-                                     }">
-                                    <div class="text-sm font-semibold mb-1"
-                                         x-text="message.role === 'user' ? 'You' : 'Assistant'"></div>
-                                    <div x-text="message.content"></div>
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        <span x-text="message.tokens"></span> tokens
-                                        <span x-show="message.provider"
-                                              x-text="'via ' + message.provider"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- Typing Indicator -->
-                    <div x-show="isTyping" class="mb-4">
-                        <div class="inline-block bg-gray-100 p-3 rounded-lg">
-                            <div class="flex space-x-2">
-                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                                     style="animation-delay: 0.1s"></div>
-                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                                     style="animation-delay: 0.2s"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Input Area -->
-                <div class="border-t p-4">
-                    <div class="flex space-x-2">
-                        <input type="text"
-                               x-model="newMessage"
-                               @keydown.enter="sendMessage()"
-                               placeholder="Type your message..."
-                               class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               :disabled="isTyping">
-
-                        <button @click="attachData()"
-                                class="px-4 py-2 border rounded-lg hover:bg-gray-100">
-                            📎 Data
-                        </button>
-
-                        <button @click="sendMessage()"
-                                :disabled="!newMessage || isTyping"
-                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50">
-                            Send
-                        </button>
-                    </div>
-
-                    <!-- Attached Data Preview -->
-                    <div x-show="attachedData" class="mt-2 p-2 bg-yellow-50 rounded text-sm">
-                        <div class="flex justify-between items-center">
-                            <span>Data attached (TOON format)</span>
-                            <button @click="attachedData = null" class="text-red-500">✕</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function chatbot() {
-    return {
-        currentConversationId: null,
-        currentProvider: 'openai',
-        messages: [],
-        newMessage: '',
-        isTyping: false,
-        attachedData: null,
-        comparison: null,
-        stats: {
-            tokens: 0,
-            cost: 0
-        },
-
-        async startNewConversation() {
-            try {
-                const response = await axios.post('/api/chatbot/conversations', {
-                    title: 'New Conversation ' + new Date().toLocaleString()
-                });
-
-                this.currentConversationId = response.data.conversation_id;
-                this.messages = [];
-                this.loadStats();
-            } catch (error) {
-                console.error('Error starting conversation:', error);
-            }
-        },
-
-        async loadConversation(conversationId) {
-            try {
-                this.currentConversationId = conversationId;
-                const response = await axios.get(`/api/chatbot/conversations/${conversationId}/messages`);
-                this.messages = response.data.messages;
-                this.scrollToBottom();
-            } catch (error) {
-                console.error('Error loading conversation:', error);
-            }
-        },
-
-        async sendMessage() {
-            if (!this.newMessage.trim() || !this.currentConversationId) return;
-
-            const message = this.newMessage;
-            this.newMessage = '';
-
-            // Add user message to UI
-            this.messages.push({
-                id: Date.now(),
-                role: 'user',
-                content: message,
-                tokens: Math.ceil(message.length / 4)
-            });
-
-            this.isTyping = true;
-            this.scrollToBottom();
-
-            try {
-                const response = await axios.post(
-                    `/api/chatbot/conversations/${this.currentConversationId}/messages`,
-                    {
-                        message: message,
-                        data: this.attachedData,
-                        provider: this.currentProvider
-                    }
-                );
-
-                this.messages.push(response.data.message);
-                this.attachedData = null;
-                this.loadStats();
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Error sending message. Please try again.');
-            } finally {
-                this.isTyping = false;
-                this.scrollToBottom();
-            }
-        },
-
-        async switchProvider() {
-            // Provider will be used on next message
-            console.log('Switched to provider:', this.currentProvider);
-        },
-
-        async compareFormats() {
-            if (!this.currentConversationId) return;
-
-            try {
-                const response = await axios.get(
-                    `/api/chatbot/conversations/${this.currentConversationId}/compare`
-                );
-                this.comparison = response.data.comparison;
-            } catch (error) {
-                console.error('Error comparing formats:', error);
-            }
-        },
-
-        async loadStats() {
-            try {
-                const response = await axios.get('/api/chatbot/stats');
-                const data = response.data;
-
-                this.stats.tokens = data.user_stats?.total_tokens_used || 0;
-                this.stats.cost = data.costs?.total?.toFixed(4) || 0;
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        },
-
-        attachData() {
-            // Simple data attachment example
-            const sampleData = {
-                user_info: {
-                    name: 'John Doe',
-                    account_type: 'premium',
-                    since: '2023-01-15'
-                },
-                request_context: {
-                    page: 'support',
-                    previous_action: 'viewed_faq'
-                }
-            };
-
-            this.attachedData = sampleData;
-            alert('Sample data attached. This will be sent in TOON format with your message.');
-        },
-
-        scrollToBottom() {
-            this.$nextTick(() => {
-                const container = document.getElementById('messagesContainer');
-                container.scrollTop = container.scrollHeight;
-            });
-        },
-
-        init() {
-            this.loadStats();
-
-            // Auto-load first conversation if exists
-            @if($conversations->isNotEmpty())
-                this.loadConversation({{ $conversations->first()->id }});
-            @else
-                this.startNewConversation();
-            @endif
-        }
-    }
-}
-</script>
-@endsection
-```
-
-## Step 7: Add Routes
-
-Update `routes/web.php`:
-
-```php
-<?php
-
-use App\Http\Controllers\ChatbotController;
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
+it('creates a ticket successfully', function () {
+    $ticket = Ticket::factory()->create([
+        'subject' => 'Cannot log in to account',
+        'description' => 'I keep getting an error message when trying to access my dashboard'
+    ]);
+
+    expect($ticket)->toBeInstanceOf(Ticket::class);
+    expect($ticket->subject)->toBe('Cannot log in to account');
 });
 
-// Chatbot routes
-Route::prefix('chatbot')->group(function () {
-    Route::get('/', [ChatbotController::class, 'index'])->name('chatbot.index');
+it('encodes ticket data to TOON format', function () {
+    $ticket = Ticket::factory()->create();
+    $encoded = $ticket->toToonFormat();
+
+    expect($encoded)->toBeString();
+    expect($encoded)->toContain($ticket->subject);
+    expect($encoded)->toContain('customer:');
+
+    // TOON should be more compact than JSON
+    $jsonSize = strlen(json_encode($ticket->toArray()));
+    $toonSize = strlen($encoded);
+    expect($toonSize)->toBeLessThan($jsonSize);
 });
 
-// API routes for chatbot
-Route::prefix('api/chatbot')->group(function () {
-    Route::post('/conversations', [ChatbotController::class, 'startConversation']);
-    Route::get('/conversations/{id}/messages', [ChatbotController::class, 'getMessages']);
-    Route::post('/conversations/{id}/messages', [ChatbotController::class, 'sendMessage']);
-    Route::get('/conversations/{id}/stream', [ChatbotController::class, 'streamMessage']);
-    Route::get('/conversations/{id}/compare', [ChatbotController::class, 'compareFormats']);
-    Route::get('/stats', [ChatbotController::class, 'getUsageStats']);
-});
-```
-
-## Step 8: Testing with Pest
-
-Create comprehensive tests. First, create `tests/Feature/ToonServiceTest.php`:
-
-```php
-<?php
-
-use App\Services\ToonService;
-use HelgeSverre\Toon\EncodeOptions;
-
-it('encodes data to TOON format', function () {
-    $service = app(ToonService::class);
+it('compares JSON and TOON formats accurately', function () {
+    $toonService = app(ToonService::class);
 
     $data = [
-        'name' => 'John Doe',
-        'age' => 30,
-        'active' => true
-    ];
-
-    $encoded = $service->encode($data);
-
-    expect($encoded)->toContain('name: John Doe')
-        ->toContain('age: 30')
-        ->toContain('active: true');
-});
-
-it('caches encoded data', function () {
-    $service = app(ToonService::class);
-    $service->resetMetrics();
-
-    $data = ['key' => 'value'];
-
-    // First call - should encode
-    $result1 = $service->encode($data);
-    $metrics1 = $service->getMetrics();
-    expect($metrics1['encodings'])->toBe(1);
-
-    // Second call - should use cache
-    $result2 = $service->encode($data);
-    $metrics2 = $service->getMetrics();
-    expect($metrics2['cache_hits'])->toBe(1);
-    expect($metrics2['encodings'])->toBe(1); // Still 1, not 2
-
-    expect($result1)->toBe($result2);
-});
-
-it('compares TOON vs JSON accurately', function () {
-    $service = app(ToonService::class);
-
-    $data = [
-        'users' => [
-            ['id' => 1, 'name' => 'Alice'],
-            ['id' => 2, 'name' => 'Bob']
+        'subject' => 'Test ticket',
+        'description' => 'This is a test description',
+        'customer' => [
+            'name' => 'John Doe',
+            'email' => 'john@example.com'
+        ],
+        'metadata' => [
+            'source' => 'web',
+            'ip' => '192.168.1.1'
         ]
     ];
 
-    $comparison = $service->compare($data);
+    $comparison = $toonService->compare($data);
 
     expect($comparison)->toHaveKeys(['json', 'toon', 'savings']);
     expect($comparison['savings']['percentage'])->toBeGreaterThan(0);
-    expect($comparison['toon']['size'])->toBeLessThan($comparison['json']['size']);
+    expect($comparison['savings']['bytes'])->toBeGreaterThan(0);
 });
 
-it('formats data for LLM consumption', function () {
-    $service = app(ToonService::class);
+it('estimates token count correctly', function () {
+    $toonService = app(ToonService::class);
 
-    $data = ['status' => 'active', 'count' => 42];
-    $context = 'Analyze this data:';
-
-    $formatted = $service->formatForLLM($data, $context);
-
-    expect($formatted)->toStartWith('Analyze this data:')
-        ->toContain('Data (TOON format):')
-        ->toContain('status: active')
-        ->toContain('count: 42');
-});
-```
-
-Create `tests/Feature/PrismToonServiceTest.php`:
-
-```php
-<?php
-
-use App\Services\PrismToonService;
-use App\Models\User;
-use App\Models\Conversation;
-
-beforeEach(function () {
-    $this->service = app(PrismToonService::class);
-    $this->user = User::factory()->create();
-});
-
-it('builds prompts with TOON data', function () {
-    $message = 'Analyze this customer';
     $data = [
-        'customer' => [
-            'id' => 123,
-            'name' => 'Test Customer'
-        ]
+        'test' => 'data',
+        'array' => ['item1', 'item2', 'item3']
     ];
 
-    // Use reflection to test private method
-    $reflection = new ReflectionClass($this->service);
-    $method = $reflection->getMethod('buildPrompt');
-    $method->setAccessible(true);
+    $tokens = $toonService->estimateTokens($data);
 
-    $prompt = $method->invoke($this->service, $message, $data);
-
-    expect($prompt)->toContain('Analyze this customer')
-        ->toContain('Data (TOON format):')
-        ->toContain('customer:')
-        ->toContain('id: 123')
-        ->toContain('name: Test Customer');
+    expect($tokens)->toBeInt();
+    expect($tokens)->toBeGreaterThan(0);
+    expect($tokens)->toBeLessThan(100); // Small data should have few tokens
 });
 
-it('tracks usage across providers', function () {
-    // This would need mocking of the Prism responses
-    // Example structure:
+it('caches encoded data when cache key is provided', function () {
+    $toonService = app(ToonService::class);
+    $data = ['test' => 'cache data'];
+    $cacheKey = 'test_cache_' . time();
 
-    $mockResponse = (object)[
-        'text' => 'Response text',
-        'usage' => (object)[
-            'promptTokens' => 100,
-            'completionTokens' => 50
-        ]
-    ];
+    // First call should encode and cache
+    $result1 = $toonService->encode($data, $cacheKey);
 
-    // After processing mock responses...
-    $stats = $this->service->getUsageStats();
+    // Second call should retrieve from cache
+    $result2 = $toonService->encode($data, $cacheKey);
 
-    expect($stats)->toBeArray();
-    // More assertions based on mocked data
+    expect($result1)->toBe($result2);
+
+    // Clean up
+    Cache::forget($cacheKey);
 });
 
-it('calculates costs correctly', function () {
-    // Set up known usage
-    $reflection = new ReflectionClass($this->service);
-    $property = $reflection->getProperty('usage');
-    $property->setAccessible(true);
-    $property->setValue($this->service, [
-        'openai' => [
-            'requests' => 10,
-            'prompt_tokens' => 1000,
-            'completion_tokens' => 500,
-            'total_tokens' => 1500
-        ]
+it('handles batch encoding efficiently', function () {
+    $toonService = app(ToonService::class);
+
+    $tickets = Ticket::factory()->count(5)->create();
+    $ticketData = $tickets->map(fn($t) => $t->toArray())->toArray();
+
+    $batchEncoded = $toonService->batchEncode($ticketData);
+
+    expect($batchEncoded)->toBeString();
+    expect($batchEncoded)->toContain('[5]'); // Array length indicator
+});
+
+it('creates ticket via API endpoint', function () {
+    $response = $this->postJson('/api/tickets', [
+        'subject' => 'API test ticket',
+        'description' => 'Testing ticket creation through API',
+        'customer_email' => 'test@example.com',
+        'customer_name' => 'Test User'
     ]);
 
-    $costs = $this->service->calculateCost();
+    $response->assertStatus(200);
+    $response->assertJsonStructure([
+        'ticket' => ['id', 'subject', 'description'],
+        'classification'
+    ]);
 
-    expect($costs['providers']['openai'])->toHaveKeys(['input', 'output', 'total']);
-    expect($costs['providers']['openai']['total'])->toBeGreaterThan(0);
+    $this->assertDatabaseHas('tickets', [
+        'subject' => 'API test ticket',
+        'customer_email' => 'test@example.com'
+    ]);
 });
 ```
 
-Create `tests/Feature/ChatbotControllerTest.php`:
+Run the tests:
+
+```bash
+php artisan test
+```
+
+## Section 8: Optimization with Caching
+
+Implement caching strategies to optimize TOON encoding for frequently accessed data.
+
+### Add Caching to Ticket Model
+
+Update `app/Models/Ticket.php`:
 
 ```php
-<?php
+use Illuminate\Support\Facades\Cache;
 
-use App\Models\User;
-use App\Models\Conversation;
-use App\Models\Message;
-
-beforeEach(function () {
-    $this->user = User::factory()->create();
-    $this->actingAs($this->user);
-});
-
-it('starts a new conversation', function () {
-    $response = $this->postJson('/api/chatbot/conversations', [
-        'title' => 'Test Conversation',
-        'context' => ['test' => 'data']
-    ]);
-
-    $response->assertSuccessful()
-        ->assertJsonStructure([
-            'success',
-            'conversation_id',
-            'conversation'
-        ]);
-
-    $this->assertDatabaseHas('conversations', [
-        'user_id' => $this->user->id,
-        'title' => 'Test Conversation'
-    ]);
-});
-
-it('sends a message to chatbot', function () {
-    $conversation = Conversation::factory()->create([
-        'user_id' => $this->user->id
-    ]);
-
-    // This would need mocking of the PrismToonService
-    $this->mock(PrismToonService::class, function ($mock) {
-        $mock->shouldReceive('chat')
-            ->once()
-            ->andReturn([
-                'success' => true,
-                'content' => 'Test response',
-                'usage' => ['total_tokens' => 150],
-                'provider' => 'openai'
-            ]);
-    });
-
-    $response = $this->postJson("/api/chatbot/conversations/{$conversation->id}/messages", [
-        'message' => 'Hello, chatbot!'
-    ]);
-
-    $response->assertSuccessful()
-        ->assertJsonPath('success', true)
-        ->assertJsonPath('message.role', 'assistant');
-
-    $this->assertDatabaseHas('messages', [
-        'conversation_id' => $conversation->id,
-        'role' => 'user',
-        'content' => 'Hello, chatbot!'
-    ]);
-});
-
-it('compares TOON vs JSON formats', function () {
-    $conversation = Conversation::factory()
-        ->has(Message::factory()->count(5))
-        ->create(['user_id' => $this->user->id]);
-
-    $response = $this->getJson("/api/chatbot/conversations/{$conversation->id}/compare");
-
-    $response->assertSuccessful()
-        ->assertJsonStructure([
-            'success',
-            'comparison' => [
-                'json',
-                'toon',
-                'savings'
-            ],
-            'recommendation'
-        ]);
-
-    expect($response->json('comparison.savings.percentage'))->toBeGreaterThan(0);
-});
-
-it('retrieves usage statistics', function () {
-    $response = $this->getJson('/api/chatbot/stats');
-
-    $response->assertSuccessful()
-        ->assertJsonStructure([
-            'success',
-            'provider_usage',
-            'costs',
-            'user_stats',
-            'toon_metrics'
-        ]);
-});
-
-it('enforces conversation ownership', function () {
-    $otherUser = User::factory()->create();
-    $conversation = Conversation::factory()->create([
-        'user_id' => $otherUser->id
-    ]);
-
-    $response = $this->postJson("/api/chatbot/conversations/{$conversation->id}/messages", [
-        'message' => 'Should fail'
-    ]);
-
-    $response->assertNotFound();
-});
-```
-
-## Step 9: Deployment Configuration
-
-Create deployment-specific configurations. Update `.env.production`:
-
-```env
-# Production LLM Configuration
-PRISM_DEFAULT_PROVIDER=openai
-PRISM_CACHE_RESPONSES=true
-PRISM_CACHE_TTL=7200
-
-# TOON Production Settings
-TOON_CACHE_ENABLED=true
-TOON_CACHE_TTL=3600
-TOON_COLLECT_METRICS=true
-
-# Redis Configuration
-REDIS_HOST=your-redis-host
-REDIS_PASSWORD=your-redis-password
-REDIS_PORT=6379
-CACHE_DRIVER=redis
-SESSION_DRIVER=redis
-QUEUE_CONNECTION=redis
-
-# Rate Limiting
-THROTTLE_CHATBOT_REQUESTS=60
-THROTTLE_CHATBOT_PERIOD=1
-```
-
-Create `app/Http/Middleware/ThrottleChatbot.php`:
-
-```php
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
-
-class ThrottleChatbot
+class Ticket extends Model
 {
-    public function handle(Request $request, Closure $next): mixed
+    // ... existing code ...
+
+    /**
+     * Get cached TOON format
+     */
+    public function getCachedToonFormat(): string
     {
-        $key = 'chatbot:' . ($request->user()->id ?? $request->ip());
-        $maxAttempts = config('app.throttle_chatbot_requests', 60);
+        $cacheKey = "ticket_toon_{$this->id}_{$this->updated_at->timestamp}";
 
-        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
-            return response()->json([
-                'error' => 'Too many requests. Please slow down.'
-            ], 429);
-        }
+        return Cache::remember($cacheKey, 3600, function () {
+            return $this->toToonFormat();
+        });
+    }
 
-        RateLimiter::hit($key);
+    /**
+     * Clear cache when ticket is updated
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (Ticket $ticket) {
+            // Clear all cache entries for this ticket
+            $pattern = "ticket_toon_{$ticket->id}_*";
+            // Note: Pattern-based cache clearing depends on cache driver
+            Cache::forget($pattern);
+        });
 
-        return $next($request);
+        static::deleted(function (Ticket $ticket) {
+            $pattern = "ticket_toon_{$ticket->id}_*";
+            Cache::forget($pattern);
+        });
     }
 }
 ```
 
-Add to `app/Http/Kernel.php`:
+### Create Cache Warming Command
 
-```php
-protected $middlewareAliases = [
-    // ...
-    'throttle.chatbot' => \App\Http\Middleware\ThrottleChatbot::class,
-];
+```bash
+php artisan make:command WarmToonCache
 ```
 
-Update routes to use throttling:
-
-```php
-Route::prefix('api/chatbot')->middleware(['throttle.chatbot'])->group(function () {
-    // ... routes
-});
-```
-
-## Step 10: Monitoring and Optimization
-
-Create `app/Console/Commands/AnalyzeToonUsage.php`:
+Edit `app/Console/Commands/WarmToonCache.php`:
 
 ```php
 <?php
 
 namespace App\Console\Commands;
 
-use App\Models\Conversation;
-use App\Services\ToonService;
+use App\Models\Ticket;
 use Illuminate\Console\Command;
 
-class AnalyzeToonUsage extends Command
+class WarmToonCache extends Command
 {
-    protected $signature = 'toon:analyze {--days=7}';
-    protected $description = 'Analyze TOON usage and savings';
+    protected $signature = 'toon:warm-cache {--limit=100}';
+    protected $description = 'Pre-encode tickets to TOON format and cache them';
 
-    public function handle(ToonService $toonService): int
+    public function handle(): int
     {
-        $days = $this->option('days');
-        $since = now()->subDays($days);
+        $limit = $this->option('limit');
 
-        $conversations = Conversation::where('created_at', '>=', $since)
-            ->with('messages')
+        $tickets = Ticket::whereNull('priority')
+            ->limit($limit)
             ->get();
 
-        $totalJsonSize = 0;
-        $totalToonSize = 0;
-        $totalMessages = 0;
+        $this->info("Warming cache for {$tickets->count()} tickets...");
 
-        foreach ($conversations as $conversation) {
-            foreach ($conversation->messages as $message) {
-                if ($message->data) {
-                    $comparison = $toonService->compare($message->data);
-                    $totalJsonSize += $comparison['json']['size'];
-                    $totalToonSize += $comparison['toon']['size'];
-                    $totalMessages++;
-                }
-            }
+        $bar = $this->output->createProgressBar($tickets->count());
+
+        foreach ($tickets as $ticket) {
+            $ticket->getCachedToonFormat();
+            $bar->advance();
         }
 
-        $savings = $totalJsonSize > 0
-            ? round((1 - $totalToonSize / $totalJsonSize) * 100, 1)
-            : 0;
-
-        $this->info("TOON Usage Analysis (Last {$days} days)");
-        $this->info("=====================================");
-        $this->info("Total conversations: " . $conversations->count());
-        $this->info("Messages with data: {$totalMessages}");
-        $this->info("Total JSON size: " . number_format($totalJsonSize) . " bytes");
-        $this->info("Total TOON size: " . number_format($totalToonSize) . " bytes");
-        $this->info("Space saved: " . number_format($totalJsonSize - $totalToonSize) . " bytes");
-        $this->info("Savings percentage: {$savings}%");
-
-        // Estimate token savings
-        $tokensSaved = ($totalJsonSize - $totalToonSize) / 4; // Rough estimate
-        $costSaved = ($tokensSaved / 1000) * 0.002; // Average cost per 1K tokens
-
-        $this->info("");
-        $this->info("Estimated Impact:");
-        $this->info("Tokens saved: " . number_format($tokensSaved));
-        $this->info("Cost saved: $" . number_format($costSaved, 2));
+        $bar->finish();
+        $this->newLine();
+        $this->info('Cache warming complete!');
 
         return Command::SUCCESS;
     }
 }
 ```
 
-## Testing and Validation
+## Section 9: Performance Analysis
 
-Run all tests:
+Create a command to analyze TOON performance in your application.
 
 ```bash
-# Run Pest tests
-php artisan test
-
-# Run specific test suites
-php artisan test --filter=ToonServiceTest
-php artisan test --filter=ChatbotControllerTest
-
-# Run with coverage
-php artisan test --coverage
-
-# Run TOON analysis
-php artisan toon:analyze --days=30
+php artisan make:command AnalyzeToonPerformance
 ```
 
-## Troubleshooting
+Edit `app/Console/Commands/AnalyzeToonPerformance.php`:
 
-### Common Issues and Solutions
+```php
+<?php
 
-1. **Prism Provider Not Working**
-   - Verify API keys in .env
-   - Check provider is enabled in config/prism.php
-   - Ensure network allows outbound HTTPS
+namespace App\Console\Commands;
 
-2. **TOON Cache Not Working**
-   - Verify Redis is running
-   - Check CACHE_DRIVER=redis in .env
-   - Clear cache: `php artisan cache:clear`
+use App\Models\Ticket;
+use App\Services\ToonService;
+use Illuminate\Console\Command;
+use HelgeSverre\Toon\Toon;
 
-3. **Message Streaming Fails**
-   - Check PHP output buffering settings
-   - Verify nginx/Apache allows SSE
-   - Test with `X-Accel-Buffering: no` header
+class AnalyzeToonPerformance extends Command
+{
+    protected $signature = 'toon:analyze {--tickets=100}';
+    protected $description = 'Analyze TOON performance vs JSON';
 
-4. **High Memory Usage**
-   - Enable pagination for conversations
-   - Limit message history context
-   - Use queue for large data processing
+    public function handle(ToonService $toonService): int
+    {
+        $ticketCount = $this->option('tickets');
+        $tickets = Ticket::limit($ticketCount)->get();
 
-5. **Token Count Mismatch**
-   - Use proper tokenizer library (tiktoken)
-   - Account for TOON metadata overhead
-   - Consider model-specific tokenization
+        if ($tickets->isEmpty()) {
+            $this->error('No tickets found. Create some tickets first.');
+            return Command::FAILURE;
+        }
+
+        $this->info("Analyzing {$tickets->count()} tickets...\n");
+
+        // Measure encoding time
+        $jsonTimes = [];
+        $toonTimes = [];
+        $sizeSavings = [];
+
+        foreach ($tickets as $ticket) {
+            $data = $ticket->toArray();
+
+            // Measure JSON encoding
+            $start = microtime(true);
+            $jsonEncoded = json_encode($data);
+            $jsonTimes[] = microtime(true) - $start;
+
+            // Measure TOON encoding
+            $start = microtime(true);
+            $toonEncoded = toon_compact($data);
+            $toonTimes[] = microtime(true) - $start;
+
+            // Calculate size savings
+            $sizeSavings[] = (strlen($jsonEncoded) - strlen($toonEncoded)) / strlen($jsonEncoded) * 100;
+        }
+
+        // Calculate statistics
+        $avgJsonTime = array_sum($jsonTimes) / count($jsonTimes) * 1000; // Convert to ms
+        $avgToonTime = array_sum($toonTimes) / count($toonTimes) * 1000;
+        $avgSizeSaving = array_sum($sizeSavings) / count($sizeSavings);
+
+        // Estimate token savings
+        $sampleTicket = $tickets->first();
+        $comparison = $toonService->compare($sampleTicket->toArray());
+
+        // Display results
+        $this->table(
+            ['Metric', 'JSON', 'TOON', 'Difference'],
+            [
+                ['Avg Encoding Time', sprintf('%.4f ms', $avgJsonTime), sprintf('%.4f ms', $avgToonTime), sprintf('%.2fx', $avgJsonTime / $avgToonTime)],
+                ['Avg Size', $comparison['json']['size'] . ' bytes', $comparison['toon']['size'] . ' bytes', sprintf('-%d%%', $avgSizeSaving)],
+                ['Est. Tokens (sample)', (int)($comparison['json']['size'] / 4), (int)($comparison['toon']['size'] / 4), sprintf('-%d tokens', (int)($comparison['savings']['bytes'] / 4))],
+            ]
+        );
+
+        $this->newLine();
+        $this->info('Summary:');
+        $this->line(sprintf('• TOON reduces size by an average of %.1f%%', $avgSizeSaving));
+        $this->line(sprintf('• Estimated token savings: %d tokens per ticket', (int)($comparison['savings']['bytes'] / 4)));
+        $this->line(sprintf('• For %d tickets, that\'s approximately %d tokens saved',
+            $ticketCount,
+            $ticketCount * (int)($comparison['savings']['bytes'] / 4)
+        ));
+
+        // Cost calculation
+        $tokensSaved = $ticketCount * (int)($comparison['savings']['bytes'] / 4);
+        $costSaved = ($tokensSaved / 1000) * 0.002; // GPT-3.5 pricing
+        $this->line(sprintf('• Estimated cost savings: $%.4f', $costSaved));
+
+        return Command::SUCCESS;
+    }
+}
+```
+
+Run the performance analysis:
+
+```bash
+php artisan toon:analyze --tickets=100
+```
+
+## Section 10: Troubleshooting
+
+Common issues and solutions when using TOON in Laravel applications.
+
+### Issue: Cache Not Working
+
+**Symptom**: Encoded data is not being cached despite providing cache keys.
+
+**Solution**: Verify Redis is running and configured correctly:
+
+```bash
+# Check Redis connection
+php artisan tinker
+>>> Cache::put('test', 'value', 60);
+>>> Cache::get('test');
+```
+
+If Redis isn't working, check:
+- Redis service is running: `redis-cli ping`
+- `.env` has correct Redis settings
+- `config/cache.php` is using the correct driver
+
+### Issue: Tests Failing
+
+**Symptom**: Feature tests fail with factory not found errors.
+
+**Solution**: Ensure factories are properly namespaced and the model uses HasFactory trait:
+
+```php
+// In your model
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Ticket extends Model
+{
+    use HasFactory;
+    // ...
+}
+```
+
+### Issue: Token Estimates Inaccurate
+
+**Symptom**: Estimated tokens don't match actual API usage.
+
+**Note**: The 1 token ≈ 4 characters rule is an approximation. For more accurate estimates, consider using tiktoken or the OpenAI tokenizer:
+
+```php
+// More accurate token counting (requires additional package)
+public function countTokensAccurately(string $text): int
+{
+    // Use a tokenizer library for accurate counts
+    // This is still an estimate but more accurate
+    $words = str_word_count($text);
+    return (int) ceil($words * 1.3);
+}
+```
+
+### Issue: OpenAI Rate Limits
+
+**Symptom**: API calls fail with rate limit errors.
+
+**Solution**: Implement exponential backoff and queuing:
+
+```php
+// In TicketClassifier
+use Illuminate\Support\Facades\RateLimiter;
+
+public function classify(Ticket $ticket): array
+{
+    $key = 'openai-api';
+
+    if (RateLimiter::tooManyAttempts($key, 10)) {
+        $seconds = RateLimiter::availableIn($key);
+        throw new \Exception("Rate limit exceeded. Try again in {$seconds} seconds.");
+    }
+
+    RateLimiter::hit($key, 60);
+
+    // ... rest of classification logic
+}
+```
+
+### Issue: Memory Usage with Large Datasets
+
+**Symptom**: Memory exhaustion when encoding large arrays.
+
+**Solution**: Use chunking for large datasets:
+
+```php
+// Process in chunks
+Ticket::chunk(100, function ($tickets) use ($toonService) {
+    foreach ($tickets as $ticket) {
+        $toonService->encode($ticket->toArray());
+    }
+});
+```
+
+### Issue: TOON Not Found After Installation
+
+**Symptom**: Class 'Toon\Toon' not found errors.
+
+**Solution**: Clear composer autoload and cache:
+
+```bash
+composer dump-autoload
+php artisan cache:clear
+php artisan config:clear
+```
+
+## Summary
+
+In this tutorial, you learned how to use TOON in a Laravel application without any special integration. Key takeaways:
+
+1. **TOON is just a library** - No facades or service providers needed
+2. **Service classes are optional** - Use them for abstraction and caching
+3. **Token savings are real** - 30-60% reduction translates to cost savings
+4. **Caching improves performance** - Cache encoded data for frequently accessed records
+5. **Testing is straightforward** - Test TOON like any other PHP code
+
+The ticket classification system demonstrates a practical use case where TOON's compact format reduces API costs when sending data to LLMs. The patterns shown here can be applied to any Laravel application that needs efficient data formatting.
 
 ## Next Steps
 
-You've built a production-ready Laravel AI chatbot! Continue with:
+- Explore using TOON with queue jobs for batch processing
+- Implement TOON formatting for API responses
+- Create custom encoding presets for your domain
+- Build a monitoring dashboard for token usage
+- Integrate with other LLM providers (Claude, Gemini)
 
-1. **Tutorial 4**: Deep dive into token optimization strategies
-2. **Tutorial 5**: Build RAG systems with vector stores
-3. **Advanced Features**: Add voice input, file uploads, and more
+## Additional Resources
 
-### Key Takeaways
-
-- TOON integrates seamlessly with Laravel's architecture
-- Prism enables easy provider switching with consistent optimization
-- Proper caching and metrics are essential for production
-- Testing AI features requires careful mocking
-- Token savings compound with application scale
-
-### Additional Resources
-
+- [TOON PHP Documentation](https://github.com/helgesverre/toon-php)
 - [Laravel Documentation](https://laravel.com/docs)
-- [Prism Documentation](https://github.com/echolabsdev/laravel-prism)
-- [TOON Repository](https://github.com/helgesverre/toon)
-- [Pest Testing](https://pestphp.com)
+- [OpenAI PHP Client](https://github.com/openai-php/client)
+- [Pest Testing Framework](https://pestphp.com)
