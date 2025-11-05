@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Performance benchmarking**: Comprehensive PHPBench suite for performance analysis
+  - EncodeBench: Measures encoding performance across data sizes (small, medium, large, xlarge) and format types (inline, tabular, list, nested)
+  - DecodeBench: Measures decoding/parsing performance with same variations
+  - ThroughputBench: Measures sustained operations per second for realistic workloads
+  - ScalabilityBench: Measures performance scaling from 10 to 100K items
+  - All benchmarks track execution time and memory usage
+- **GitHub Actions workflow**: Automated performance benchmarking on every PR
+  - Runs benchmarks on PHP 8.1, 8.2, 8.3, 8.4
+  - Compares PR performance against main branch baseline
+  - Comments results directly on pull requests
+  - Detects performance regressions (>15% slower)
+  - Stores benchmark results as artifacts
+- **Justfile commands**: New benchmark commands for local development
+  - `just benchmark-performance` - Run PHPBench with default report
+  - `just benchmark-perf-summary` - Run with summary report
+  - `just benchmark-all` - Run both token efficiency and performance benchmarks
+  - `just benchmark-baseline` - Store current performance as baseline
+  - `just benchmark-compare` - Compare against stored baseline
+- **Documentation**: Comprehensive README for performance benchmarks explaining metrics, usage, and interpretation
+
 ## [1.3.0] - 2025-11-03
 
 ### Added

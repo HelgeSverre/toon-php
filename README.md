@@ -1,6 +1,11 @@
 # TOON (Token-Oriented Object Notation)
 
-A PHP port of [johannschopplich/toon](https://github.com/johannschopplich/toon) - a compact data format designed to reduce token consumption when sending structured data to Large Language Models.
+[![Packagist Version](https://img.shields.io/packagist/v/helgesverre/toon)](https://packagist.org/packages/helgesverre/toon)
+![Total Downloads](https://img.shields.io/packagist/dt/helgesverre/toon)fs
+
+![License](https://img.shields.io/packagist/l/helgesverre/toon)
+
+A PHP port of [toon-format/toon](https://github.com/toon-format/toon) - a compact data format designed to reduce token consumption when sending structured data to Large Language Models.
 
 ## What is TOON?
 
@@ -368,7 +373,7 @@ $response = $client->messages()->create([
 ]);
 ```
 
-See the [`examples/`](examples) directory for complete working examples.
+For complete working examples with these integrations, see the tutorials below.
 
 ## Tutorials
 
@@ -384,6 +389,9 @@ Comprehensive step-by-step guides for learning TOON and integrating it with popu
 
 - **[Laravel + Prism AI Application](tutorials/03-laravel-prism-integration.md)** (20-30 min)
   Build a complete Laravel AI chatbot using TOON and Prism for multi-provider support.
+
+- **[Anthropic/Claude Integration](tutorials/06-anthropic-integration.md)** (20-25 min)
+  Leverage Claude's 200K context window with TOON optimization. Process large datasets efficiently.
 
 ### Advanced Topics
 - **[Token Optimization Strategies](tutorials/04-token-optimization-strategies.md)** (20-25 min)
@@ -519,7 +527,8 @@ TOON is not a strict superset or subset of JSON. Key differences:
 
 ## Credits
 
-- Original TypeScript implementation: [johannschopplich/toon](https://github.com/johannschopplich/toon)
+- Original TypeScript implementation: [toon-format/toon](https://github.com/toon-format/toon)
+- Specification: [toon-format/spec](https://github.com/toon-format/spec)
 - PHP port: [HelgeSverre](https://github.com/HelgeSverre)
 
 ## License

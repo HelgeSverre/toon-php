@@ -44,6 +44,8 @@ just benchmark
 
 ## Architecture
 
+TOON PHP is a port of the TOON (Token-Oriented Object Notation) format specification, which achieves 30-60% token reduction vs JSON for LLM contexts. The implementation strictly follows the **TOON Specification v1.3+** (see `docs/SPEC.md`).
+
 ### Core Components
 
 1. **Toon** (`src/Toon.php`) - Main entry point with single static `encode()` method
@@ -91,16 +93,19 @@ The encoder automatically selects the optimal format:
 
 - **Tests**: All tests MUST go in `tests/` directory. Never create test PHP files elsewhere in the repo.
 - **Documentation**: All documentation MUST go in `docs/` folder if needed. Never create report/summary markdown files in the root.
-- **Examples**: Example code in documentation must be valid, executable PHP syntax.
+- **Examples**: Example code in documentation and examples/ directory must be valid, executable PHP syntax that matches the actual codebase.
+- **Spec Files**: The official TOON specification lives in `docs/SPEC.md`. Always validate implementation changes against the spec.
 
 ### Development Workflow
 
 **When adding features:**
-1. Write tests first in appropriate test file under `tests/`
-2. Implement in relevant src file
-3. Run `just dev` to format and test
-4. Update CHANGELOG.md following Keep a Changelog format
-5. Run `just pr` before submitting
+1. **Check the spec** - Review `docs/SPEC.md` to ensure proposed change conforms to TOON specification
+2. **Check spec requirements** - Review `docs/spec-requirements.md` for normative requirements (142 total requirements)
+3. Write tests first in appropriate test file under `tests/`
+4. Implement in relevant src file following spec requirements
+5. Run `just dev` to format and test
+6. Update CHANGELOG.md following Keep a Changelog format
+7. Run `just pr` before submitting
 
 **When debugging:**
 1. Check normalization step (`Normalize.php`)
@@ -224,12 +229,35 @@ just pr
 just ci
 ```
 
+## Specification Compliance
+
+**CRITICAL**: This library implements the official TOON Specification v1.3+ (docs/SPEC.md). All code changes MUST conform to the specification.
+
+### Key Specification Requirements
+
+The specification defines 142 normative requirements across 19 sections:
+- 104 MUST/REQUIRED requirements (critical)
+- 12 MUST NOT prohibitions (critical)
+- 17 SHOULD recommendations (high priority)
+- 9 MAY/OPTIONAL features (low priority)
+
+**Before making changes**:
+1. Read relevant sections in `docs/SPEC.md`
+2. Check `docs/spec-requirements.md` for specific requirements
+3. Validate your implementation against encoder/decoder conformance checklists (§13 of spec)
+
+**Encoder Conformance (Section 13.1)**: Encoders MUST produce UTF-8 output with LF line endings, use consistent indentation (no tabs), escape exactly 5 characters (\\, ", \n, \r, \t), quote delimiter-containing strings, emit accurate array lengths, preserve key order, normalize numbers to non-exponential form, convert -0 to 0, convert NaN/±Infinity to null, and emit no trailing spaces or newlines.
+
+**Decoder Conformance (Section 13.2)**: Decoders MUST parse array headers correctly, split only on active delimiters, unescape valid escapes only, type unquoted primitives correctly, enforce strict-mode rules when enabled, accept optional # length markers, and preserve array/object order.
+
 ## Important Reminders
 
-1. **Use justfile commands** - Always prefer `just` over raw composer/vendor commands
-2. **Keep CHANGELOG.md updated** - Document all user-facing changes
-3. **No scattered test files** - All tests go in `tests/` directory only
-4. **No root-level reports** - Documentation goes in `docs/` folder
-5. **Valid PHP in docs** - All example code must be syntactically correct
-6. **Format before commit** - Always run `just fix` or `just dev`
-7. **Test after changes** - Verify with `just test` before pushing
+1. **Follow the spec** - ALL code changes must conform to TOON Specification v1.3+ in `docs/SPEC.md`
+2. **Use justfile commands** - Always prefer `just` over raw composer/vendor commands
+3. **Keep CHANGELOG.md updated** - Document all user-facing changes
+4. **No scattered test files** - All tests go in `tests/` directory only
+5. **No root-level reports** - Documentation goes in `docs/` folder
+6. **Valid PHP in docs** - All example code must be syntactically correct and match actual code
+7. **Verify examples** - Run `php -l` on any example files to ensure syntax validity
+8. **Format before commit** - Always run `just fix` or `just dev`
+9. **Test after changes** - Verify with `just test` before pushing
