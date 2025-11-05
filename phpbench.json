@@ -1,0 +1,19 @@
+{
+    "$schema": "./vendor/phpbench/phpbench/phpbench.schema.json",
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": "benchmarks/performance",
+    "runner.php_config": {
+        "memory_limit": "1G"
+    },
+    "report.generators": {
+        "default": {
+            "extends": "aggregate",
+            "cols": ["benchmark", "subject", "set", "revs", "its", "mem_peak", "best", "mean", "mode", "worst", "stdev", "rstdev"]
+        },
+        "summary": {
+            "extends": "aggregate",
+            "cols": ["benchmark", "subject", "mean", "mem_peak"]
+        }
+    },
+    "storage.xml_storage_path": "benchmarks/performance/.phpbench/storage"
+}

@@ -1,116 +1,130 @@
 # Toon - Token-Oriented Object Notation
 # https://just.systems/man/en/
-
 # Load environment variables from .env
-set dotenv-load
+
+set dotenv-load := true
 
 # Show available commands by default (first recipe is default)
 help:
     @just --list
 
+# Private: Ensure vendor directory exists, auto-install if missing
+[private]
+_ensure-vendor:
+    #!/usr/bin/env bash
+    if [ ! -d vendor ]; then
+        if command -v composer &> /dev/null; then
+            echo "📦 Installing dependencies..."
+            composer install
+        else
+            echo "❌ vendor/ not found and composer not available"
+            exit 1
+        fi
+    fi
+
 # === Setup ===
 
+[doc('Install PHP dependencies')]
 [group('setup')]
 install:
     @echo "Installing PHP dependencies..."
     composer install
 
-[group('setup')]
-[doc('Complete initial setup')]
-setup: install
-    @echo "Setup complete!"
-    @echo ""
-    @echo "Try running: just test"
+# === Specification Sync ===
+
+[doc('Download latest SPEC.md from upstream')]
+[group('spec')]
+sync-spec:
+    @echo "Downloading SPEC.md from toon-format/spec..."
+    @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/SPEC.md -o docs/SPEC.md
+    @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/CHJANGELOG.md -o docs/SPEC.md
+    @echo "Done! Review changes: git diff docs/SPEC.md"
 
 # === Testing ===
 
-[group('test')]
 [doc('Run all tests')]
-test:
+[group('test')]
+test: _ensure-vendor
     @echo "Running tests..."
     composer test
 
-[group('test')]
 [doc('Run tests with coverage report')]
-test-coverage:
-    @echo "Running tests with coverage..."
-    composer coverage
-
 [group('test')]
-[doc('Run tests with coverage using Herd')]
-test-coverage-herd:
-    @echo "Running tests with coverage (Herd)..."
-    composer coverage:herd
+coverage: _ensure-vendor
+    #!/usr/bin/env bash
+    if command -v herd &> /dev/null; then
+        echo "Running tests with coverage (Herd)..."
+        composer coverage:herd
+    else
+        echo "Running tests with coverage..."
+        composer coverage
+    fi
 
-[group('test')]
 [doc('Watch files and run tests on change (requires entr)')]
-watch-test:
+[group('test')]
+watch-test: _ensure-vendor
     @echo "Watching for changes... (press Ctrl+C to stop)"
     @find src tests -name '*.php' | entr -c composer test
 
-# === Static Analysis ===
+# === Development Tools ===
 
-[group('analyse')]
 [doc('Run PHPStan static analysis')]
-analyse:
+[group('dev')]
+analyse: _ensure-vendor
     @echo "Running PHPStan analysis..."
     composer analyse
 
-[group('analyse')]
-[doc('Alias for analyse')]
-analyze: analyse
-
-# === Code Style ===
-
-[group('format')]
 [doc('Auto-fix code style issues')]
-fix:
+[group('dev')]
+fix: _ensure-vendor
     @echo "Fixing PHP code style..."
     composer format
 
-[group('format')]
-[doc('Alias for fix')]
+# Hidden aliases for common spellings/tools
+[private]
+analyze: analyse
+
+[private]
 format: fix
 
-[group('format')]
-[doc('Alias for fix')]
+[private]
 pint: fix
 
-# === Quality Checks ===
+# === Workflows ===
 
-[group('quality')]
-[doc('Run all checks (format + analyse + test)')]
+[doc('Quick dev cycle: format and test')]
+[group('workflow')]
+dev: fix test
+    @echo "Development cycle complete!"
+
+[doc('Full quality suite: format + analyse + test')]
+[group('workflow')]
 quality: fix analyse test
     @echo "Quality checks complete!"
 
-[group('quality')]
-[doc('Run checks without modifying files')]
-check: analyse test
-    @echo "Checks complete!"
-
-# === Benchmarks ===
-
-[group('benchmark')]
-[doc('Run token efficiency benchmarks')]
-benchmark:
-    @echo "Running benchmarks..."
-    @cd benchmarks && composer benchmark
-
-[group('benchmark')]
-[doc('Setup and run benchmarks')]
-benchmark-full: benchmark-install benchmark
-    @echo "Benchmark complete!"
-
-[group('benchmark')]
-[doc('Install benchmark dependencies')]
-benchmark-install:
-    @echo "Installing benchmark dependencies..."
-    @cd benchmarks && composer install
-
-# === Cleanup ===
-
+[doc('Prepare for PR: run full quality suite')]
 [group('workflow')]
+pr: quality
+    @echo "Ready for PR!"
+
+[doc('CI pipeline: analyse + test (no formatting)')]
+[group('workflow')]
+ci: analyse test
+    @echo "CI pipeline complete!"
+
+[doc('Quick check: analyse only (no test)')]
+[group('workflow')]
+quick: analyse
+    @echo "Quick check complete!"
+
+[doc('Watch mode: format + test on file changes (requires entr)')]
+[group('workflow')]
+watch: _ensure-vendor
+    @echo "Watching for changes (format + test)... (press Ctrl+C to stop)"
+    @find src tests -name '*.php' | entr -c bash -c 'just fix && just test'
+
 [doc('Clean cache and generated files')]
+[group('workflow')]
 clean:
     @echo "Cleaning cache files..."
     @rm -rf vendor/bin/.phpunit.result.cache
@@ -118,26 +132,54 @@ clean:
     @rm -rf coverage
     @echo "Cache cleaned!"
 
-# === CI/CD ===
+# Deprecated alias - use 'quality' instead
+[private]
+check: ci
 
-[group('ci')]
-[doc('Run CI pipeline (analyse + test)')]
-ci: analyse test
-    @echo "CI pipeline complete!"
+# === Benchmarks ===
 
-# === Development Workflows ===
+[doc('Run token efficiency benchmarks')]
+[group('benchmark')]
+benchmark:
+    @echo "Running token efficiency benchmarks..."
+    @cd benchmarks && composer benchmark
 
-[group('workflow')]
-[doc('Quick dev cycle: fix code style and run tests')]
-dev: fix test
-    @echo "Development cycle complete!"
+[doc('Run performance benchmarks (time, memory, throughput)')]
+[group('benchmark')]
+benchmark-performance: _ensure-vendor
+    @echo "Running PHPBench performance benchmarks..."
+    @./vendor/bin/phpbench run --report=default
 
-[group('workflow')]
-[doc('Prepare for PR: run full quality suite')]
-pr: quality
-    @echo "Ready for PR!"
+[doc('Run performance benchmarks with summary report')]
+[group('benchmark')]
+benchmark-perf-summary: _ensure-vendor
+    @echo "Running PHPBench with summary report..."
+    @./vendor/bin/phpbench run --report=summary
 
-[group('workflow')]
-[doc('Quick check without running tests')]
-quick: analyse
-    @echo "Quick check complete!"
+[doc('Run all benchmarks (token + performance)')]
+[group('benchmark')]
+benchmark-all: benchmark benchmark-performance
+    @echo "All benchmarks complete!"
+
+[doc('Compare performance against baseline')]
+[group('benchmark')]
+benchmark-compare: _ensure-vendor
+    @echo "Comparing against baseline..."
+    @./vendor/bin/phpbench report --ref=baseline --report=default
+
+[doc('Store current performance as baseline')]
+[group('benchmark')]
+benchmark-baseline: _ensure-vendor
+    @echo "Storing baseline results..."
+    @./vendor/bin/phpbench run --report=summary --store --tag=baseline
+
+[doc('Setup and run all benchmarks')]
+[group('benchmark')]
+benchmark-full: benchmark-install benchmark-all
+    @echo "All benchmarks complete!"
+
+[doc('Install benchmark dependencies')]
+[group('benchmark')]
+benchmark-install:
+    @echo "Installing benchmark dependencies..."
+    @cd benchmarks && composer install
