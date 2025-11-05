@@ -34,15 +34,13 @@ final class Encoders
 
         // Handle arrays
         if (Normalize::isJsonArray($value)) {
-            assert(is_array($value));
             self::encodeArray($value, $writer, $options, $depth);
 
             return;
         }
 
         // Handle objects
-        if (Normalize::isJsonObject($value)) {
-            assert(is_array($value) && ! array_is_list($value));
+        if (Normalize::isJsonObject($value)) { // @phpstan-ignore staticMethod.impossibleType
             self::encodeObject($value, $writer, $options, $depth);
 
             return;
@@ -78,21 +76,20 @@ final class Encoders
 
         // Handle arrays
         if (Normalize::isJsonArray($value)) {
-            assert(is_array($value));
             $array = $value;
 
             // Empty array
             if (empty($array)) {
-                $inlineArray = self::formatInlineArray($array, $options);
-                $writer->push($depth, $prefix.$encodedKey.$inlineArray);
+                $inlineArray = self::formatInlineArray($array, $options, $key);
+                $writer->push($depth, $prefix.$inlineArray);
 
                 return;
             }
 
             // Inline primitive array
             if (Normalize::isArrayOfPrimitives($array)) {
-                $inlineArray = self::formatInlineArray($array, $options);
-                $writer->push($depth, $prefix.$encodedKey.$inlineArray);
+                $inlineArray = self::formatInlineArray($array, $options, $key);
+                $writer->push($depth, $prefix.$inlineArray);
 
                 return;
             }
@@ -103,7 +100,6 @@ final class Encoders
                 $delimiterKey = self::getDelimiterKey($options->delimiter);
                 $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
-                    assert(is_array($item));
                     $inlineArray = self::formatInlineArray($item, $options);
                     $writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
                 }
@@ -115,7 +111,7 @@ final class Encoders
             if (Normalize::isArrayOfObjects($array)) {
                 $header = self::detectTabularHeader($array);
                 if ($header !== null && self::isTabularArray($array, $header)) {
-                    $writer->push($depth, $prefix.$encodedKey.self::formatArrayHeader(count($array), $header, $options));
+                    $writer->push($depth, $prefix.self::formatArrayHeader(count($array), $header, $options, $key));
                     self::writeTabularRows($array, $header, $writer, $options, $depth + 1);
 
                     return;
@@ -124,7 +120,6 @@ final class Encoders
                 // Fall back to list format
                 $writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
-                    assert(is_array($item) && ! array_is_list($item));
                     self::encodeObjectAsListItem($item, $writer, $options, $depth + 1);
                 }
 
@@ -141,12 +136,12 @@ final class Encoders
         }
 
         // Handle nested objects
-        if (Normalize::isJsonObject($value)) {
-            assert(is_array($value) && ! array_is_list($value));
+        if (Normalize::isJsonObject($value)) { // @phpstan-ignore staticMethod.impossibleType
             $object = $value;
 
             // Empty object
-            if (empty($object)) {
+            if (empty($object)) { // @phpstan-ignore empty.variable
+
                 $writer->push($depth, $prefix.$encodedKey.Constants::COLON);
 
                 return;
@@ -184,8 +179,7 @@ final class Encoders
             $delimiterKey = self::getDelimiterKey($options->delimiter);
             $writer->push($depth, Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
-                assert(is_array($item));
-                $inlineArray = self::formatInlineArray($item, $options);
+                $inlineArray = self::formatInlineArray($item, $options); // @phpstan-ignore argument.type
                 $writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
             }
 
@@ -196,7 +190,7 @@ final class Encoders
         if (Normalize::isArrayOfObjects($array)) {
             $header = self::detectTabularHeader($array);
             if ($header !== null && self::isTabularArray($array, $header)) {
-                $writer->push($depth, self::formatArrayHeader(count($array), $header, $options));
+                $writer->push($depth, self::formatArrayHeader(count($array), $header, $options, null));
                 self::writeTabularRows($array, $header, $writer, $options, $depth + 1);
 
                 return;
@@ -205,8 +199,7 @@ final class Encoders
             // Fall back to list format
             $writer->push($depth, Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
-                assert(is_array($item) && ! array_is_list($item));
-                self::encodeObjectAsListItem($item, $writer, $options, $depth + 1);
+                self::encodeObjectAsListItem($item, $writer, $options, $depth + 1); // @phpstan-ignore argument.type
             }
 
             return;
@@ -221,8 +214,9 @@ final class Encoders
 
     /**
      * @param  array<mixed>  $array
+     * @param  string|null  $key  Optional key for the array (for header quoting)
      */
-    private static function formatInlineArray(array $array, EncodeOptions $options): string
+    private static function formatInlineArray(array $array, EncodeOptions $options, ?string $key = null): string
     {
         $length = count($array);
         $lengthPrefix = $options->lengthMarker !== false ? $options->lengthMarker : '';
@@ -235,26 +229,43 @@ final class Encoders
 
         $joined = implode($options->delimiter, $encoded);
 
+        // Build header with optional key prefix
+        $header = '';
+        if ($key !== null) {
+            $header = Primitives::encodeKey($key);
+        }
+
         // Only add space after colon if there are items
-        return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.($joined !== '' ? Constants::SPACE.$joined : '');
+        return $header.Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.($joined !== '' ? Constants::SPACE.$joined : '');
     }
 
     /**
+     * Format a tabular array header with field declarations.
+     *
+     * Field names are encoded as keys following the same quoting rules (§7.3).
+     *
      * @param  array<string>  $fields
+     * @param  string|null  $key  Optional key for the array
      */
-    private static function formatArrayHeader(int $length, array $fields, EncodeOptions $options): string
+    private static function formatArrayHeader(int $length, array $fields, EncodeOptions $options, ?string $key = null): string
     {
         $lengthPrefix = $options->lengthMarker !== false ? $options->lengthMarker : '';
         $delimiterKey = self::getDelimiterKey($options->delimiter);
 
-        // Encode field names as keys using identifier pattern matching
+        // Encode field names as keys
         $quotedFields = array_map(
             fn ($field) => Primitives::encodeKey($field),
             $fields
         );
         $fieldsList = implode($options->delimiter, $quotedFields);
 
-        return Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::OPEN_BRACE.$fieldsList.Constants::CLOSE_BRACE.Constants::COLON;
+        // Build header with optional key prefix
+        $header = '';
+        if ($key !== null) {
+            $header = Primitives::encodeKey($key);
+        }
+
+        return $header.Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::OPEN_BRACE.$fieldsList.Constants::CLOSE_BRACE.Constants::COLON;
     }
 
     /**
@@ -267,12 +278,11 @@ final class Encoders
             return null;
         }
 
-        $firstObject = reset($array);
+        $firstKey = array_key_first($array);
+        $firstObject = $array[$firstKey];
         if (! Normalize::isJsonObject($firstObject)) {
             return null;
         }
-
-        assert(is_array($firstObject));
 
         return array_keys($firstObject);
     }
@@ -292,7 +302,6 @@ final class Encoders
                 return false;
             }
 
-            assert(is_array($item));
             $keys = array_keys($item);
             $sortedKeys = $keys;
             sort($sortedKeys);
@@ -320,10 +329,9 @@ final class Encoders
     private static function writeTabularRows(array $array, array $fields, LineWriter $writer, EncodeOptions $options, int $depth): void
     {
         foreach ($array as $object) {
-            assert(is_array($object));
             $values = [];
             foreach ($fields as $field) {
-                $values[] = Primitives::encodePrimitive($object[$field], $options->delimiter);
+                $values[] = Primitives::encodePrimitive($object[$field], $options->delimiter); // @phpstan-ignore offsetAccess.nonOffsetAccessible
             }
             $writer->push($depth, implode($options->delimiter, $values));
         }
@@ -365,7 +373,6 @@ final class Encoders
 
         // Arrays
         if (Normalize::isJsonArray($item)) {
-            assert(is_array($item));
             if (Normalize::isArrayOfPrimitives($item)) {
                 $inlineArray = self::formatInlineArray($item, $options);
                 $writer->push($depth, Constants::LIST_ITEM_PREFIX.$inlineArray);
@@ -383,8 +390,7 @@ final class Encoders
         }
 
         // Objects
-        if (Normalize::isJsonObject($item)) {
-            assert(is_array($item) && ! array_is_list($item));
+        if (Normalize::isJsonObject($item)) { // @phpstan-ignore staticMethod.impossibleType
             self::encodeObjectAsListItem($item, $writer, $options, $depth);
 
             return;

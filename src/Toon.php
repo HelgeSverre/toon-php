@@ -35,6 +35,32 @@ final class Toon
         return $writer->toString();
     }
 
+    /**
+     * Decode a TOON string to a PHP value.
+     *
+     * Parses TOON format back into PHP data structures (arrays, primitives).
+     * Objects are decoded as associative arrays.
+     *
+     * @param  string  $toon  The TOON-formatted string to decode
+     * @param  DecodeOptions|null  $options  Optional decoding options (indent, strict mode)
+     * @return mixed The decoded PHP value
+     *
+     * @throws Exceptions\DecodeException If decoding fails
+     */
+    public static function decode(string $toon, ?DecodeOptions $options = null): mixed
+    {
+        // Resolve options
+        $options ??= DecodeOptions::default();
+
+        // Tokenize input
+        $lines = Decoder\Tokenizer::tokenize($toon, $options);
+
+        // Parse tokenized lines
+        $parser = new Decoder\Parser($options);
+
+        return $parser->parse($lines);
+    }
+
     private function __construct()
     {
         // Prevent instantiation

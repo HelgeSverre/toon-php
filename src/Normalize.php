@@ -6,8 +6,6 @@ namespace HelgeSverre\Toon;
 
 use DateTimeInterface;
 use JsonSerializable;
-use ReflectionClass;
-use stdClass;
 
 final class Normalize
 {
@@ -119,6 +117,8 @@ final class Normalize
      *
      * @param  mixed  $value  The value to check
      * @return bool True if the value is an array list
+     *
+     * @phpstan-assert-if-true array $value
      */
     public static function isJsonArray(mixed $value): bool
     {
@@ -130,37 +130,12 @@ final class Normalize
      *
      * @param  mixed  $value  The value to check
      * @return bool True if the value is an associative array
+     *
+     * @phpstan-assert-if-true array $value
      */
     public static function isJsonObject(mixed $value): bool
     {
         return is_array($value) && ! array_is_list($value);
-    }
-
-    public static function isPlainObject(mixed $value): bool
-    {
-        if (! is_object($value)) {
-            return false;
-        }
-
-        $class = get_class($value);
-
-        // stdClass is always plain
-        if ($class === 'stdClass') {
-            return true;
-        }
-
-        // Anonymous classes are not plain
-        if (str_contains($class, '@anonymous')) {
-            return false;
-        }
-
-        // Built-in classes are not plain
-        $reflection = new ReflectionClass($value);
-        if ($reflection->isInternal()) {
-            return false;
-        }
-
-        return false;
     }
 
     /**

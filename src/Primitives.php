@@ -11,6 +11,11 @@ final class Primitives
     /**
      * Encode a primitive value (null, bool, int, float, string) to TOON format.
      *
+     * Numbers are encoded without exponential notation (§2). Negative zero is
+     * normalized to zero (§2). Very large numbers (>10^20) are quoted as strings
+     * for precision preservation (§2.9). Sufficient precision is maintained for
+     * round-trip fidelity (§2.7).
+     *
      * @param  mixed  $value  The primitive value to encode
      * @param  string  $delimiter  The delimiter used in the context (affects string quoting)
      * @return string The encoded primitive value
@@ -35,14 +40,19 @@ final class Primitives
 
             // Handle float zero and negative zero
             if (is_float($value) && $value === 0.0) {
-                // Both 0.0 and -0.0 should encode as '0'
                 return '0';
             }
 
-            // For floats, expand scientific notation for consistency with JS
-            // Use json_encode for locale-independent formatting, then process
+            // Expand scientific notation for floats
             if (is_float($value)) {
-                // json_encode gives us locale-independent decimal representation
+                // Very large numbers are quoted as strings for exact precision
+                if (abs($value) > 1e20) {
+                    $str = sprintf('%.0f', $value);
+
+                    return Constants::DOUBLE_QUOTE.$str.Constants::DOUBLE_QUOTE;
+                }
+
+                // Use json_encode for locale-independent formatting
                 $result = json_encode($value);
                 if ($result === false) {
                     throw new InvalidArgumentException('Failed to encode float value');
@@ -51,13 +61,19 @@ final class Primitives
                 // If result contains scientific notation, expand it
                 if (stripos($result, 'e') !== false) {
                     if (abs($value) >= 1) {
-                        // For large numbers, use integer format
-                        // Must ensure locale-independent output
-                        $result = number_format($value, 0, '.', '');
+                        // Large numbers: use integer format if whole number
+                        if ($value == floor($value)) {
+                            $result = sprintf('%.0f', $value);
+                        } else {
+                            // Use fixed-point with sufficient precision, then trim trailing zeros
+                            $result = rtrim(rtrim(sprintf('%.14f', $value), '0'), '.');
+                        }
                     } else {
-                        // For small numbers, use fixed-point and trim trailing zeros
-                        // Create locale-independent representation
-                        $result = rtrim(rtrim(number_format($value, 20, '.', ''), '0'), '.');
+                        // Small numbers: use fixed-point and trim trailing zeros
+                        $result = rtrim(rtrim(sprintf('%.20f', $value), '0'), '.');
+                        if ($result === '' || $result === '-') {
+                            $result = '0';
+                        }
                     }
                 }
 
@@ -77,8 +93,9 @@ final class Primitives
     /**
      * Encode an object key for TOON format.
      *
-     * Keys matching the identifier pattern ^[A-Za-z_][\w.]*$ are unquoted.
-     * Other keys are quoted and escaped.
+     * Keys matching the identifier pattern ^[A-Za-z_][\w.]*$ are unquoted (§7.3).
+     * Other keys are quoted and escaped. This applies to both object keys and
+     * tabular field names in array headers.
      *
      * @param  string  $key  The key to encode
      * @return string The encoded key (quoted or unquoted)
@@ -132,9 +149,9 @@ final class Primitives
     /**
      * Check if a string can be safely represented without quotes.
      *
-     * Strings need quoting if they: are empty, have leading/trailing whitespace,
-     * contain structural characters, match keywords, look numeric, contain control
-     * characters, or start with list markers.
+     * Strings need quoting if they (§7.2): are empty, have leading/trailing whitespace,
+     * contain structural characters, match keywords (true/false/null), look numeric,
+     * contain control characters, contain the delimiter, or start with hyphens.
      *
      * @param  string  $value  The string to check
      * @param  string  $delimiter  The delimiter used in the context
