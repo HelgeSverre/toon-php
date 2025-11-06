@@ -7,8 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-11-06
+
 ### Added
 
+- **Full TOON decoder implementation**: Complete decoding functionality with strict mode support
+  - Parses all TOON formats: inline arrays, list arrays, tabular arrays, nested objects
+  - Strict mode validation (enabled by default) for spec compliance
+  - Configurable indentation and delimiter support
+  - Comprehensive error handling with specific exception types
+  - Round-trip encode/decode verified working perfectly
+- **Specification compliance documentation**: Created comprehensive SPEC-COMPLIANCE.md
+  - Encoder conformance: 10/10 requirements verified
+  - Decoder conformance: 7/7 requirements verified
+  - Strict mode: 11/11 requirements verified
+  - Full TOON Specification v1.3 compliance verified
+
+### Changed
+
+- **Architecture refactoring**: Converted Encoder from static methods to instance-based pattern
+  - Encoder now stores EncodeOptions and LineWriter as readonly properties
+  - Eliminated parameter threading through 9 methods (~30+ parameter passes)
+  - Matches Decoder's instance-based architecture for consistency
+  - Performance impact is negligible (< 3% worst case, often better)
+- **Decoder improvements**: Completed Parser instance-based refactoring
+  - Fixed remaining DecodeOptions parameter bugs
+  - Parser now fully instance-based with stored configuration
+  - All 539 tests pass, PHPStan Level 9 clean
+
+### Added
+
+- **Specification compliance documentation**: Created comprehensive SPEC-COMPLIANCE.md
+  - Encoder conformance: 10/10 requirements verified
+  - Decoder conformance: 7/7 requirements verified
+  - Strict mode: 11/11 requirements verified
+  - Full TOON Specification v1.3 compliance
 - **Performance benchmarking**: Comprehensive PHPBench suite for performance analysis
   - EncodeBench: Measures encoding performance across data sizes (small, medium, large, xlarge) and format types (inline, tabular, list, nested)
   - DecodeBench: Measures decoding/parsing performance with same variations
@@ -28,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `just benchmark-baseline` - Store current performance as baseline
   - `just benchmark-compare` - Compare against stored baseline
 - **Documentation**: Comprehensive README for performance benchmarks explaining metrics, usage, and interpretation
+- **Baseline benchmarks**: Saved performance baselines before and after encoder refactoring for comparison
 
 ## [1.3.0] - 2025-11-03
 
