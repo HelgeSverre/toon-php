@@ -1,0 +1,102 @@
+BASELINE BENCHMARKS - Before Encoder Instance-Based Refactoring
+=================================================================
+Date: 2025-11-06
+PHP Version: 8.3.27
+PHPBench Version: 1.4.2
+
+SCALABILITY BENCHMARKS
+----------------------
+
+Encode Performance (10 items to 100K items):
+  10 items:    53.134μs (±0.84%)
+  50 items:   253.178μs (±0.40%)
+  100 items:  505.295μs (±2.09%)
+  500 items:    2.490ms (±0.63%)
+  1K items:     4.986ms (±1.36%)
+  5K items:    24.838ms (±0.80%)
+  10K items:   50.391ms (±0.88%)
+  50K items:  251.695ms (±0.62%)
+  100K items: 517.933ms (±2.87%)
+
+Decode Performance (10 items to 100K items):
+  10 items:    245.775μs (±30.99%)
+  50 items:    663.409μs (±0.70%)
+  100 items:     1.160ms (±2.02%)
+  500 items:     5.294ms (±0.99%)
+  1K items:     10.476ms (±0.81%)
+  5K items:     52.478ms (±0.14%)
+  10K items:   105.387ms (±0.18%)
+  50K items:   535.376ms (±0.89%)
+  100K items:    1.081s (±0.43%)
+
+Encode Scalability (with parameters):
+  10 items:    134.429μs (±31.87%)
+  50 items:    321.767μs (±1.70%)
+  100 items:   548.747μs (±2.11%)
+  500 items:     2.515ms (±1.75%)
+  1K items:      4.904ms (±1.02%)
+  5K items:     24.641ms (±3.43%)
+  10K items:    48.820ms (±0.50%)
+  50K items:   248.821ms (±0.19%)
+  100K items:  502.968ms (±0.30%)
+
+Decode Scalability (with parameters):
+  10 items:    245.775μs (±30.99%)
+  50 items:    663.409μs (±0.70%)
+  100 items:     1.160ms (±2.02%)
+  500 items:     5.294ms (±0.99%)
+  1K items:     10.476ms (±0.81%)
+  5K items:     52.478ms (±0.14%)
+  10K items:   105.387ms (±0.18%)
+  50K items:   535.376ms (±0.89%)
+  100K items:    1.081s (±0.43%)
+
+FORMAT-SPECIFIC BENCHMARKS
+--------------------------
+
+Encode by Size:
+  Small:    37.154μs (±2.21%)
+  Medium:  338.496μs (±0.96%)
+  Large:     3.377ms (±4.09%)
+  XLarge:   33.597ms (±0.55%)
+
+Encode by Format:
+  Inline format:   10.279μs (±0.64%)
+  Tabular format: 171.765μs (±1.41%)
+  List format:     13.273μs (±0.96%)
+  Nested arrays:   14.652μs (±0.88%)
+  Primitives:       4.566μs (±0.77%)
+  Deeply nested:    6.449μs (±3.36%)
+
+Decode by Size:
+  Small:    57.970μs (±3.32%)
+  Medium:  541.710μs (±3.56%)
+  Large:     5.477ms (±3.07%)
+  XLarge:   56.619ms (±5.16%)
+
+Decode by Format:
+  Inline format:     6.869μs (±0.59%)
+  Tabular format:  283.776μs (±11.74%)
+  List format:      22.313μs (±3.87%)
+  Nested arrays:     6.641μs (±39.55%)
+  Primitives:       14.652μs (±3.32%)
+  Deeply nested:    19.407μs (±6.96%)
+
+THROUGHPUT BENCHMARKS
+---------------------
+
+Encode throughput:       200.295μs (±3.77%)
+Decode throughput:       387.144μs (±1.75%)
+Round-trip throughput:   597.675μs (±1.95%)
+
+Small payload encode:      4.308μs (±1.07%)
+Small payload decode:      7.572μs (±10.70%)
+Large payload encode:      1.046ms (±2.28%)
+Large payload decode:      2.891ms (±1.32%)
+
+NOTES
+-----
+- These benchmarks represent the current static method architecture
+- EncodeOptions is passed as parameter through ~9 methods ~30+ times
+- LineWriter is created in Toon::encode() and passed through methods
+- After refactoring to instance-based, we'll compare these results
