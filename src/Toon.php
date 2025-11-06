@@ -28,8 +28,9 @@ final class Toon
         $indentString = str_repeat(Constants::SPACE, $options->indent);
         $writer = new LineWriter($indentString);
 
-        // Encode the value
-        Encoders::encodeValue($normalizedValue, $writer, $options);
+        // Create encoder and encode the value
+        $encoder = new Encoders($options, $writer);
+        $encoder->encodeValue($normalizedValue);
 
         // Return the result
         return $writer->toString();
