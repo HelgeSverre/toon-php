@@ -17,7 +17,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals(2, $options->indent);
         $this->assertEquals(Constants::DEFAULT_DELIMITER, $options->delimiter);
-        $this->assertEquals(false, $options->lengthMarker);
     }
 
     public function test_compact_creates_options_with_zero_indent(): void
@@ -26,7 +25,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals(0, $options->indent);
         $this->assertEquals(',', $options->delimiter);
-        $this->assertEquals(false, $options->lengthMarker);
     }
 
     public function test_readable_creates_options_with_four_space_indent(): void
@@ -35,7 +33,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals(4, $options->indent);
         $this->assertEquals(',', $options->delimiter);
-        $this->assertEquals(false, $options->lengthMarker);
     }
 
     public function test_tabular_creates_options_with_tab_delimiter(): void
@@ -44,16 +41,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals(2, $options->indent);
         $this->assertEquals("\t", $options->delimiter);
-        $this->assertEquals(false, $options->lengthMarker);
-    }
-
-    public function test_with_length_markers_creates_options_with_hash_prefix(): void
-    {
-        $options = EncodeOptions::withLengthMarkers();
-
-        $this->assertEquals(2, $options->indent);
-        $this->assertEquals(',', $options->delimiter);
-        $this->assertEquals('#', $options->lengthMarker);
     }
 
     public function test_pipe_delimited_creates_options_with_pipe_delimiter(): void
@@ -62,7 +49,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals(2, $options->indent);
         $this->assertEquals('|', $options->delimiter);
-        $this->assertEquals(false, $options->lengthMarker);
     }
 
     public function test_constructor_validates_negative_indent(): void
@@ -79,13 +65,6 @@ final class EncodeOptionsTest extends TestCase
         new EncodeOptions(delimiter: ';');
     }
 
-    public function test_constructor_validates_invalid_length_marker(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Length marker must be "#" or false');
-        new EncodeOptions(lengthMarker: '%');
-    }
-
     public function test_with_indent_creates_new_instance_with_updated_indent(): void
     {
         $options = EncodeOptions::default();
@@ -93,7 +72,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals(4, $updated->indent);
         $this->assertEquals($options->delimiter, $updated->delimiter);
-        $this->assertEquals($options->lengthMarker, $updated->lengthMarker);
         $this->assertEquals(2, $options->indent); // original unchanged
     }
 
@@ -112,7 +90,6 @@ final class EncodeOptionsTest extends TestCase
 
         $this->assertEquals("\t", $updated->delimiter);
         $this->assertEquals($options->indent, $updated->indent);
-        $this->assertEquals($options->lengthMarker, $updated->lengthMarker);
         $this->assertEquals(',', $options->delimiter); // original unchanged
     }
 
@@ -124,56 +101,14 @@ final class EncodeOptionsTest extends TestCase
         $options->withDelimiter(';');
     }
 
-    public function test_with_length_marker_creates_new_instance_with_updated_length_marker(): void
-    {
-        $options = EncodeOptions::default();
-        $updated = $options->withLengthMarker('#');
-
-        $this->assertEquals('#', $updated->lengthMarker);
-        $this->assertEquals($options->indent, $updated->indent);
-        $this->assertEquals($options->delimiter, $updated->delimiter);
-        $this->assertEquals(false, $options->lengthMarker); // original unchanged
-    }
-
-    public function test_with_length_marker_can_disable_length_marker(): void
-    {
-        $options = new EncodeOptions(lengthMarker: '#');
-        $updated = $options->withLengthMarker(false);
-
-        $this->assertEquals(false, $updated->lengthMarker);
-        $this->assertEquals('#', $options->lengthMarker); // original unchanged
-    }
-
-    public function test_with_length_marker_validates_invalid_length_marker(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Length marker must be "#" or false');
-        $options = EncodeOptions::default();
-        $options->withLengthMarker('%');
-    }
-
     public function test_chaining_multiple_with_methods(): void
     {
         $options = EncodeOptions::default()
             ->withIndent(4)
-            ->withDelimiter('|')
-            ->withLengthMarker('#');
+            ->withDelimiter('|');
 
         $this->assertEquals(4, $options->indent);
         $this->assertEquals('|', $options->delimiter);
-        $this->assertEquals('#', $options->lengthMarker);
-    }
-
-    public function test_length_marker_with_tab_delimiter_combined(): void
-    {
-        // P1 High Priority: Test combining length marker with tab delimiter
-        // Both options should work together correctly
-        $input = ['tags' => ['reading', 'gaming', 'coding']];
-        $options = new EncodeOptions(lengthMarker: '#', delimiter: "\t");
-        $expected = "tags[#3\t]: reading\tgaming\tcoding";
-
-        $result = \HelgeSverre\Toon\Toon::encode($input, $options);
-        $this->assertEquals($expected, $result);
     }
 
     // Phase 3.2: Feature Combinations
@@ -216,9 +151,9 @@ final class EncodeOptionsTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function test_encode_tab_delimiter_with_length_markers_and_nesting(): void
+    public function test_encode_tab_delimiter_with_nesting(): void
     {
-        // Combine tab delimiter, length markers, and nested structures
+        // Combine tab delimiter and nested structures
         $input = [
             'users' => [
                 ['id' => 1, 'tags' => ['admin', 'active']],
@@ -226,12 +161,12 @@ final class EncodeOptionsTest extends TestCase
             ],
         ];
 
-        $options = new EncodeOptions(delimiter: "\t", lengthMarker: '#');
+        $options = new EncodeOptions(delimiter: "\t");
         $result = \HelgeSverre\Toon\Toon::encode($input, $options);
 
-        // Length marker and delimiter apply to the nested inline arrays
+        // Delimiter applies to the nested inline arrays
         $this->assertStringContainsString('users[2]:', $result);
-        $this->assertStringContainsString("tags[#2\t]:", $result); // Nested array uses length marker + tab
+        $this->assertStringContainsString("tags[2\t]:", $result); // Nested array uses tab delimiter
         $this->assertStringContainsString("admin\tactive", $result); // Tab delimiter used
         $this->assertStringContainsString("user\tguest", $result);
     }

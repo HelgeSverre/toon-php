@@ -49,36 +49,6 @@ final class DecoderHeaderParsingTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function test_decoder_parses_inline_array_with_length_marker(): void
-    {
-        $toon = '[#3]: a,b,c';
-        $expected = ['a', 'b', 'c'];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function test_decoder_parses_inline_array_with_length_marker_and_pipe(): void
-    {
-        $toon = '[#3|]: x|y|z';
-        $expected = ['x', 'y', 'z'];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function test_decoder_parses_inline_array_with_length_marker_and_tab(): void
-    {
-        $toon = "[#3\t]: x\ty\tz";
-        $expected = ['x', 'y', 'z'];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
     // ========================================
     // Section B: Keyed Inline Arrays
     // ========================================
@@ -113,26 +83,6 @@ final class DecoderHeaderParsingTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function test_decoder_parses_keyed_inline_array_with_length_marker(): void
-    {
-        $toon = 'items[#2]: a,b';
-        $expected = ['items' => ['a', 'b']];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function test_decoder_parses_keyed_inline_array_with_length_marker_and_pipe(): void
-    {
-        $toon = 'x[#2|]: a|b';
-        $expected = ['x' => ['a', 'b']];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
     // ========================================
     // Section C: List Array Headers
     // ========================================
@@ -160,26 +110,6 @@ final class DecoderHeaderParsingTest extends TestCase
     public function test_decoder_parses_list_array_header_with_tab(): void
     {
         $toon = "[2\t]:\n  - a\n  - b";
-        $expected = ['a', 'b'];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function test_decoder_parses_list_array_header_with_length_marker(): void
-    {
-        $toon = "[#2]:\n  - a\n  - b";
-        $expected = ['a', 'b'];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function test_decoder_parses_list_array_header_with_length_marker_and_pipe(): void
-    {
-        $toon = "[#2|]:\n  - a\n  - b";
         $expected = ['a', 'b'];
 
         $result = Toon::decode($toon);
@@ -230,19 +160,6 @@ final class DecoderHeaderParsingTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function test_decoder_parses_tabular_array_with_length_marker_and_pipe(): void
-    {
-        $toon = "[#2|]{id|name}:\n  1|Alice\n  2|Bob";
-        $expected = [
-            ['id' => 1, 'name' => 'Alice'],
-            ['id' => 2, 'name' => 'Bob'],
-        ];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
     // ========================================
     // Section E: Empty Arrays
     // ========================================
@@ -260,16 +177,6 @@ final class DecoderHeaderParsingTest extends TestCase
     public function test_decoder_parses_empty_inline_array_with_tab(): void
     {
         $toon = "items[0\t]:";
-        $expected = ['items' => []];
-
-        $result = Toon::decode($toon);
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function test_decoder_parses_empty_inline_array_with_length_marker(): void
-    {
-        $toon = 'items[#0]:';
         $expected = ['items' => []];
 
         $result = Toon::decode($toon);

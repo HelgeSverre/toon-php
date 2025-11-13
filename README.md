@@ -98,6 +98,48 @@ echo Toon::encode([
 // active: true
 ```
 
+## Decoding TOON
+
+TOON supports bidirectional conversion - you can decode TOON strings back to PHP arrays:
+
+```php
+use HelgeSverre\Toon\Toon;
+
+// Decode simple values
+$result = Toon::decode('42');           // 42
+$result = Toon::decode('hello');        // "hello"
+$result = Toon::decode('true');         // true
+
+// Decode arrays
+$result = Toon::decode('[3]: a,b,c');
+// ['a', 'b', 'c']
+
+// Decode objects (returned as associative arrays)
+$toon = <<<TOON
+id: 123
+name: Ada
+active: true
+TOON;
+
+$result = Toon::decode($toon);
+// ['id' => 123, 'name' => 'Ada', 'active' => true]
+
+// Decode nested structures
+$toon = <<<TOON
+user:
+  id: 123
+  email: ada@example.com
+  metadata:
+    active: true
+    score: 9.5
+TOON;
+
+$result = Toon::decode($toon);
+// ['user' => ['id' => 123, 'email' => 'ada@example.com', 'metadata' => ['active' => true, 'score' => 9.5]]]
+```
+
+**Note**: TOON objects are decoded as PHP associative arrays, not objects.
+
 ## Advanced Examples
 
 ### Nested Objects
@@ -311,6 +353,9 @@ TOON provides global helper functions for convenience:
 // Basic encoding
 $toon = toon($data);
 
+// Decoding (use class method)
+$data = Toon::decode($toonString);
+
 // Compact (minimal indentation)
 $compact = toon_compact($data);
 
@@ -520,10 +565,10 @@ TOON is ideal for:
 
 TOON is not a strict superset or subset of JSON. Key differences:
 
-- No decode function (one-way transformation)
-- Optimized for readability and token efficiency, not for parsing
-- Uses whitespace-significant formatting
-- Includes metadata like array lengths and field headers
+- Bidirectional encoding and decoding (objects decode as associative arrays)
+- Optimized for readability and token efficiency in LLM contexts
+- Uses whitespace-significant formatting (indentation-based nesting)
+- Includes metadata like array lengths and field headers for better LLM comprehension
 
 ## Credits
 

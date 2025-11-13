@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-11-13
+
+### Breaking Changes
+
+This major release aligns with **TOON Specification v2.0**, which removes the optional `#` length marker prefix from array headers. The library version now matches the spec version for clarity.
+
+#### Removed Features
+
+- **`EncodeOptions::$lengthMarker` parameter** - The optional length marker parameter has been removed from the constructor
+- **`EncodeOptions::withLengthMarkers()` preset** - This preset method has been removed
+- **`EncodeOptions::withLengthMarker()` method** - This fluent setter has been removed
+
+#### Changed Behavior
+
+- **Encoder**: Always emits `[N]` format (e.g., `[3]: a,b,c`). The deprecated `[#N]` format is no longer supported.
+- **Decoder**: Now rejects `[#N]` format with `SyntaxException`. Previously accepted both `[N]` and `[#N]` formats.
+
+#### Migration Guide
+
+**Before (v1.x):**
+```php
+use HelgeSverre\Toon\EncodeOptions;
+use HelgeSverre\Toon\Toon;
+
+// Using preset with length markers
+$options = EncodeOptions::withLengthMarkers();
+$toon = Toon::encode($data, $options);
+// Output: [#3]: a,b,c
+
+// Using constructor
+$options = new EncodeOptions(lengthMarker: '#');
+$toon = Toon::encode($data, $options);
+```
+
+**After (v2.0):**
+```php
+use HelgeSverre\Toon\EncodeOptions;
+use HelgeSverre\Toon\Toon;
+
+// Use default options (no length marker parameter)
+$options = EncodeOptions::default();
+$toon = Toon::encode($data, $options);
+// Output: [3]: a,b,c
+
+// Constructor no longer accepts lengthMarker
+$options = new EncodeOptions();
+$toon = Toon::encode($data, $options);
+```
+
+### Changed
+
+- **TOON Specification updated to v2.0** - Spec now explicitly prohibits `[#N]` format
+- **Encoder implementation** - Removed all length marker logic, always emits `[N]` format
+- **Decoder implementation** - Added strict validation to reject `[#N]` format with clear error messages
+- **EncodeOptions simplified** - Removed `lengthMarker` parameter and related methods
+
+### Removed
+
+- `EncodeOptions::$lengthMarker` property
+- `EncodeOptions::withLengthMarkers()` static method
+- `EncodeOptions::withLengthMarker()` instance method
+
 ## [1.4.0] - 2025-11-06
 
 ### Added

@@ -184,22 +184,10 @@ final class DecoderDelimitersTest extends TestCase
         $this->assertSame(5, $result);
     }
 
-    public function test_extract_length_with_hash_marker(): void
-    {
-        $result = DelimiterParser::extractLength('[#5]');
-        $this->assertSame(5, $result);
-    }
-
     public function test_extract_length_with_whitespace(): void
     {
         $result = DelimiterParser::extractLength('[ 42 ]');
         $this->assertSame(42, $result);
-    }
-
-    public function test_extract_length_with_hash_and_whitespace(): void
-    {
-        $result = DelimiterParser::extractLength('[ # 10 ]');
-        $this->assertSame(10, $result);
     }
 
     public function test_extract_length_throws_on_missing_opening_bracket(): void

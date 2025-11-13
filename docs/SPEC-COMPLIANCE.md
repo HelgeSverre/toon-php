@@ -1,20 +1,30 @@
 # TOON Specification Compliance Report
 
 **Library:** toon-php
-**Version:** 1.3.0 (pre-release)
-**Spec Version:** TOON Specification v1.3
-**Date:** 2025-11-06
+**Version:** 2.0.0
+**Spec Version:** TOON Specification v2.0
+**Date:** 2025-11-13
 **Status:** ✅ FULLY CONFORMANT
 
 ---
 
 ## Test Results
 
-- **Total Tests:** 539
-- **Passing:** 539 (100%)
+- **Total Tests:** 512
+- **Passing:** 512 (100%)
 - **Failing:** 0
 - **PHPStan Level:** 9 (maximum strictness)
 - **PHPStan Errors:** 0
+
+---
+
+## v2.0 Compliance Notes
+
+This release aligns with **TOON Specification v2.0**, which removes the optional `#` length marker prefix:
+
+- **Encoder**: Always emits `[N]` format (e.g., `[3]: a,b,c`)
+- **Decoder**: Rejects `[#N]` format with `SyntaxException`
+- **Breaking Change**: Removed `lengthMarker` parameter and related methods from `EncodeOptions`
 
 ---
 

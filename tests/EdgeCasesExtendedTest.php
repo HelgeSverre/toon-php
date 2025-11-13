@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class EdgeCasesExtendedTest extends TestCase
 {
-    public function test_encoding_with_all_delimiter_types_and_length_markers(): void
+    public function test_encoding_with_pipe_delimiter(): void
     {
         $data = [
             ['a', 'b', 'c'],
@@ -18,11 +18,10 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $result = Toon::encode($data, new EncodeOptions(
-            delimiter: '|',
-            lengthMarker: '#'
+            delimiter: '|'
         ));
 
-        $this->assertStringContainsString('[#2|]:', $result);
+        $this->assertStringContainsString('[2|]:', $result);
         $this->assertStringContainsString('a|b|c', $result);
     }
 
@@ -136,13 +135,12 @@ final class EdgeCasesExtendedTest extends TestCase
         $this->assertStringContainsString('[1]{id,name}:', $result);
     }
 
-    public function test_root_level_primitive_array_with_length_marker(): void
+    public function test_root_level_primitive_array(): void
     {
         $data = [1, 2, 3, 4, 5];
-        $options = new EncodeOptions(lengthMarker: '#');
 
-        $result = Toon::encode($data, $options);
-        $expected = '[#5]: 1,2,3,4,5';
+        $result = Toon::encode($data);
+        $expected = '[5]: 1,2,3,4,5';
         $this->assertEquals($expected, $result);
     }
 
@@ -222,7 +220,7 @@ final class EdgeCasesExtendedTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function test_combining_length_markers_with_tab_delimiter(): void
+    public function test_combining_tab_delimiter(): void
     {
         $data = [
             'items' => [
@@ -232,16 +230,15 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $options = new EncodeOptions(
-            delimiter: "\t",
-            lengthMarker: '#'
+            delimiter: "\t"
         );
 
         $result = Toon::encode($data, $options);
-        $this->assertStringContainsString("[#2\t]:", $result);
+        $this->assertStringContainsString("[2\t]:", $result);
         $this->assertStringContainsString("a\tb", $result);
     }
 
-    public function test_tabular_format_with_pipe_delimiter_and_length_marker(): void
+    public function test_tabular_format_with_pipe_delimiter(): void
     {
         $data = [
             ['id' => 1, 'name' => 'Alice'],
@@ -249,12 +246,11 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $options = new EncodeOptions(
-            delimiter: '|',
-            lengthMarker: '#'
+            delimiter: '|'
         );
 
         $result = Toon::encode($data, $options);
-        $this->assertStringContainsString('[#2|]{id|name}:', $result);
+        $this->assertStringContainsString('[2|]{id|name}:', $result);
         $this->assertStringContainsString('1|Alice', $result);
     }
 

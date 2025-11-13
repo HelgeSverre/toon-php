@@ -155,52 +155,6 @@ final class DelimitersTest extends TestCase
         $this->assertEquals($expected, Toon::encode($input, $options));
     }
 
-    // Length Marker Tests
-    public function test_encode_with_length_marker(): void
-    {
-        $input = ['tags' => ['reading', 'gaming', 'coding']];
-        $options = new EncodeOptions(lengthMarker: '#');
-        $expected = 'tags[#3]: reading,gaming,coding';
-        $this->assertEquals($expected, Toon::encode($input, $options));
-    }
-
-    public function test_encode_with_length_marker_empty_array(): void
-    {
-        $input = ['items' => []];
-        $options = new EncodeOptions(lengthMarker: '#');
-        $expected = 'items[#0]:';
-        $this->assertEquals($expected, Toon::encode($input, $options));
-    }
-
-    public function test_encode_with_length_marker_tabular(): void
-    {
-        $input = [
-            'items' => [
-                ['sku' => 'A1', 'qty' => 2, 'price' => 9.99],
-                ['sku' => 'B2', 'qty' => 1, 'price' => 14.5],
-            ],
-        ];
-        $options = new EncodeOptions(lengthMarker: '#');
-        $expected = "items[#2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5";
-        $this->assertEquals($expected, Toon::encode($input, $options));
-    }
-
-    public function test_encode_with_length_marker_nested(): void
-    {
-        $input = ['pairs' => [['a', 'b'], ['c', 'd']]];
-        $options = new EncodeOptions(lengthMarker: '#');
-        $expected = "pairs[#2]:\n  - [#2]: a,b\n  - [#2]: c,d";
-        $this->assertEquals($expected, Toon::encode($input, $options));
-    }
-
-    public function test_encode_with_length_marker_and_pipe_delimiter(): void
-    {
-        $input = ['tags' => ['reading', 'gaming', 'coding']];
-        $options = new EncodeOptions(lengthMarker: '#', delimiter: '|');
-        $expected = 'tags[#3|]: reading|gaming|coding';
-        $this->assertEquals($expected, Toon::encode($input, $options));
-    }
-
     public function test_encode_without_length_marker_default(): void
     {
         $input = ['tags' => ['reading', 'gaming', 'coding']];

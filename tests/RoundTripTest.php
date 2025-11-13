@@ -60,67 +60,7 @@ final class RoundTripTest extends TestCase
     }
 
     // ========================================
-    // Section B: Length Marker Round-Trips
-    // ========================================
-
-    public function test_inline_array_round_trip_without_length_marker(): void
-    {
-        $data = ['items' => ['a', 'b']];
-        $options = new EncodeOptions(lengthMarker: false);
-
-        $encoded = Toon::encode($data, $options);
-        $decoded = Toon::decode($encoded);
-        $reencoded = Toon::encode($decoded, $options);
-
-        $this->assertEquals($data, $decoded, 'Decoded data should match original');
-        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
-    }
-
-    public function test_inline_array_round_trip_with_length_marker(): void
-    {
-        $data = ['items' => ['a', 'b']];
-        $options = new EncodeOptions(lengthMarker: '#');
-
-        $encoded = Toon::encode($data, $options);
-        $decoded = Toon::decode($encoded);
-        $reencoded = Toon::encode($decoded, $options);
-
-        $this->assertEquals($data, $decoded, 'Decoded data should match original');
-        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
-    }
-
-    // ========================================
-    // Section C: Combined Options
-    // ========================================
-
-    public function test_inline_array_round_trip_pipe_with_length_marker(): void
-    {
-        $data = ['items' => ['x', 'y', 'z']];
-        $options = new EncodeOptions(delimiter: '|', lengthMarker: '#');
-
-        $encoded = Toon::encode($data, $options);
-        $decoded = Toon::decode($encoded);
-        $reencoded = Toon::encode($decoded, $options);
-
-        $this->assertEquals($data, $decoded, 'Decoded data should match original');
-        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
-    }
-
-    public function test_inline_array_round_trip_tab_with_length_marker(): void
-    {
-        $data = ['items' => ['x', 'y', 'z']];
-        $options = new EncodeOptions(delimiter: "\t", lengthMarker: '#');
-
-        $encoded = Toon::encode($data, $options);
-        $decoded = Toon::decode($encoded);
-        $reencoded = Toon::encode($decoded, $options);
-
-        $this->assertEquals($data, $decoded, 'Decoded data should match original');
-        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
-    }
-
-    // ========================================
-    // Section D: Tabular Arrays
+    // Section B: Tabular Arrays
     // ========================================
 
     public function test_tabular_array_round_trip_with_comma(): void
@@ -178,7 +118,7 @@ final class RoundTripTest extends TestCase
     }
 
     // ========================================
-    // Section E: List Arrays
+    // Section C: List Arrays
     // ========================================
 
     public function test_list_array_round_trip_with_comma(): void
@@ -218,7 +158,7 @@ final class RoundTripTest extends TestCase
     }
 
     // ========================================
-    // Section F: Root-Level Arrays
+    // Section D: Root-Level Arrays
     // ========================================
 
     public function test_root_inline_array_round_trip_with_pipe(): void
@@ -247,21 +187,8 @@ final class RoundTripTest extends TestCase
         $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
     }
 
-    public function test_root_inline_array_round_trip_with_length_marker(): void
-    {
-        $data = ['a', 'b', 'c'];
-        $options = new EncodeOptions(lengthMarker: '#');
-
-        $encoded = Toon::encode($data, $options);
-        $decoded = Toon::decode($encoded);
-        $reencoded = Toon::encode($decoded, $options);
-
-        $this->assertEquals($data, $decoded, 'Decoded data should match original');
-        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
-    }
-
     // ========================================
-    // Section G: Complex Nested Structures
+    // Section E: Complex Nested Structures
     // ========================================
 
     public function test_complex_nested_structure_round_trip_with_pipe(): void
@@ -286,7 +213,7 @@ final class RoundTripTest extends TestCase
     }
 
     // ========================================
-    // Section H: Primitives Round-Trip
+    // Section F: Primitives Round-Trip
     // ========================================
 
     public function test_primitives_survive_round_trip(): void

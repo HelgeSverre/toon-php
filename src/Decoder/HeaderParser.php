@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace HelgeSverre\Toon\Decoder;
 
+use HelgeSverre\Toon\Exceptions\SyntaxException;
+
 /**
  * Parses TOON array headers using character-by-character state machine.
  *
- * Following TOON Spec Appendix B.2: Array Header Parsing
+ * Following TOON Spec v2.0 Appendix B.2: Array Header Parsing
  *
  * Handles all header formats:
  * - [N]: or [N]: values (inline array)
  * - [N|]: or [N\t]: (with delimiter)
- * - [#N]: (with length marker)
  * - [N]{fields}: (tabular)
  * - {fields}: (tabular continuation)
  * - key[N]: (keyed arrays)
+ *
+ * Note: [#N] format (with length marker) was removed in TOON v2.0 and will be rejected.
  */
 final class HeaderParser
 {
@@ -105,13 +108,17 @@ final class HeaderParser
         $pos = 0;
         $len = strlen($line);
 
-        // Parse length section [N] or [#N] or [N|] etc
+        // Parse length section [N] or [N|] etc
         if ($line[$pos] === '[') {
             $pos++; // skip [
 
-            // Check for optional # marker
+            // TOON v2.0: Reject deprecated [#N] format
             if ($pos < $len && $line[$pos] === '#') {
-                $pos++; // skip #
+                throw new SyntaxException(
+                    'Invalid array header format: [#N] syntax is not supported in TOON v2.0. Use [N] instead.',
+                    0,
+                    $line
+                );
             }
 
             // Parse length number

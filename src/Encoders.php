@@ -99,9 +99,8 @@ final class Encoders
 
             // Array of arrays
             if (Normalize::isArrayOfArrays($array)) {
-                $lengthPrefix = $this->options->lengthMarker !== false ? $this->options->lengthMarker : '';
                 $delimiterKey = $this->getDelimiterKey($this->options->delimiter);
-                $this->writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
+                $this->writer->push($depth, $prefix.$encodedKey.Constants::OPEN_BRACKET.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
                 foreach ($array as $item) {
                     $inlineArray = $this->formatInlineArray($item);
                     $this->writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
@@ -178,9 +177,8 @@ final class Encoders
 
         // Array of arrays
         if (Normalize::isArrayOfArrays($array)) {
-            $lengthPrefix = $this->options->lengthMarker !== false ? $this->options->lengthMarker : '';
             $delimiterKey = $this->getDelimiterKey($this->options->delimiter);
-            $this->writer->push($depth, Constants::OPEN_BRACKET.$lengthPrefix.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
+            $this->writer->push($depth, Constants::OPEN_BRACKET.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
                 $inlineArray = $this->formatInlineArray($item); // @phpstan-ignore argument.type
                 $this->writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
@@ -222,7 +220,6 @@ final class Encoders
     private function formatInlineArray(array $array, ?string $key = null): string
     {
         $length = count($array);
-        $lengthPrefix = $this->options->lengthMarker !== false ? $this->options->lengthMarker : '';
         $delimiterKey = $this->getDelimiterKey($this->options->delimiter);
 
         $encoded = array_map(
@@ -239,7 +236,7 @@ final class Encoders
         }
 
         // Only add space after colon if there are items
-        return $header.Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.($joined !== '' ? Constants::SPACE.$joined : '');
+        return $header.Constants::OPEN_BRACKET.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON.($joined !== '' ? Constants::SPACE.$joined : '');
     }
 
     /**
@@ -252,7 +249,6 @@ final class Encoders
      */
     private function formatArrayHeader(int $length, array $fields, ?string $key = null): string
     {
-        $lengthPrefix = $this->options->lengthMarker !== false ? $this->options->lengthMarker : '';
         $delimiterKey = $this->getDelimiterKey($this->options->delimiter);
 
         // Encode field names as keys
@@ -268,7 +264,7 @@ final class Encoders
             $header = Primitives::encodeKey($key);
         }
 
-        return $header.Constants::OPEN_BRACKET.$lengthPrefix.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::OPEN_BRACE.$fieldsList.Constants::CLOSE_BRACE.Constants::COLON;
+        return $header.Constants::OPEN_BRACKET.$length.$delimiterKey.Constants::CLOSE_BRACKET.Constants::OPEN_BRACE.$fieldsList.Constants::CLOSE_BRACE.Constants::COLON;
     }
 
     /**

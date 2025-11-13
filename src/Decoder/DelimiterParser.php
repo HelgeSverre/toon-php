@@ -88,7 +88,7 @@ final class DelimiterParser
         if (str_contains($line, '{')) {
             return 'tabular';
         }
-        if (preg_match('/^\[#?\d+[|\t]?\]:\s*.+/', $line)) {
+        if (preg_match('/^\[\d+[|\t]?\]:\s*.+/', $line)) {
             return 'inline';
         }
 
@@ -97,7 +97,15 @@ final class DelimiterParser
 
     public static function extractDelimiter(string $header): string
     {
-        $header = str_replace('#', '', $header);
+        // TOON v2.0: Reject deprecated [#N] format
+        if (str_contains($header, '#')) {
+            throw new SyntaxException(
+                'Invalid array header format: [#N] syntax is not supported in TOON v2.0. Use [N] instead.',
+                0,
+                $header
+            );
+        }
+
         if (str_contains($header, '|')) {
             return '|';
         }
@@ -141,14 +149,19 @@ final class DelimiterParser
     {
         $header = trim($header);
         if (! str_starts_with($header, '[') || ! str_ends_with($header, ']')) {
-            throw new SyntaxException('Invalid array header format: must be [N] or [#N]', $lineNumber, $header);
+            throw new SyntaxException('Invalid array header format: must be [N]', $lineNumber, $header);
         }
         $content = trim(substr($header, 1, -1));
         if ($content === '') {
             throw new SyntaxException('Empty array header: must contain a length', $lineNumber, $header);
         }
+        // TOON v2.0: Reject deprecated [#N] format
         if (str_starts_with($content, '#')) {
-            $content = trim(substr($content, 1));
+            throw new SyntaxException(
+                'Invalid array header format: [#N] syntax is not supported in TOON v2.0. Use [N] instead.',
+                $lineNumber,
+                $header
+            );
         }
         if (! ctype_digit($content) || $content === '0') {
             throw new SyntaxException('Invalid array length: must be a positive integer', $lineNumber, $header);
