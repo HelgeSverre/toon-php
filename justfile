@@ -37,7 +37,7 @@ install:
 sync-spec:
     @echo "Downloading SPEC.md from toon-format/spec..."
     @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/SPEC.md -o docs/SPEC.md
-    @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/CHANGELOG.md -o docs/SPEC.md
+    @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/CHANGELOG.md -o docs/CHANGELOG.md
     @echo "Done! Review changes: git diff docs/SPEC.md"
 
 # === Testing ===
