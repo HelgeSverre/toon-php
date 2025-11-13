@@ -131,6 +131,15 @@ final class HeaderParser
                 $result['length'] = (int) substr($line, $numStart, $pos - $numStart);
             }
 
+            // TOON v2.0: Also check for # after digits (catches [N#] pattern)
+            if ($pos < $len && $line[$pos] === '#') {
+                throw new SyntaxException(
+                    'Invalid array header format: [#N] syntax is not supported in TOON v2.0. Use [N] instead.',
+                    0,
+                    $line
+                );
+            }
+
             // Check for delimiter marker
             if ($pos < $len) {
                 if ($line[$pos] === '|') {

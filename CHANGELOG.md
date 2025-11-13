@@ -69,6 +69,18 @@ $toon = Toon::encode($data, $options);
 - `EncodeOptions::withLengthMarkers()` static method
 - `EncodeOptions::withLengthMarker()` instance method
 
+### Fixed
+
+- **Control character handling (Security)**: Strings containing unsupported control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) are now rejected with `InvalidArgumentException`. Per TOON Spec §7.1, only `\n`, `\r`, and `\t` have defined escape sequences. This prevents potential security issues from raw control characters in output.
+- **Decoder error messages**: Pattern `[N#]` (hash after digits) now produces the correct v2.0 error message instead of a generic error
+- **Test coverage**: Added 10 comprehensive tests for v2.0 breaking change verification (`tests/Spec/Version2BreakingChangesTest.php`)
+- **Test coverage**: Added 5 tests for control character rejection
+
+### Documentation
+
+- Updated `docs/SPEC-COMPLIANCE.md` with control character policy and v2.0 verification details
+- Test count updated: 524 tests (up from 512), 997 assertions
+
 ## [1.4.0] - 2025-11-06
 
 ### Added

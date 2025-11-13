@@ -353,8 +353,11 @@ TOON provides global helper functions for convenience:
 // Basic encoding
 $toon = toon($data);
 
-// Decoding (use class method)
-$data = Toon::decode($toonString);
+// Decoding
+$data = toon_decode($toonString);
+
+// Lenient decoding (forgiving parsing)
+$data = toon_decode_lenient($toonString);
 
 // Compact (minimal indentation)
 $compact = toon_compact($data);

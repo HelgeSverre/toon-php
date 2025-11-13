@@ -10,8 +10,8 @@
 
 ## Test Results
 
-- **Total Tests:** 512
-- **Passing:** 512 (100%)
+- **Total Tests:** 524
+- **Passing:** 524 (100%)
 - **Failing:** 0
 - **PHPStan Level:** 9 (maximum strictness)
 - **PHPStan Errors:** 0
@@ -25,6 +25,17 @@ This release aligns with **TOON Specification v2.0**, which removes the optional
 - **Encoder**: Always emits `[N]` format (e.g., `[3]: a,b,c`)
 - **Decoder**: Rejects `[#N]` format with `SyntaxException`
 - **Breaking Change**: Removed `lengthMarker` parameter and related methods from `EncodeOptions`
+
+### Control Character Handling
+
+Per TOON Spec §7.1, only three control characters have defined escape sequences:
+- `\n` (newline, 0x0A)
+- `\r` (carriage return, 0x0D)
+- `\t` (tab, 0x09)
+
+**Implementation Policy**: Strings containing other control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) are **rejected** with `InvalidArgumentException`, as the spec provides no escape sequences for them. This prevents potential security issues from raw control characters in output.
+
+**Test Coverage**: `PrimitivesTest.php` includes 5 tests verifying rejection of unsupported control characters (NULL, BEL, ESC, FF, VT)
 
 ---
 
@@ -44,7 +55,8 @@ Conforming encoders MUST:
 - [x] **Escape \\, ", \n, \r, \t in quoted strings; reject other escapes (§7.1)**
   - ✅ Implemented in `Primitives.php:escapeString()`
   - ✅ Only escapes: `\\`, `\"`, `\n`, `\r`, `\t`
-  - ✅ Test coverage: `PrimitivesTest.php`
+  - ✅ Rejects strings with unsupported control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
+  - ✅ Test coverage: `PrimitivesTest.php` (escape tests + 5 control character rejection tests)
 
 - [x] **Quote strings containing active delimiter, colon, or structural characters (§7.2)**
   - ✅ Implemented in `Primitives.php:needsQuoting()`

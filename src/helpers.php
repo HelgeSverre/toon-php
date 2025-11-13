@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use HelgeSverre\Toon\DecodeOptions;
 use HelgeSverre\Toon\EncodeOptions;
 use HelgeSverre\Toon\Toon;
 
@@ -129,5 +130,46 @@ if (! function_exists('toon_estimate_tokens')) {
         $size = toon_size($value, $options);
 
         return (int) ceil($size / 4);
+    }
+}
+
+if (! function_exists('toon_decode')) {
+    /**
+     * Decode a TOON string to a PHP value.
+     *
+     * Parses TOON format back into PHP data structures (arrays, primitives).
+     * Objects are decoded as associative arrays.
+     *
+     * @param  string  $toon  The TOON-formatted string to decode
+     * @param  DecodeOptions|null  $options  Optional decoding options
+     * @return mixed The decoded PHP value
+     *
+     * @throws \HelgeSverre\Toon\Exceptions\DecodeException If decoding fails
+     */
+    function toon_decode(string $toon, ?DecodeOptions $options = null): mixed
+    {
+        return Toon::decode($toon, $options);
+    }
+}
+
+if (! function_exists('toon_decode_lenient')) {
+    /**
+     * Decode a TOON string with lenient parsing.
+     *
+     * Uses lenient mode for more forgiving parsing of hand-written TOON:
+     * - Allows count mismatches
+     * - Allows irregular indentation
+     * - Allows blank lines in arrays
+     * - Allows tabs in indentation
+     * - Allows empty input
+     *
+     * @param  string  $toon  The TOON-formatted string to decode
+     * @return mixed The decoded PHP value
+     *
+     * @throws \HelgeSverre\Toon\Exceptions\DecodeException If decoding fails
+     */
+    function toon_decode_lenient(string $toon): mixed
+    {
+        return Toon::decode($toon, DecodeOptions::lenient());
     }
 }

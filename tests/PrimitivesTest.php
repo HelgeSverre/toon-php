@@ -6,6 +6,7 @@ namespace HelgeSverre\Toon\Tests;
 
 use HelgeSverre\Toon\Primitives;
 use HelgeSverre\Toon\Toon;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class PrimitivesTest extends TestCase
@@ -399,5 +400,55 @@ final class PrimitivesTest extends TestCase
         $input = "text\twith\ttabs";
         $expected = '"text\\twith\\ttabs"';
         $this->assertEquals($expected, Toon::encode($input));
+    }
+
+    public function test_encode_rejects_null_byte_in_string(): void
+    {
+        // NULL byte (0x00) is not supported per TOON v2.0 §7.1
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('unsupported control characters');
+
+        $input = "text\x00with\x00null";
+        Toon::encode($input);
+    }
+
+    public function test_encode_rejects_bell_character(): void
+    {
+        // BEL character (0x07) is not supported per TOON v2.0 §7.1
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('unsupported control characters');
+
+        $input = "text\x07bell";
+        Toon::encode($input);
+    }
+
+    public function test_encode_rejects_escape_character(): void
+    {
+        // ESC character (0x1B) is not supported per TOON v2.0 §7.1
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('unsupported control characters');
+
+        $input = "text\x1Bescape";
+        Toon::encode($input);
+    }
+
+    public function test_encode_rejects_form_feed_character(): void
+    {
+        // Form feed (0x0C) is not supported per TOON v2.0 §7.1
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('unsupported control characters');
+
+        $input = "text\fform feed";
+        Toon::encode($input);
+    }
+
+    public function test_encode_rejects_vertical_tab_character(): void
+    {
+        // Vertical tab (0x0B) is not supported per TOON v2.0 §7.1
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('unsupported control characters');
+
+        $input = "text\x0Bvertical tab";
+        Toon::encode($input);
     }
 }

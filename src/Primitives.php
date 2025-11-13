@@ -132,11 +132,27 @@ final class Primitives
      *
      * Escapes backslashes, double quotes, newlines, carriage returns, and tabs.
      *
+     * Per TOON v2.0 §7.1: Only \n, \r, and \t control characters are supported.
+     * Strings containing other control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
+     * are rejected as the spec provides no escape sequences for them.
+     *
      * @param  string  $value  The string to escape
      * @return string The escaped string
+     *
+     * @throws InvalidArgumentException If string contains unsupported control characters
      */
     public static function escapeString(string $value): string
     {
+        // Check for unsupported control characters (§7.1)
+        // Allowed: \n (0x0A), \r (0x0D), \t (0x09)
+        // Rejected: All other control chars (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
+        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $value)) {
+            throw new InvalidArgumentException(
+                'String contains unsupported control characters. '.
+                'Only \\n (newline), \\r (carriage return), and \\t (tab) are allowed per TOON Spec §7.1.'
+            );
+        }
+
         $escaped = str_replace(Constants::BACKSLASH, Constants::BACKSLASH.Constants::BACKSLASH, $value);
         $escaped = str_replace(Constants::DOUBLE_QUOTE, Constants::BACKSLASH.Constants::DOUBLE_QUOTE, $escaped);
         $escaped = str_replace("\n", '\n', $escaped);
