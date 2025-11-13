@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class Version2BreakingChangesTest extends TestCase
 {
-    public function test_decoder_rejects_hash_N_inline_array(): void
+    public function test_decoder_rejects_hash_n_inline_array(): void
     {
         // v2.0: [#N]: format is INVALID
         $this->expectException(SyntaxException::class);
@@ -27,7 +27,7 @@ final class Version2BreakingChangesTest extends TestCase
         Toon::decode('[#3]: a,b,c');
     }
 
-    public function test_decoder_rejects_hash_N_list_array(): void
+    public function test_decoder_rejects_hash_n_list_array(): void
     {
         // v2.0: [#N]: format with list items is INVALID
         $this->expectException(SyntaxException::class);
@@ -37,7 +37,7 @@ final class Version2BreakingChangesTest extends TestCase
         Toon::decode($toon);
     }
 
-    public function test_decoder_rejects_hash_N_tabular_array(): void
+    public function test_decoder_rejects_hash_n_tabular_array(): void
     {
         // v2.0: [#N]{fields}: format is INVALID
         $this->expectException(SyntaxException::class);
@@ -47,7 +47,7 @@ final class Version2BreakingChangesTest extends TestCase
         Toon::decode($toon);
     }
 
-    public function test_decoder_rejects_hash_N_keyed_array(): void
+    public function test_decoder_rejects_hash_n_keyed_array(): void
     {
         // v2.0: key[#N]: format is INVALID
         $this->expectException(SyntaxException::class);
@@ -56,7 +56,7 @@ final class Version2BreakingChangesTest extends TestCase
         Toon::decode('items[#3]: a,b,c');
     }
 
-    public function test_decoder_rejects_hash_N_with_pipe_delimiter(): void
+    public function test_decoder_rejects_hash_n_with_pipe_delimiter(): void
     {
         // v2.0: [#N|]: format with pipe delimiter is INVALID
         $this->expectException(SyntaxException::class);
@@ -65,7 +65,7 @@ final class Version2BreakingChangesTest extends TestCase
         Toon::decode('[#3|]: a|b|c');
     }
 
-    public function test_decoder_rejects_hash_N_with_tab_delimiter(): void
+    public function test_decoder_rejects_hash_n_with_tab_delimiter(): void
     {
         // v2.0: [#N\t]: format with tab delimiter is INVALID
         $this->expectException(SyntaxException::class);
@@ -74,7 +74,7 @@ final class Version2BreakingChangesTest extends TestCase
         Toon::decode("[#3\t]: a\tb\tc");
     }
 
-    public function test_encoder_never_emits_hash_N_format(): void
+    public function test_encoder_never_emits_hash_n_format(): void
     {
         // v2.0: Encoder MUST use [N]: format only
         $input = ['items' => [1, 2, 3]];
@@ -87,7 +87,7 @@ final class Version2BreakingChangesTest extends TestCase
         $this->assertStringContainsString('[3]:', $result);
     }
 
-    public function test_encoder_never_emits_hash_N_in_nested_arrays(): void
+    public function test_encoder_never_emits_hash_n_in_nested_arrays(): void
     {
         // v2.0: Encoder MUST NOT use [#N]: even in nested structures
         $input = [
@@ -106,7 +106,7 @@ final class Version2BreakingChangesTest extends TestCase
         $this->assertStringContainsString('[3]:', $result);
     }
 
-    public function test_decoder_rejects_N_hash_pattern(): void
+    public function test_decoder_rejects_n_hash_pattern(): void
     {
         // v2.0: [N#]: pattern (# after digits) is also INVALID
         $this->expectException(SyntaxException::class);
