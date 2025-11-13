@@ -47,7 +47,8 @@ final class Primitives
             if (is_float($value)) {
                 // Very large numbers are quoted as strings for exact precision
                 if (abs($value) > 1e20) {
-                    $str = sprintf('%.0f', $value);
+                    // Use number_format for locale-independent formatting
+                    $str = number_format($value, 0, '.', '');
 
                     return Constants::DOUBLE_QUOTE.$str.Constants::DOUBLE_QUOTE;
                 }
@@ -63,14 +64,17 @@ final class Primitives
                     if (abs($value) >= 1) {
                         // Large numbers: use integer format if whole number
                         if ($value == floor($value)) {
-                            $result = sprintf('%.0f', $value);
+                            // Use number_format for locale-independent formatting
+                            $result = number_format($value, 0, '.', '');
                         } else {
                             // Use fixed-point with sufficient precision, then trim trailing zeros
-                            $result = rtrim(rtrim(sprintf('%.14f', $value), '0'), '.');
+                            // number_format is locale-independent when decimal separator is explicit
+                            $result = rtrim(rtrim(number_format($value, 14, '.', ''), '0'), '.');
                         }
                     } else {
                         // Small numbers: use fixed-point and trim trailing zeros
-                        $result = rtrim(rtrim(sprintf('%.20f', $value), '0'), '.');
+                        // number_format is locale-independent when decimal separator is explicit
+                        $result = rtrim(rtrim(number_format($value, 20, '.', ''), '0'), '.');
                         if ($result === '' || $result === '-') {
                             $result = '0';
                         }

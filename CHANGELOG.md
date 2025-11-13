@@ -71,6 +71,7 @@ $toon = Toon::encode($data, $options);
 
 ### Fixed
 
+- **Locale-dependent float formatting (Critical)**: Fixed `sprintf()` calls that were locale-dependent, causing decimal points to become commas in locales like `da_DK`, `de_DE`, etc. Now uses `number_format()` with explicit decimal point separator for guaranteed locale-independent formatting per TOON Spec §2. This ensures output is always valid regardless of system locale settings.
 - **Control character handling (Security)**: Strings containing unsupported control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) are now rejected with `InvalidArgumentException`. Per TOON Spec §7.1, only `\n`, `\r`, and `\t` have defined escape sequences. This prevents potential security issues from raw control characters in output.
 - **Decoder error messages**: Pattern `[N#]` (hash after digits) now produces the correct v2.0 error message instead of a generic error
 - **Test coverage**: Added 10 comprehensive tests for v2.0 breaking change verification (`tests/Spec/Version2BreakingChangesTest.php`)
@@ -79,7 +80,7 @@ $toon = Toon::encode($data, $options);
 ### Documentation
 
 - Updated `docs/SPEC-COMPLIANCE.md` with control character policy and v2.0 verification details
-- Test count updated: 524 tests (up from 512), 997 assertions
+- Test count: 544 tests (up from 512 in v1.4.0), 997 assertions
 
 ## [1.4.0] - 2025-11-06
 

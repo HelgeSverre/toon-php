@@ -10,8 +10,8 @@
 
 ## Test Results
 
-- **Total Tests:** 524
-- **Passing:** 524 (100%)
+- **Total Tests:** 544
+- **Passing:** 544 (100%)
 - **Failing:** 0
 - **PHPStan Level:** 9 (maximum strictness)
 - **PHPStan Errors:** 0
@@ -76,9 +76,10 @@ Conforming encoders MUST:
   - ✅ Test coverage: `ArraysTest.php`, `TabularArraysTest.php`
 
 - [x] **Normalize numbers to non-exponential decimal form (§2)**
-  - ✅ Implemented in `Normalize.php:normalizeNumber()`
+  - ✅ Implemented in `Primitives.php:encodePrimitive()`
   - ✅ Converts exponential notation to decimal
-  - ✅ Test coverage: `NormalizationTest.php`
+  - ✅ Uses locale-independent `number_format()` with explicit '.' decimal separator
+  - ✅ Test coverage: `NormalizationTest.php`, `PrimitivesTest.php`
 
 - [x] **Convert -0 to 0 (§2)**
   - ✅ Implemented in `Normalize.php:normalizeNumber()`
