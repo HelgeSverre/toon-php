@@ -65,9 +65,6 @@ $readable = EncodeOptions::readable();
 
 // Tab-delimited (spreadsheets)
 $tabular = EncodeOptions::tabular();
-
-// With length markers
-$withMarkers = EncodeOptions::withLengthMarkers();
 ```
 
 **New to TOON?** Check out our [step-by-step tutorials](tutorials) to learn how to integrate TOON with OpenAI, Anthropic, Laravel, and more.
@@ -265,11 +262,6 @@ echo Toon::encode(['tags' => ['a', 'b', 'c']], $options);
 $options = new EncodeOptions(delimiter: '|');
 echo Toon::encode(['tags' => ['a', 'b', 'c']], $options);
 // tags[3|]: a|b|c
-
-// Length marker prefix (default: false)
-$options = new EncodeOptions(lengthMarker: '#');
-echo Toon::encode(['tags' => ['a', 'b', 'c']], $options);
-// tags[#3]: a,b,c
 ```
 
 ## Special Value Handling

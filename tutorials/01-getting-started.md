@@ -291,8 +291,7 @@ echo toon_tabular($tabData) . "\n\n";
 echo "=== Custom Options ===\n";
 $options = new EncodeOptions(
     indent: 3,
-    delimiter: '|',
-    lengthMarker: '#'
+    delimiter: '|'
 );
 $customData = ['items' => ['apple', 'banana', 'cherry']];
 echo toon($customData, $options) . "\n";
@@ -331,7 +330,7 @@ server:
 tags[4	]: php	javascript	python	ruby
 
 === Custom Options ===
-items[#3|]: apple|banana|cherry
+items[3|]: apple|banana|cherry
 ```
 
 ## Step 5: Token Comparison with JSON

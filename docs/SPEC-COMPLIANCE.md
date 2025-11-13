@@ -107,8 +107,8 @@ Conforming decoders MUST:
 - [x] **Parse array headers per §6 (length, delimiter, optional fields)**
   - ✅ Implemented in `Decoder/HeaderParser.php`
   - ✅ Parses: `[N]:`, `[N|]:`, `[N]{fields}:`
-  - ✅ Supports optional `#` length marker: `[#N]:`
-  - ✅ Test coverage: Comprehensive header parsing tests
+  - ✅ **Rejects** `[#N]` format (removed in v2.0) with clear error message
+  - ✅ Test coverage: Comprehensive header parsing tests + v2.0 breaking change tests
 
 - [x] **Split inline arrays and tabular rows using active delimiter only (§11)**
   - ✅ Implemented in `Decoder/DelimiterParser.php:split()`
@@ -134,11 +134,6 @@ Conforming decoders MUST:
   - ✅ Default: `strict=true`
   - ✅ Validates: array counts, row widths, blank lines, colon presence
   - ✅ Test coverage: Comprehensive strict mode tests
-
-- [x] **Accept and ignore optional # length marker (§6)**
-  - ✅ Implemented in `Decoder/HeaderParser.php`
-  - ✅ Parses `[#N]:` and `[N]:` identically
-  - ✅ Test coverage: Header parsing tests
 
 - [x] **Preserve array order and object key order (§2)**
   - ✅ PHP arrays maintain insertion order
