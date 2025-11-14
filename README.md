@@ -3,6 +3,7 @@
 [![Packagist Version](https://img.shields.io/packagist/v/helgesverre/toon)](https://packagist.org/packages/helgesverre/toon)
 ![Total Downloads](https://img.shields.io/packagist/dt/helgesverre/toon)
 ![License](https://img.shields.io/packagist/l/helgesverre/toon)
+[![Try it](https://img.shields.io/badge/try_it-ArrayAlchemy-4E45E2)](https://arrayalchemy.com/?format=toon-php)
 
 A PHP port of [toon-format/toon](https://github.com/toon-format/toon) - a compact data format designed to reduce token consumption when sending structured data to Large Language Models.
 
@@ -67,6 +68,10 @@ $tabular = EncodeOptions::tabular();
 ```
 
 **New to TOON?** Check out our [step-by-step tutorials](tutorials) to learn how to integrate TOON with OpenAI, Anthropic, Laravel, and more.
+
+### Try it Online
+
+Experiment with TOON encoding and decoding at [ArrayAlchemy](https://arrayalchemy.com/?format=toon-php) - an interactive playground for converting between JSON, PHP arrays, and TOON formats. Powered by this package.
 
 ## Basic Usage
 
