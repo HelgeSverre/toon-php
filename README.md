@@ -1,8 +1,7 @@
 # TOON (Token-Oriented Object Notation)
 
 [![Packagist Version](https://img.shields.io/packagist/v/helgesverre/toon)](https://packagist.org/packages/helgesverre/toon)
-![Total Downloads](https://img.shields.io/packagist/dt/helgesverre/toon)fs
-
+![Total Downloads](https://img.shields.io/packagist/dt/helgesverre/toon)
 ![License](https://img.shields.io/packagist/l/helgesverre/toon)
 
 A PHP port of [toon-format/toon](https://github.com/toon-format/toon) - a compact data format designed to reduce token consumption when sending structured data to Large Language Models.
