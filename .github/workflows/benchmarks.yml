@@ -40,7 +40,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p benchmarks/performance/.phpbench/storage
-          ./vendor/bin/phpbench run --report=summary --store --tag=baseline-php${{ matrix.php }}
+          ./vendor/bin/phpbench run --report=summary --store --tag=baseline_php${{ matrix.php }}
 
       - name: Upload benchmark results
         if: always()
@@ -76,7 +76,7 @@ jobs:
 
       - name: Run baseline benchmarks
         run: |
-          ./vendor/bin/phpbench run --report=summary --store --tag=baseline-main
+          ./vendor/bin/phpbench run --report=summary --store --tag=baseline_main
         continue-on-error: true
 
       - name: Checkout PR branch
@@ -87,7 +87,7 @@ jobs:
 
       - name: Run PR benchmarks
         run: |
-          ./vendor/bin/phpbench run --report=summary --store --tag=pr-${{ github.event.pull_request.number }}
+          ./vendor/bin/phpbench run --report=summary --store --tag=pr_${{ github.event.pull_request.number }}
 
       - name: Compare benchmarks
         id: compare
@@ -97,7 +97,7 @@ jobs:
           echo "Comparing PR #${{ github.event.pull_request.number }} against main branch:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          ./vendor/bin/phpbench report --ref=baseline-main --ref=pr-${{ github.event.pull_request.number }} --report=default || echo "No baseline available for comparison" >> $GITHUB_STEP_SUMMARY
+          ./vendor/bin/phpbench report --ref=baseline_main --ref=pr_${{ github.event.pull_request.number }} --report=default || echo "No baseline available for comparison" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
         continue-on-error: true
 
