@@ -29,6 +29,7 @@ This release aligns with **TOON Specification v2.0**, which removes the optional
 ### Control Character Handling
 
 Per TOON Spec §7.1, only three control characters have defined escape sequences:
+
 - `\n` (newline, 0x0A)
 - `\r` (carriage return, 0x0D)
 - `\t` (tab, 0x09)
@@ -211,11 +212,13 @@ When strict mode is enabled (default), decoders MUST error on:
 Both Encoder and Decoder now use consistent instance-based architecture:
 
 **Encoder:**
+
 - Constructor: stores `EncodeOptions` and `LineWriter` as readonly properties
 - No parameter threading through methods
 - Clean, maintainable code structure
 
 **Decoder:**
+
 - Constructor: stores `DecodeOptions` as readonly property
 - No parameter threading through methods
 - Matches Encoder pattern
@@ -223,6 +226,7 @@ Both Encoder and Decoder now use consistent instance-based architecture:
 ### Static Utilities
 
 Both use static utility classes appropriately:
+
 - `Primitives` - Pure functions for encoding primitives
 - `ValueParser` - Pure functions for parsing values
 - `DelimiterParser` - Pure functions for delimiter handling
@@ -235,6 +239,7 @@ Both use static utility classes appropriately:
 ## Performance Verification
 
 Post-refactoring benchmarks show:
+
 - Minimal performance impact (< 3% worst case, often better)
 - Some metrics improved (throughput +6.65%)
 - All 539 tests pass
@@ -247,11 +252,13 @@ Post-refactoring benchmarks show:
 **Status: ✅ FULLY CONFORMANT WITH TOON SPECIFICATION v1.3**
 
 The toon-php library successfully implements all MUST requirements for:
+
 - Encoder conformance (10/10 requirements)
 - Decoder conformance (7/7 requirements)
 - Strict mode validation (11/11 requirements)
 
 The library is ready for release as v1.3.0 with confidence in its:
+
 - Specification compliance
 - Type safety (PHPStan Level 9)
 - Test coverage (539 passing tests)

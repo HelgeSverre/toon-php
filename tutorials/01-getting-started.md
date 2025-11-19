@@ -7,6 +7,7 @@
 ## What You'll Build
 
 A complete PHP script that:
+
 - Encodes various data structures using TOON
 - Compares token consumption with JSON
 - Processes real-world receipt data for LLM validation
@@ -61,6 +62,7 @@ php test.php
 ```
 
 Expected output:
+
 ```
 Hello TOON!
 ```
@@ -114,6 +116,7 @@ php basic-encoding.php
 ```
 
 Expected output:
+
 ```
 === Primitive Values ===
 String: hello world
@@ -215,6 +218,7 @@ php nested-structures.php
 ```
 
 Expected output:
+
 ```
 === Nested User Object ===
 id: 1001
@@ -304,6 +308,7 @@ php configuration.php
 ```
 
 Expected output:
+
 ```
 === Default Configuration ===
 server:
@@ -442,7 +447,7 @@ php token-comparison.php
 
 Now let's use TOON to process receipt data that could be sent to an LLM for validation. Create `receipt-processor.php`:
 
-```php
+````php
 <?php
 require_once 'vendor/autoload.php';
 
@@ -563,7 +568,7 @@ echo abs($calculatedSubtotal - $receipt['subtotal']) < 0.01 ? "(OK)\n" : "(MISMA
 $calculatedTotal = $receipt['subtotal'] + $receipt['tax'];
 echo "Total check: \${$receipt['subtotal']} + \${$receipt['tax']} = \$$calculatedTotal ";
 echo abs($calculatedTotal - $receipt['total']) < 0.01 ? "(OK)\n" : "(MISMATCH)\n";
-```
+````
 
 Run it:
 
@@ -690,18 +695,23 @@ php log-processor.php
 ## Troubleshooting Common Issues
 
 ### Issue 1: Composer Not Found
+
 **Solution**: Install Composer from https://getcomposer.org/download/
 
 ### Issue 2: PHP Version Too Old
+
 **Solution**: Upgrade to PHP 8.1+ using your system's package manager or https://www.php.net/downloads
 
 ### Issue 3: Autoloader Not Working
+
 **Solution**: Run `composer dump-autoload` to regenerate the autoloader
 
 ### Issue 4: Special Characters Not Encoding Properly
+
 **Solution**: Ensure your PHP files are UTF-8 encoded and use proper string quoting
 
 ### Issue 5: Memory Issues with Large Datasets
+
 **Solution**: Increase PHP memory limit in php.ini or use `ini_set('memory_limit', '256M')`
 
 ## Validation and Testing
@@ -769,6 +779,7 @@ Congratulations! You've learned the fundamentals of TOON. Here's where to go nex
 ## Summary
 
 You've learned how to:
+
 - Install and configure TOON
 - Encode various data types efficiently
 - Compare token consumption with JSON
@@ -776,6 +787,7 @@ You've learned how to:
 - Process real-world data for LLM analysis
 
 TOON typically reduces token consumption by 30-60%, which directly translates to:
+
 - Lower API costs
 - More efficient use of context windows
 - Faster response times from LLMs

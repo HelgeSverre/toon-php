@@ -16,6 +16,7 @@ You'll see exactly how TOON reduces token consumption and learn to measure actua
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Install and configure the official openai-php/client package
 - Format complex data structures with TOON for LLM context
 - Measure actual token savings between JSON and TOON
@@ -35,6 +36,7 @@ By the end of this tutorial, you will:
 ## Introduction
 
 TOON is a data encoding format that reduces token consumption when working with Large Language Models. It achieves this through:
+
 - Removing redundant syntax (braces, quotes, brackets)
 - Using indentation-based nesting
 - Employing compact tabular formats for uniform data
@@ -197,6 +199,7 @@ This example demonstrates the fundamental pattern for all TOON + OpenAI integrat
 5. **Process the response** - Handle OpenAI's response as normal
 
 **Key Observations**:
+
 - The system prompt explains what TOON format is so the model understands it
 - We use `gpt-4o-mini` for cost efficiency in this basic example
 - The TOON-encoded data is readable by both humans and LLMs
@@ -209,6 +212,7 @@ php basic-example.php
 ```
 
 Expected output shows:
+
 - The original JSON encoding
 - The TOON encoding (significantly shorter)
 - Character/token savings percentage
@@ -223,6 +227,7 @@ Let's build our first real-world example: processing support emails to extract k
 ### The Scenario
 
 Your company receives hundreds of support emails daily. You need to:
+
 - Extract customer sentiment
 - Identify the issue category
 - Determine urgency level
@@ -401,6 +406,7 @@ Now let's build a more complex example: validating invoices extracted from PDFs 
 ### The Scenario
 
 Your accounting system processes thousands of invoices monthly. You need to:
+
 - Validate mathematical calculations
 - Check for missing required fields
 - Identify unusual patterns or potential fraud
@@ -1104,6 +1110,7 @@ if ($result['success']) {
 **Problem**: "Invalid API key" or authentication errors
 
 **Solution**:
+
 ```php
 // Verify your API key format
 if (!preg_match('/^sk-[a-zA-Z0-9]{48}$/', $_ENV['OPENAI_API_KEY'])) {
@@ -1125,6 +1132,7 @@ try {
 **Problem**: Estimated tokens don't match actual API usage
 
 **Solution**:
+
 ```php
 // More accurate token estimation
 function estimateTokens(string $text): int {
@@ -1145,6 +1153,7 @@ function estimateTokens(string $text): int {
 **Problem**: "Rate limit exceeded" errors
 
 **Solution**:
+
 ```php
 // Implement exponential backoff
 function callWithRetry($client, array $params, int $maxAttempts = 3): ?array {
@@ -1176,6 +1185,7 @@ function callWithRetry($client, array $params, int $maxAttempts = 3): ?array {
 **Problem**: The model doesn't understand TOON format
 
 **Solution**:
+
 ```php
 // Always explain TOON format in your system prompt
 $systemPrompt = "You receive data in TOON format, where:
@@ -1197,6 +1207,7 @@ Parse this format carefully when analyzing data.";
 **Problem**: PHP memory exhausted with large data arrays
 
 **Solution**:
+
 ```php
 // Process data in chunks
 function processLargeDataset(array $items, int $chunkSize = 100): void {
@@ -1227,6 +1238,7 @@ function streamEncoding($items): \Generator {
 ## Next Steps
 
 Congratulations! You've successfully integrated TOON with the OpenAI PHP client and learned how to:
+
 - Format complex data structures efficiently
 - Measure and calculate real token savings
 - Handle API responses properly
@@ -1257,4 +1269,4 @@ Congratulations! You've successfully integrated TOON with the OpenAI PHP client 
 
 ---
 
-*Remember: The key to maximizing your savings with TOON is to use it consistently across all your LLM interactions. Start with your highest-volume API calls and work your way down. Every token saved is money in your pocket!*
+_Remember: The key to maximizing your savings with TOON is to use it consistently across all your LLM interactions. Start with your highest-volume API calls and work your way down. Every token saved is money in your pocket!_

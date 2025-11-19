@@ -15,6 +15,7 @@ Every token sent to an LLM costs money. When you're processing thousands or mill
 ### What You'll Learn
 
 Throughout this tutorial series, you'll master:
+
 - TOON encoding fundamentals and configuration options
 - Integration with OpenAI and other LLM providers
 - Building token-efficient Laravel applications
@@ -102,6 +103,7 @@ This comprehensive path covers everything from basics to advanced RAG implementa
 **What you'll build**: A receipt parsing system that demonstrates TOON's token efficiency. You'll encode receipt data, compare token consumption with JSON, and see real savings percentages.
 
 **Key concepts covered**:
+
 - Installing and configuring TOON
 - Basic encoding with `Toon::encode()`
 - Understanding automatic string quoting
@@ -121,6 +123,7 @@ This comprehensive path covers everything from basics to advanced RAG implementa
 **What you'll build**: Two complete systems - an email classification service and an invoice validation system. Both demonstrate real-world integration patterns with concrete token savings.
 
 **Key concepts covered**:
+
 - Setting up OpenAI PHP client
 - Formatting chat messages with TOON
 - Optimizing system prompts
@@ -140,6 +143,7 @@ This comprehensive path covers everything from basics to advanced RAG implementa
 **What you'll build**: A customer support ticket classification system integrated into Laravel 11. Includes service providers, API endpoints, and Pest tests.
 
 **Key concepts covered**:
+
 - Laravel service provider setup
 - Dependency injection patterns
 - Building AI service classes
@@ -159,6 +163,7 @@ This comprehensive path covers everything from basics to advanced RAG implementa
 **What you'll build**: A PDF metadata extraction system and a product catalog classifier, both optimized for maximum token efficiency.
 
 **Key concepts covered**:
+
 - Analyzing data for optimization opportunities
 - Choosing optimal TOON formats
 - Preprocessing strategies
@@ -178,6 +183,7 @@ This comprehensive path covers everything from basics to advanced RAG implementa
 **What you'll build**: A PHP documentation search system using Ollama for local embeddings, vector similarity search, and TOON-optimized context compression.
 
 **Key concepts covered**:
+
 - Setting up Ollama locally
 - Generating text embeddings
 - Implementing cosine similarity
@@ -198,6 +204,7 @@ This comprehensive path covers everything from basics to advanced RAG implementa
 **What you'll build**: A large dataset analysis system using Claude's 200K context window, optimized with TOON to fit 40-60% more data in each request.
 
 **Key concepts covered**:
+
 - Setting up Anthropic PHP SDK
 - Leveraging Claude's large context window
 - Formatting large datasets with TOON
@@ -240,11 +247,13 @@ composer require helgesverre/toon
 Each tutorial may require additional packages. Install them as needed:
 
 **Tutorial 2 - OpenAI Integration**:
+
 ```bash
 composer require openai-php/client
 ```
 
 **Tutorial 3 - Laravel Integration**:
+
 ```bash
 # Create new Laravel project
 composer create-project laravel/laravel support-system
@@ -253,12 +262,14 @@ composer require helgesverre/toon
 ```
 
 **Tutorial 4 - Token Optimization**:
+
 ```bash
 # No additional packages required
 # Uses TOON core features only
 ```
 
 **Tutorial 5 - RAG System**:
+
 ```bash
 # Install HTTP client for Ollama
 composer require guzzlehttp/guzzle
@@ -269,6 +280,7 @@ ollama pull mxbai-embed-large
 ```
 
 **Tutorial 6 - Anthropic Integration**:
+
 ```bash
 composer require anthropics/anthropic-sdk-php
 ```
@@ -282,6 +294,7 @@ php -r "require 'vendor/autoload.php'; use HelgeSverre\Toon\Toon; echo Toon::enc
 ```
 
 Expected output:
+
 ```
 test: success
 ```
@@ -331,12 +344,14 @@ These tutorials focus on TOON specifically and assume:
 Each tutorial includes a dedicated troubleshooting section with solutions for common issues. Additionally, check these resources:
 
 **Common Issues**:
+
 - Installation problems: Check PHP version (8.1+ required)
 - API errors: Verify your API keys are valid and have credits
 - Memory issues: Increase PHP memory limit for large datasets
 - Token mismatches: Different models use different tokenizers
 
 **TOON Documentation**:
+
 - Configuration options: See TOON PHP README
 - Format specification: Check the TOON spec document
 - Helper functions: Review the API documentation
@@ -356,6 +371,7 @@ Get help and share experiences:
 These benchmarks come from actual examples in the tutorials:
 
 **Data Structure Savings**:
+
 - Receipt data: 35-45% reduction
 - Email classification: 40-50% reduction
 - Invoice validation: 45-55% reduction
@@ -369,11 +385,13 @@ These benchmarks come from actual examples in the tutorials:
 Based on OpenAI GPT-3.5-turbo pricing ($0.0015/1K input tokens):
 
 **Monthly savings at different scales**:
+
 - 100K requests/month: $10-30 savings
 - 1M requests/month: $100-300 savings
 - 10M requests/month: $1,000-3,000 savings
 
 **Example calculation** (1M requests/month):
+
 - Average JSON tokens per request: 500
 - Average TOON tokens per request: 275 (45% reduction)
 - Tokens saved monthly: 225M tokens
@@ -402,6 +420,7 @@ After completing these tutorials, consider these next steps:
 ### Production Deployment
 
 When deploying TOON in production:
+
 - Add comprehensive logging for token usage
 - Implement fallback to JSON if needed
 - Monitor performance impact

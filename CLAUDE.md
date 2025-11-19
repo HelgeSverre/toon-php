@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 TOON (Token-Oriented Object Notation) is a PHP 8.1+ library that converts PHP data structures into a compact format optimized for LLM contexts. It reduces token consumption by 30-60% compared to JSON through:
+
 - Removing redundant syntax (braces, brackets, unnecessary quotes)
 - Using indentation-based nesting
 - Employing tabular format for uniform data rows
@@ -60,6 +61,7 @@ TOON PHP is a port of the TOON (Token-Oriented Object Notation) format specifica
 ### Format Selection Logic
 
 The encoder automatically selects the optimal format:
+
 1. **Inline format** for arrays of primitives: `[3]: a,b,c`
 2. **Array-of-arrays format** for nested arrays with list items
 3. **Tabular format** for uniform object arrays: `[2]{id,name}: 1,Alice`
@@ -70,12 +72,14 @@ The encoder automatically selects the optimal format:
 **PHP Array Behavior**: PHP converts numeric string keys to integers. The library handles this by quoting numeric keys when encoding.
 
 **String Quoting Rules**: Strings are quoted only when necessary:
+
 - Reserved words: "true", "false", "null"
 - Numeric strings: "42", "3.14"
 - Strings with special characters
 - Empty strings: ""
 
 **Enum Normalization**:
+
 - `BackedEnum`: Extracts backing value
 - `UnitEnum`: Uses case name as string
 
@@ -99,6 +103,7 @@ The encoder automatically selects the optimal format:
 ### Development Workflow
 
 **When adding features:**
+
 1. **Check the spec** - Review `docs/SPEC.md` to ensure proposed change conforms to TOON specification
 2. **Check spec requirements** - Review `docs/spec-requirements.md` for normative requirements (142 total requirements)
 3. Write tests first in appropriate test file under `tests/`
@@ -108,6 +113,7 @@ The encoder automatically selects the optimal format:
 7. Run `just pr` before submitting
 
 **When debugging:**
+
 1. Check normalization step (`Normalize.php`)
 2. Trace through `Encoders.php` format detection
 3. Check primitive encoding in `Primitives.php`
@@ -115,6 +121,7 @@ The encoder automatically selects the optimal format:
 5. Run PHP code directly for quick checks (don't create scattered test files)
 
 **When running tests:**
+
 ```bash
 # Use just commands (preferred)
 just test
@@ -136,18 +143,21 @@ vendor/bin/phpunit --filter testEncodesStringsWithoutQuotes
 ### Release Titles
 
 Version numbers only, with no descriptive text:
+
 - ✅ Correct: `v1.1.0`, `v1.0.1`, `v2.0.0`
 - ❌ Incorrect: `v1.1.0 - New Features`, `Version 1.0.0: Initial Release`
 
 ### Release Notes
 
 Must be factual and straightforward:
+
 - **No emojis** - Plain text only
 - **No marketing language** - Avoid "exciting", "amazing", "revolutionary"
 - **Technical focus** - What changed, not how great it is
 - **Simple headings** - Use "Added", "Changed", "Fixed", not "What's New"
 
 **Good example:**
+
 ```
 ## Changes in v1.1.0
 
@@ -167,6 +177,7 @@ Must be factual and straightforward:
 Documentation must focus on **what the package does**, not how it was built.
 
 **Always avoid:**
+
 - Development process details
 - Self-referential language ("we verified", "our testing")
 - Meta-commentary about development history
@@ -174,6 +185,7 @@ Documentation must focus on **what the package does**, not how it was built.
 - Details about how features were validated
 
 **Always include:**
+
 - Package features and capabilities
 - User-facing functionality
 - Clear, direct descriptions of behavior
@@ -182,16 +194,20 @@ Documentation must focus on **what the package does**, not how it was built.
 ### Example Quality
 
 **Good (feature-focused):**
+
 ```markdown
 ## Features
+
 - Reduces token consumption by 30-60% compared to JSON
 - Supports nested objects and arrays
 - Configurable delimiters and formatting options
 ```
 
 **Bad (process-focused):**
+
 ```markdown
 ## Implementation
+
 This implementation has been verified against the TypeScript version
 with extensive testing to ensure correctness.
 ```
@@ -199,6 +215,7 @@ with extensive testing to ensure correctness.
 ## Common Tasks
 
 ### Running Benchmarks
+
 ```bash
 # Preferred: use just command
 just benchmark
@@ -206,10 +223,13 @@ just benchmark
 # Alternative: direct composer
 cd benchmarks && composer benchmark
 ```
+
 Results are saved to `benchmarks/results/token-efficiency.md`
 
 ### Quick PHP Testing
+
 When testing quick PHP snippets, run them directly:
+
 ```bash
 # Direct execution (preferred for quick tests)
 php -r "require 'vendor/autoload.php'; echo Toon\Toon::encode(['test' => 'data']);"
@@ -218,6 +238,7 @@ php -r "require 'vendor/autoload.php'; echo Toon\Toon::encode(['test' => 'data']
 ```
 
 ### Quality Checks
+
 ```bash
 # Before any commit
 just dev
@@ -236,12 +257,14 @@ just ci
 ### Key Specification Requirements
 
 The specification defines 142 normative requirements across 19 sections:
+
 - 104 MUST/REQUIRED requirements (critical)
 - 12 MUST NOT prohibitions (critical)
 - 17 SHOULD recommendations (high priority)
 - 9 MAY/OPTIONAL features (low priority)
 
 **Before making changes**:
+
 1. Read relevant sections in `docs/SPEC.md`
 2. Check `docs/spec-requirements.md` for specific requirements
 3. Validate your implementation against encoder/decoder conformance checklists (§13 of spec)

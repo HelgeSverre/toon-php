@@ -12,6 +12,7 @@ In this tutorial, you'll create a support ticket classification system that uses
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Use TOON directly in Laravel applications
 - Create a simple service class for TOON operations
 - Build a practical ticket classification system
@@ -30,12 +31,14 @@ By the end of this tutorial, you will:
 TOON is a standalone PHP library that doesn't require any Laravel-specific integration. There are no facades, service providers, or configuration files needed. You simply install it via Composer and use its functions directly in your Laravel code.
 
 The key insight is that TOON is designed to reduce token consumption when sending data to LLMs. In a Laravel application, this typically happens when:
+
 - Sending database records to AI for analysis
 - Providing context for AI-powered features
 - Batching multiple records for bulk processing
 - Caching formatted data for repeated API calls
 
 This tutorial demonstrates practical patterns for using TOON in Laravel by building a ticket classification system. The system will:
+
 1. Accept support tickets through an API
 2. Format ticket data using TOON for efficient token usage
 3. Send the formatted data to OpenAI for classification
@@ -1024,6 +1027,7 @@ php artisan tinker
 ```
 
 If Redis isn't working, check:
+
 - Redis service is running: `redis-cli ping`
 - `.env` has correct Redis settings
 - `config/cache.php` is using the correct driver

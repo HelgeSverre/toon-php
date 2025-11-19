@@ -7,21 +7,25 @@ This directory contains comprehensive performance benchmarks for the TOON-PHP li
 The benchmark suite measures four key performance dimensions:
 
 ### 1. **Execution Time** (EncodeBench, DecodeBench)
+
 - How fast encoding/decoding operations complete
 - Measured across different data sizes (small, medium, large, xlarge)
 - Tests different TOON format types (inline, tabular, list, nested arrays)
 
 ### 2. **Memory Usage** (All benchmarks)
+
 - Peak memory consumption during operations
 - Important for large datasets and serverless environments
 - Tracked automatically by PHPBench
 
 ### 3. **Throughput** (ThroughputBench)
+
 - Operations per second for sustained workloads
 - Tests realistic API response structures
 - Includes round-trip (encode + decode) performance
 
 ### 4. **Scalability** (ScalabilityBench)
+
 - How performance scales with data size
 - Tests from 10 to 100K items
 - Helps identify O(n) complexity characteristics
@@ -90,44 +94,56 @@ just benchmark-compare
 ### Interpreting Results
 
 **Time Units:**
+
 - Times are typically shown in microseconds (μs) or milliseconds (ms)
 - Lower is better
 
 **Memory:**
+
 - Shown in bytes (B), kilobytes (KB), or megabytes (MB)
 - Lower is better
 
 **Standard Deviation:**
+
 - Lower rstdev means more consistent performance
 - High rstdev may indicate GC pauses or other variability
 
 **Diff (Baseline Comparison):**
+
 - `+10%` means 10% slower than baseline (regression)
 - `-10%` means 10% faster than baseline (improvement)
 
 ## Benchmark Files
 
 ### EncodeBench.php
+
 Tests encoding performance across different scenarios:
+
 - **Size-based**: Small (10), Medium (100), Large (1K), XLarge (10K) items
 - **Format-based**: Inline, Tabular, List, Nested arrays
 - **Special cases**: Primitives, Deeply nested structures
 
 ### DecodeBench.php
+
 Tests decoding performance:
+
 - Same size variations as encoding
 - Tests parsing of all TOON format types
 - Measures string parsing overhead
 
 ### ThroughputBench.php
+
 Tests sustained performance:
+
 - Typical API responses (20-100 items)
 - Small payloads (single objects)
 - Large payloads (100+ items)
 - Round-trip operations (encode + decode)
 
 ### ScalabilityBench.php
+
 Tests performance at scale:
+
 - Data sizes: 10, 50, 100, 500, 1K, 5K, 10K, 50K, 100K items
 - Uses parameterized benchmarks for easy comparison
 - Helps identify performance curves
@@ -201,15 +217,18 @@ Based on typical use cases:
 ## Troubleshooting
 
 ### Benchmarks running too slow
+
 - Reduce `@Revs` count for slower operations
 - Reduce test data size in constructor
 
 ### Inconsistent results (high rstdev)
+
 - Increase `@Iterations` count
 - Close other applications
 - Check for background processes
 
 ### Out of memory
+
 - Reduce test data size
 - Increase PHP memory limit in `phpbench.json`
 

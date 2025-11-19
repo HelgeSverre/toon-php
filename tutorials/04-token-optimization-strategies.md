@@ -21,6 +21,7 @@
 ## Final Result
 
 By the end of this tutorial, you'll have built a comprehensive optimization system that:
+
 - Analyzes data structures for token usage patterns
 - Implements strategic preprocessing before encoding
 - Measures and reports on actual cost savings
@@ -338,6 +339,7 @@ When you run `php token-comparison.php`, you'll typically see:
 - **Nested structures**: 35-45% savings
 
 **Why the variance?**
+
 - Uniform arrays have repeated keys that TOON eliminates
 - Nested objects have structural overhead that TOON reduces
 - Simple key-value pairs benefit less but still save 30%+
@@ -1301,21 +1303,25 @@ echo "  Average processing time: {$summary['avg_processing_time_ms']}ms\n";
 ### Common Issues and Solutions
 
 **Token estimates don't match actual**
+
 - Use tiktoken library for OpenAI models
 - Each model has different tokenization rules
 - Our 4-char estimate is approximate only
 
 **Choosing wrong preset**
+
 - Test all presets with your actual data
 - Measure real token counts, not estimates
 - Consider data structure, not just size
 
 **Over-optimization causing errors**
+
 - Don't remove fields the LLM needs
 - Test with sample requests first
 - Keep essential context intact
 
 **Performance issues with large data**
+
 - Implement caching for repeated data
 - Process in batches
 - Use async operations where possible

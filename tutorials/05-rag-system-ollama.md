@@ -7,6 +7,7 @@
 ## What You'll Build
 
 In this tutorial, you'll create a knowledge base search system that:
+
 - Uses Ollama for local embeddings (no cloud API needed)
 - Implements a simple in-memory vector store in pure PHP
 - Performs cosine similarity search
@@ -16,6 +17,7 @@ In this tutorial, you'll create a knowledge base search system that:
 ## Learning Objectives
 
 By the end of this tutorial, you'll understand:
+
 - RAG (Retrieval-Augmented Generation) architecture basics
 - How to implement vector embeddings with Ollama
 - How to build cosine similarity search from scratch
@@ -45,6 +47,7 @@ RAG (Retrieval-Augmented Generation) is a pattern that enhances LLM responses by
 ### TOON's Role in RAG
 
 While TOON doesn't handle the core RAG functionality (embeddings, vector search), it plays a crucial role in optimizing the system:
+
 - **Metadata Compression**: Reduces document metadata size by 40-60%
 - **Context Optimization**: Minimizes tokens when sending context to LLMs
 - **Efficient Storage**: Compact representation of search results
@@ -1026,6 +1029,7 @@ echo "\nGoodbye!\n";
 ### Common Issues and Solutions
 
 **Ollama not running:**
+
 ```bash
 # Check if Ollama is running
 curl http://localhost:11434
@@ -1038,6 +1042,7 @@ brew services start ollama
 ```
 
 **Model not found:**
+
 ```bash
 # List available models
 ollama list
@@ -1050,21 +1055,25 @@ ollama pull all-minilm
 ```
 
 **Low similarity scores:**
+
 - Different embedding models have different score ranges
 - Adjust threshold based on your model (try 0.2-0.5)
 - Ensure text preprocessing is consistent
 
 **Memory issues:**
+
 - Vector stores hold everything in RAM
 - For this demo, limit to 10-20 documents
 - In production, use a vector database
 
 **Slow embedding generation:**
+
 - Ollama runs on CPU by default
 - For GPU acceleration, ensure CUDA/Metal support
 - Consider batching embeddings for bulk indexing
 
 **Connection errors:**
+
 ```php
 // Add retry logic for resilience
 $maxRetries = 3;
@@ -1088,21 +1097,25 @@ for ($i = 0; $i < $maxRetries; $i++) {
 ### What to Use in Production
 
 **Vector Databases:**
+
 - **Cloud**: Pinecone, Qdrant Cloud, Weaviate Cloud
 - **Self-hosted**: pgvector, Qdrant, Milvus, ChromaDB
 - **Serverless**: Upstash Vector, Cloudflare Vectorize
 
 **Document Processing:**
+
 - **Chunking**: Split documents into overlapping chunks (500-1000 tokens)
 - **Metadata extraction**: Parse structured data from documents
 - **Deduplication**: Remove duplicate or near-duplicate content
 
 **Search Improvements:**
+
 - **Hybrid search**: Combine vector search with keyword search (BM25)
 - **Reranking**: Use cross-encoders to rerank results
 - **Query expansion**: Generate multiple query variations
 
 **Performance Optimization:**
+
 - **Caching**: Cache embeddings and frequent queries
 - **Batch processing**: Process multiple documents in parallel
 - **Async operations**: Use async/await for I/O operations
@@ -1168,6 +1181,7 @@ Congratulations! You've built a functional RAG system from scratch. You learned:
 ## Complete Code Repository
 
 Find the complete working code at:
+
 ```bash
 git clone https://github.com/your-username/php-rag-tutorial
 cd php-rag-tutorial

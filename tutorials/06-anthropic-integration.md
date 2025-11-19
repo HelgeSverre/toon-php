@@ -16,6 +16,7 @@ You'll see how TOON's 40-60% token reduction allows you to maximize Claude's mas
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Install and configure the Anthropic PHP SDK
 - Format large datasets with TOON for Claude's context window
 - Measure token savings specific to Claude's models
@@ -37,6 +38,7 @@ By the end of this tutorial, you will:
 Claude (Anthropic's LLM) offers a massive 200K token context window, allowing you to send large amounts of data in a single request. However, this still has cost implications - every token counts.
 
 TOON's format optimization becomes even more powerful with Claude because:
+
 - You can fit 40-60% more data in the same context window
 - Claude's models are particularly good at understanding structured formats
 - Costs scale linearly with tokens, so savings compound with large contexts
@@ -115,6 +117,7 @@ Claude's strength is analyzing large amounts of data in context. Let's build a s
 ### The Scenario
 
 Your company has accumulated 50+ support tickets that need analysis. You want Claude to:
+
 - Identify high-priority open tickets
 - Detect common issue patterns
 - Recommend actions for the support team
@@ -236,6 +239,7 @@ php ticket-analyzer.php
 ```
 
 Expected output shows:
+
 - Encoding comparison (JSON vs TOON)
 - Token savings (typically 40-50%)
 - Claude's analysis of the tickets
@@ -641,6 +645,7 @@ if ($result['success']) {
 **Problem**: Authentication failures
 
 **Solution**:
+
 ```php
 // Verify API key format
 if (!str_starts_with($_ENV['ANTHROPIC_API_KEY'], 'sk-ant-')) {
@@ -653,6 +658,7 @@ if (!str_starts_with($_ENV['ANTHROPIC_API_KEY'], 'sk-ant-')) {
 **Problem**: Token estimates don't match Claude's counts
 
 **Solution**:
+
 - Claude uses its own tokenizer (different from OpenAI's)
 - Always use actual usage from the API response
 - The 4-char estimate is approximate
@@ -663,6 +669,7 @@ if (!str_starts_with($_ENV['ANTHROPIC_API_KEY'], 'sk-ant-')) {
 **Problem**: Too many requests
 
 **Solution**:
+
 - Implement exponential backoff
 - Batch requests where possible
 - Monitor rate limit headers
@@ -672,6 +679,7 @@ if (!str_starts_with($_ENV['ANTHROPIC_API_KEY'], 'sk-ant-')) {
 **Problem**: Still hitting limits even with TOON
 
 **Solution**:
+
 - Preprocess data before encoding
 - Remove unnecessary fields
 - Summarize verbose content
@@ -680,6 +688,7 @@ if (!str_starts_with($_ENV['ANTHROPIC_API_KEY'], 'sk-ant-')) {
 ## Next Steps
 
 Congratulations! You've successfully integrated TOON with Claude and learned how to:
+
 - Leverage Claude's large context window efficiently
 - Measure real token savings with Anthropic's API
 - Build production-ready analysis systems
@@ -709,4 +718,4 @@ Congratulations! You've successfully integrated TOON with Claude and learned how
 
 ---
 
-*Remember: Claude's massive context window combined with TOON's compression lets you include much richer context in your prompts. Use this to your advantage for more accurate, context-aware responses!*
+_Remember: Claude's massive context window combined with TOON's compression lets you include much richer context in your prompts. Use this to your advantage for more accurate, context-aware responses!_

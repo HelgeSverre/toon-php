@@ -9,17 +9,20 @@
 ### Toon Class (Primary Public API)
 
 **v1.3.0:**
+
 ```php
 public static function encode(mixed $value, ?EncodeOptions $options = null): string
 ```
 
 **v1.3.1:**
+
 ```php
 public static function encode(mixed $value, ?EncodeOptions $options = null): string
 public static function decode(string $toon, ?DecodeOptions $options = null): mixed  // NEW - not breaking
 ```
 
 **Analysis:**
+
 - ✅ `Toon::encode()` signature unchanged
 - ✅ `Toon::decode()` is a NEW addition (not a breaking change)
 - ✅ All existing code calling `Toon::encode()` will work identically
@@ -27,6 +30,7 @@ public static function decode(string $toon, ?DecodeOptions $options = null): mix
 ### Helper Functions
 
 All global helper functions remain unchanged:
+
 - ✅ `toon()` - unchanged
 - ✅ `toon_compact()` - unchanged
 - ✅ `toon_readable()` - unchanged
@@ -35,6 +39,7 @@ All global helper functions remain unchanged:
 ### EncodeOptions Class
 
 All public methods and presets unchanged:
+
 - ✅ `EncodeOptions::default()` - unchanged
 - ✅ `EncodeOptions::compact()` - unchanged
 - ✅ `EncodeOptions::readable()` - unchanged
@@ -53,6 +58,7 @@ All public methods and presets unchanged:
 ### Encoders Class
 
 **v1.3.0:** Static methods with parameter threading
+
 ```php
 final class Encoders
 {
@@ -65,6 +71,7 @@ final class Encoders
 ```
 
 **v1.3.1:** Instance-based with stored configuration
+
 ```php
 final class Encoders
 {
@@ -77,12 +84,14 @@ final class Encoders
 ```
 
 **Impact Analysis:**
+
 - ✅ The `Encoders` class is marked as `final` and is in the internal namespace
 - ✅ It was never documented in README or tutorials as a public API
 - ✅ All usage examples in documentation use `Toon::encode()` exclusively
 - ✅ The class is internal implementation detail, not public API
 
 **Potential Risk:** If any users were directly calling `Encoders::encodeValue()` (not documented/supported), their code would break. However:
+
 1. This is not documented as public API
 2. All official examples use `Toon::encode()`
 3. There's no use case for calling `Encoders` directly
@@ -95,6 +104,7 @@ final class Encoders
 **v1.3.0:** Did not exist (decoder was just added)
 
 **v1.3.1:** Instance-based from the start
+
 ```php
 final class Parser
 {
@@ -104,6 +114,7 @@ final class Parser
 ```
 
 **Impact:**
+
 - ✅ No breaking changes - decoder is new in this version
 - ✅ Clean architecture from the start
 
@@ -149,6 +160,7 @@ This release qualifies as a PATCH version (1.3.0 → 1.3.1) because:
 5. ✅ New functionality added (decoder) without breaking changes
 
 This release is a MINOR version (1.3.0 → 1.4.0) because:
+
 - New functionality added (complete decoder implementation)
 - New public API surface (`Toon::decode()` method)
 - Backwards compatible feature additions
@@ -160,6 +172,7 @@ This release is a MINOR version (1.3.0 → 1.4.0) because:
 **Required Changes:** NONE
 
 **Optional Updates:**
+
 - Consider using the new `Toon::decode()` method if you need to parse TOON format
 - No changes needed to existing encoding code
 
@@ -168,6 +181,7 @@ This release is a MINOR version (1.3.0 → 1.4.0) because:
 ## Semantic Versioning
 
 This is correctly versioned as **v1.4.0** (MINOR) because:
+
 1. New functionality added: Full TOON decoder implementation
 2. New public API: `Toon::decode()` method
 3. Zero breaking changes to existing public API
@@ -177,6 +191,7 @@ This is correctly versioned as **v1.4.0** (MINOR) because:
 **Why MINOR (1.4.0) instead of PATCH (1.3.1)?**
 
 According to SemVer 2.0.0:
+
 - MINOR version when you add functionality in a backwards compatible manner
 - The decoder is a significant new feature that adds public API surface
 - Even though the decoder was partially present in v1.3.0, this release completes and documents it
@@ -186,6 +201,7 @@ According to SemVer 2.0.0:
 **✅ This release is FULLY BACKWARDS COMPATIBLE**
 
 Release as **v1.4.0** (minor version) with confidence that:
+
 1. No user code will break
 2. All existing APIs remain unchanged
 3. New decoder functionality is fully tested and spec-compliant

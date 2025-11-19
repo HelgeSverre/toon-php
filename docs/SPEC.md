@@ -58,6 +58,7 @@ https://www.iso.org/standard/70907.html
 ## Table of Contents
 
 - [Introduction](#introduction)
+
 1. [Terminology and Conventions](#1-terminology-and-conventions)
 2. [Data Model](#2-data-model)
 3. [Encoding Normalization (Reference Encoder)](#3-encoding-normalization-reference-encoder)
@@ -81,6 +82,7 @@ https://www.iso.org/standard/70907.html
 21. [Intellectual Property Considerations](#21-intellectual-property-considerations)
 
 **Appendices:**
+
 - [Appendix A: Examples (Informative)](#appendix-a-examples-informative)
 - [Appendix B: Parsing Helpers (Informative)](#appendix-b-parsing-helpers-informative)
 - [Appendix C: Test Suite and Compliance (Informative)](#appendix-c-test-suite-and-compliance-informative)
@@ -98,17 +100,20 @@ TOON (Token-Oriented Object Notation) is a line-oriented, indentation-based text
 ### Applicability and non‑goals
 
 Use TOON when:
+
 - arrays of objects share the same fields (uniform tabular data),
 - deterministic, minimally quoted text is desirable,
 - explicit lengths and fixed row widths help detect truncation or malformed data,
 - you want unambiguous, human-readable structure without repeating keys.
 
 TOON is not intended to replace:
+
 - JSON for non-uniform or deeply nested structures where repeated keys are not dominant,
 - CSV for flat, strictly tabular data where maximum compactness is required and nesting is not needed,
 - general-purpose storage or public APIs. TOON carries the JSON data model; it is a transport/authoring format with explicit structure, not an extended type system or schema language.
 
 Out of scope:
+
 - comments and annotations,
 - alternative number systems or locale-specific formatting,
 - user-defined escape sequences or control directives.
@@ -130,6 +135,7 @@ users[2]{id,name,role}:
 ### Document roadmap
 
 Normative rules are organized as follows:
+
 - Data model and canonical number form (§2); normalization on encode (§3); decoding interpretation (§4).
 - Concrete syntax, including root-form determination (§5) and header syntax (§6).
 - Strings and keys (§7); objects (§8); arrays and their sub-forms (§9); objects as list items (§10); delimiter rules (§11).
@@ -293,11 +299,13 @@ TOON is a deterministic, line-oriented, indentation-based notation.
 Array headers declare length and active delimiter, and optionally field names.
 
 General forms:
+
 - Root header (no key): [N<delim?>]:
 - With key: key[N<delim?>]:
 - Tabular fields: key[N<delim?>]{field1<delim>field2<delim>…}:
 
 Where:
+
 - N is the non-negative integer length.
 - <delim?> is:
   - absent for comma (","),
@@ -306,6 +314,7 @@ Where:
 - Field names in braces are separated by the same active delimiter and encoded as keys (Section 7.3).
 
 Spacing and delimiters:
+
 - Every header line MUST end with a colon.
 - When inline values follow a header on the same line (non-empty primitive arrays), there MUST be exactly one space after the colon before the first value.
 - The active delimiter declared by the bracket segment applies to:
@@ -317,6 +326,7 @@ Spacing and delimiters:
 - Absence of a delimiter symbol in a bracket segment ALWAYS means comma, regardless of any parent header.
 
 Normative header grammar (ABNF):
+
 ```
 ; Core rules from RFC 5234
 ALPHA  = %x41-5A / %x61-7A   ; A-Z / a-z
@@ -350,6 +360,7 @@ Note: The ABNF grammar above cannot enforce that the delimiter used in the field
 Note: The grammar above specifies header syntax. TOON's grammar is deliberately designed to prioritize human readability and token efficiency over strict LR(1) parseability. This requires some context-sensitive parsing (particularly for tabular row disambiguation in Section 9.3), which is a deliberate design tradeoff. Reference implementations demonstrate that deterministic parsing is achievable with modest lookahead.
 
 Decoding requirements:
+
 - The bracket segment MUST parse as a non-negative integer length N.
 - If a trailing tab or pipe appears inside the brackets, it selects the active delimiter; otherwise comma is active.
 - If a fields segment occurs between the bracket and the colon, parse field names using the active delimiter; quoted names MUST be unescaped per Section 7.1.
@@ -362,6 +373,7 @@ Note: Key folding (§13.4) affects only the key prefix in headers. The header gr
 ### 7.1 Escaping (Encoding and Decoding)
 
 In quoted strings and keys, the following characters MUST be escaped:
+
 - "\\" → "\\\\"
 - "\"" → "\\\""
 - U+000A newline → "\\n"
@@ -375,6 +387,7 @@ Tabs are allowed inside quoted strings and as a declared delimiter; they MUST NO
 ### 7.2 Quoting Rules for String Values (Encoding)
 
 A string value MUST be quoted if any of the following is true:
+
 - It is empty ("").
 - It has leading or trailing whitespace.
 - It equals true, false, or null (case-sensitive).
@@ -394,7 +407,8 @@ Otherwise, the string MAY be emitted without quotes. Unicode, emoji, and strings
 ### 7.3 Key Encoding (Encoding)
 
 Object keys and tabular field names:
-- MAY be unquoted only if they match: ^[A-Za-z_][A-Za-z0-9_.]*$.
+
+- MAY be unquoted only if they match: ^[A-Za-z\_][A-Za-z0-9_.]\*$.
 - Otherwise, they MUST be quoted and escaped per Section 7.1.
 
 Keys requiring quoting per the above rules MUST be quoted in all contexts, including array headers (e.g., "my-key"[N]:).
@@ -451,17 +465,20 @@ Encoders MAY perform key folding when enabled (see §13.4 for complete folding r
 ### 9.3 Arrays of Objects — Tabular Form
 
 Tabular detection (encoding; MUST hold for all elements):
+
 - Every element is an object.
 - All objects have the same set of keys (order per object MAY vary).
 - All values across these keys are primitives (no nested arrays/objects).
 
 When satisfied (encoding):
+
 - Header: key[N<delim?>]{f1<delim>f2<delim>…}: where field order is the first object's key encounter order.
 - Field names encoded per Section 7.3.
 - Rows: one line per object at depth +1 under the header; values are encoded primitives (Section 7) and joined by the active delimiter.
 - Root tabular arrays omit the key: [N<delim?>]{…}: followed by rows.
 
 Decoding:
+
 - A tabular header declares the active delimiter and ordered field list.
 - Rows appear at depth +1 as delimiter-separated value lines.
 - Strict mode MUST enforce:
@@ -478,6 +495,7 @@ Decoding:
 ### 9.4 Mixed / Non-Uniform Arrays — Expanded List
 
 When tabular requirements are not met (encoding):
+
 - Header: key[N<delim?>]:
 - Each element is rendered as a list item at depth +1 under the header:
   - Primitive: - <primitive>
@@ -486,6 +504,7 @@ When tabular requirements are not met (encoding):
   - Complex arrays: - key'[M<delim?>]: followed by nested items as appropriate.
 
 Decoding:
+
 - Header declares list length N and the active delimiter for any nested inline arrays.
 - Each list item starts with "- " at depth +1 and is parsed as:
   - Primitive (no colon and no array header),
@@ -511,6 +530,7 @@ For an object appearing as a list item:
 - Remaining fields of the same object appear at depth +1 under the hyphen line in encounter order, using normal object field rules.
 
 Decoding:
+
 - The first field is parsed from the hyphen line. If it is a nested object (- key:), nested fields are at +2 relative to the hyphen line; subsequent fields of the same list item are at +1.
 - If the first field is a tabular header on the hyphen line, its rows are at +1; subsequent sibling fields continue at +1 after the rows.
 
@@ -557,6 +577,7 @@ Decoding:
   - Trailing newline at end-of-file: decoders SHOULD accept; validators MAY warn.
 
 Recommended blank-line handling (normative where stated):
+
 - Before decoding, or during scanning:
   - Track blank lines with depth.
   - For strict mode: if a blank line occurs between the first and last row/item line in an array/tabular block, this MUST error.
@@ -587,6 +608,7 @@ Conformance classes:
   - SHOULD verify length counts vs declared [N].
 
 Options:
+
 - Encoder options:
   - indent (default: 2 spaces)
   - delimiter (document delimiter; default: comma; alternatives: tab, pipe)
@@ -608,32 +630,38 @@ Key folding and path expansion are optional transformations for compact dotted-p
 Key folding allows encoders to collapse chains of single-key objects into dotted-path notation, reducing verbosity for deeply nested structures.
 
 Mode: `"off"` | `"safe"` (default: `"off"`)
+
 - `"off"`: No folding is performed. All objects are encoded with standard nesting.
 - `"safe"`: Fold eligible chains according to the rules below.
 
 flattenDepth: The maximum number of segments from K0 to include in the folded path (default: Infinity when keyFolding is `"safe"`; values less than 2 have no practical effect).
+
 - A value of 2 folds only two-segment chains: `{a: {b: val}}` → `a.b: val`.
 - A value of Infinity folds entire eligible chains: `{a: {b: {c: val}}}` → `a.b.c: val`.
 
 Foldable chain: A chain K0 → K1 → ... → Kn is foldable when:
+
 - Each Ki (where i = 0 to n−1) is an object with exactly one key Ki+1.
 - The chain stops at the first non-single-key object or when encountering a leaf value.
 - Arrays are not considered single-key objects; a chain stops at arrays.
 - The leaf value at Kn is either a primitive, an array, or an empty object.
 
 Safe mode requirements (all MUST hold for a chain to be folded):
+
 1. All folded segments K0 through K(d−1) (where d = min(chain length, flattenDepth)) MUST be IdentifierSegments (§1.9): matching `^[A-Za-z_][A-Za-z0-9_]*$`.
 2. No segment may contain the path separator (`.` in v1.5).
 3. The resulting folded key string MUST NOT equal any existing sibling literal key at the same object depth (collision avoidance).
 4. If any segment would require quoting per §7.3, the chain MUST NOT be folded.
 
 Folding process:
+
 - For a foldable chain of length n, determine d = min(n, flattenDepth).
 - Fold segments K0 through K(d−1) into a single key: `K0.K1.....K(d−1)`.
 - If d < n, emit the remaining structure (Kd through Kn) as normal nested objects.
 - The leaf value at Kn is encoded normally (primitive, array, or empty object).
 
 Examples:
+
 - `{a: {b: {c: 1}}}` with safe mode, depth=Infinity → `a.b.c: 1`
 - `{a: {b: {c: {d: 1}}}}` with safe mode, depth=2 → produces `a.b:` followed by nested `c:` and `d: 1` at appropriate depths
 - `{data: {"full-name": {x: 1}}}` → safe mode skips (segment `"full-name"` requires quoting); emits standard nested structure
@@ -643,10 +671,12 @@ Examples:
 Path expansion allows decoders to split dotted keys into nested object structures, enabling round-trip compatibility with folded encodings.
 
 Mode: `"off"` | `"safe"` (default: `"off"`)
+
 - `"off"`: Dotted keys are treated as literal keys. No expansion is performed.
 - `"safe"`: Expand eligible dotted keys according to the rules below.
 
 Safe mode behavior:
+
 - Any key containing the path separator (`.`) is considered for expansion.
 - Split the key into segments at each occurrence of `.`.
 - Only expand when ALL resulting segments are IdentifierSegments (§1.9) and none contain `.` after splitting.
@@ -654,12 +684,14 @@ Safe mode behavior:
 
 Deep merge semantics:
 When multiple expanded keys construct overlapping object paths, the decoder MUST merge them recursively:
+
 - Object + Object: Deep merge recursively (recurse into nested keys and apply these rules).
 - Object + Non-object (array or primitive): This is a conflict. Apply conflict resolution policy.
 - Array + Array or Primitive + Primitive: This is a conflict. Apply conflict resolution policy. Arrays are never merged element-wise.
 - Key ordering: During expansion, newly created keys are inserted in encounter order (the order they appear in the document). When merging creates nested keys, keys from later lines are appended after existing keys at the same depth. This ensures deterministic, predictable key order in the resulting object.
 
 Conflict resolution:
+
 - Conflict definition: A conflict occurs when expansion requires an object at a given path but finds a non-object value (array or primitive), or vice versa. A conflict also occurs when a final leaf key already exists with a non-object value that must be overwritten.
 - `strict=true` (default): Decoders MUST error on any conflict. This ensures data integrity and catches structural inconsistencies.
 - `strict=false`: Last-write-wins (LWW) conflict resolution: keys appearing later in document order (encounter order during parsing) overwrite earlier values. This provides deterministic behavior for lenient parsing.
@@ -667,6 +699,7 @@ Conflict resolution:
 Application order: Path expansion is applied AFTER all base parsing rules (§4–12) have been applied and BEFORE the final decoded value is returned to the caller. Structural validations enumerated in §14 (strict-mode errors for array counts, indentation, etc.) operate on the pre-expanded structure and remain unaffected by expansion.
 
 Examples:
+
 - Input: `data.meta.items[2]: a,b` with `expandPaths="safe"` → Output: `{"data": {"meta": {"items": ["a", "b"]}}}`
 - Input: `user.name: Ada` with `expandPaths="off"` → Output: `{"user.name": "Ada"}`
 - Input: `a.b.c: 1` and `a.b.d: 2` and `a.e: 3` with `expandPaths="safe"` → Output: `{"a": {"b": {"c": 1, "d": 2}, "e": 3}}` (deep merge)
@@ -676,6 +709,7 @@ Examples:
 ### 13.1 Encoder Conformance Checklist
 
 Conforming encoders MUST:
+
 - [ ] Produce UTF-8 output with LF (U+000A) line endings (§5)
 - [ ] Use consistent indentation (default 2 spaces, no tabs) (§12)
 - [ ] Escape \\, ", \n, \r, \t in quoted strings; reject other escapes (§7.1)
@@ -692,6 +726,7 @@ Conforming encoders MUST:
 ### 13.2 Decoder Conformance Checklist
 
 Conforming decoders MUST:
+
 - [ ] Parse array headers per §6 (length, delimiter, optional fields)
 - [ ] Split inline arrays and tabular rows using active delimiter only (§11)
 - [ ] Unescape quoted strings with only valid escapes (§7.1)
@@ -705,6 +740,7 @@ Conforming decoders MUST:
 ### 13.3 Validator Conformance Checklist
 
 Validators SHOULD verify:
+
 - [ ] Structural conformance (headers, indentation, list markers)
 - [ ] Whitespace invariants (no trailing spaces/newlines)
 - [ ] Delimiter consistency between headers and rows
@@ -742,6 +778,7 @@ For root-form rules, including handling of empty documents, see §5.
 ### 14.5 Path Expansion Conflicts
 
 When `expandPaths="safe"` is enabled:
+
 - With `strict=true` (default): Decoders MUST error on any expansion conflict.
 - With `strict=false`: Decoders MUST apply deterministic last-write-wins (LWW) resolution in document order. Implementations MUST resolve conflicts silently and MUST NOT emit diagnostics during normal decode operations.
 
@@ -752,11 +789,13 @@ Note (informative): Implementations MAY expose conflict diagnostics via out-of-b
 ### 14.6 Recommended Error Messages and Validator Diagnostics (Informative)
 
 Validators SHOULD additionally report:
+
 - Trailing spaces, trailing newlines (encoding invariants).
 - Headers missing delimiter marks when non-comma delimiter is in use.
 - Values violating delimiter-aware quoting rules.
 
 Recommended error messages:
+
 - "Missing colon after key"
 - "Unterminated string: missing closing quote"
 - "Invalid escape sequence: \x"
@@ -792,6 +831,7 @@ TOON models the same data types as JSON [RFC8259]: objects, arrays, strings, num
 Round-trip Compatibility:
 
 JSON → TOON → JSON round-trips preserve all JSON values, with these normalization behaviors:
+
 - JavaScript-specific types (Date, Set, Map, BigInt) normalize per Section 3
 - NaN and ±Infinity normalize to null
 - -0 normalizes to 0
@@ -800,6 +840,7 @@ JSON → TOON → JSON round-trips preserve all JSON values, with these normaliz
 Example: JSON to TOON Conversion
 
 JSON input:
+
 ```json
 {
   "users": [
@@ -811,6 +852,7 @@ JSON input:
 ```
 
 TOON output (tabular format):
+
 ```
 users[2]{id,name,active}:
   1,Alice,true
@@ -823,6 +865,7 @@ count: 2
 TOON's tabular format generalizes CSV [RFC4180] with several enhancements:
 
 Advantages over CSV:
+
 - Explicit array length declarations enable validation
 - Field names declared in header (no separate header row)
 - Supports nested structures (CSV is flat-only)
@@ -832,6 +875,7 @@ Advantages over CSV:
 Example: CSV to TOON Conversion
 
 CSV input:
+
 ```csv
 id,name,price
 A1,Widget,9.99
@@ -839,6 +883,7 @@ B2,Gadget,14.50
 ```
 
 TOON equivalent:
+
 ```
 items[2]{id,name,price}:
   A1,Widget,9.99
@@ -846,6 +891,7 @@ items[2]{id,name,price}:
 ```
 
 Conversion Guidelines:
+
 - CSV headers map to TOON field names
 - CSV data rows map to TOON tabular rows
 - CSV string escaping (double-quotes) maps to TOON quoting rules
@@ -856,11 +902,13 @@ Conversion Guidelines:
 TOON shares YAML's indentation-based structure but differs significantly in syntax:
 
 Similarities:
+
 - Indentation for nesting
 - List items with hyphen markers (- )
 - Minimal quoting for simple values
 
 Differences:
+
 - TOON requires explicit array headers with lengths
 - TOON uses colon-space for key-value (no other separators)
 - TOON has no comment syntax (YAML has #)
@@ -869,6 +917,7 @@ Differences:
 Example: YAML to TOON Conversion
 
 YAML input:
+
 ```yaml
 server:
   host: localhost
@@ -879,6 +928,7 @@ server:
 ```
 
 TOON equivalent:
+
 ```
 server:
   host: localhost
@@ -903,6 +953,7 @@ Subtype name: toon (provisional, not IANA-registered)
 Required parameters: None
 
 Optional parameters:
+
 - charset: Although TOON is always UTF-8, the charset parameter MAY be specified as "charset=utf-8". If absent, UTF-8 MUST be assumed.
 
 Encoding considerations: 8-bit. TOON documents are UTF-8 encoded text with LF (U+000A) line endings.
@@ -918,6 +969,7 @@ Applications: LLM-based applications, prompt engineering tools, data serializati
 Fragment identifier considerations: None defined.
 
 Additional information:
+
 - File extension: .toon
 - Macintosh file type code: TEXT
 - Contact: See Appendix E (Author section)
@@ -935,6 +987,7 @@ Implementers SHOULD be aware that the media type designation `text/toon` is prov
 ## Appendix A: Examples (Informative)
 
 Objects:
+
 ```
 id: 123
 name: Ada
@@ -942,6 +995,7 @@ active: true
 ```
 
 Nested objects:
+
 ```
 user:
   id: 123
@@ -949,11 +1003,13 @@ user:
 ```
 
 Primitive arrays:
+
 ```
 tags[3]: admin,ops,dev
 ```
 
 Arrays of arrays (primitives):
+
 ```
 pairs[2]:
   - [2]: 1,2
@@ -961,6 +1017,7 @@ pairs[2]:
 ```
 
 Tabular arrays:
+
 ```
 items[2]{sku,qty,price}:
   A1,2,9.99
@@ -968,6 +1025,7 @@ items[2]{sku,qty,price}:
 ```
 
 Mixed arrays:
+
 ```
 items[3]:
   - 1
@@ -976,6 +1034,7 @@ items[3]:
 ```
 
 Objects as list items (first field on hyphen line):
+
 ```
 items[2]:
   - id: 1
@@ -986,6 +1045,7 @@ items[2]:
 ```
 
 Nested tabular inside a list item:
+
 ```
 items[1]:
   - users[2]{id,name}:
@@ -995,6 +1055,7 @@ items[1]:
 ```
 
 Delimiter variations:
+
 ```
 items[2	]{sku	name	qty	price}:
   A1	Widget	2	9.99
@@ -1004,6 +1065,7 @@ tags[3|]: reading|gaming|coding
 ```
 
 Quoted colons and disambiguation (rows continue; colon is inside quotes):
+
 ```
 links[2]{id,url}:
   1,"http://a:b"
@@ -1011,6 +1073,7 @@ links[2]{id,url}:
 ```
 
 Error cases (invalid TOON):
+
 ```
 key value
 
@@ -1027,6 +1090,7 @@ tags[5]: a,b,c
 ```
 
 Edge cases:
+
 ```
 name: ""
 
@@ -1051,6 +1115,7 @@ decimal: 0.3333333333333333
 ```
 
 Quoted keys with arrays (keys requiring quoting per Section 7.3):
+
 ```
 "my-key"[3]: 1,2,3
 
@@ -1068,6 +1133,7 @@ Key folding and path expansion (v1.5+):
 Encoding - basic folding (safe mode, depth=Infinity):
 
 Input: `{"a": {"b": {"c": 1}}}`
+
 ```
 a.b.c: 1
 ```
@@ -1075,6 +1141,7 @@ a.b.c: 1
 Encoding - folding with inline array:
 
 Input: `{"data": {"meta": {"items": ["x", "y"]}}}`
+
 ```
 data.meta.items[2]: x,y
 ```
@@ -1082,6 +1149,7 @@ data.meta.items[2]: x,y
 Encoding - folding with tabular array:
 
 Input: `{"a": {"b": {"items": [{"id": 1, "name": "A"}, {"id": 2, "name": "B"}]}}}`
+
 ```
 a.b.items[2]{id,name}:
   1,A
@@ -1091,6 +1159,7 @@ a.b.items[2]{id,name}:
 Encoding - partial folding (flattenDepth=2):
 
 Input: `{"a": {"b": {"c": {"d": 1}}}}`
+
 ```
 a.b:
   c:
@@ -1106,29 +1175,35 @@ Output: `{"data": {"meta": {"items": ["a", "b"]}}}`
 Decoding - deep merge (multiple expanded keys):
 
 Input with options `{expandPaths: "safe"}`:
+
 ```
 a.b.c: 1
 a.b.d: 2
 a.e: 3
 ```
+
 Output: `{"a": {"b": {"c": 1, "d": 2}, "e": 3}}`
 
 Decoding - conflict error (strict=true, default):
 
 Input with options `{expandPaths: "safe", strict: true}`:
+
 ```
 a.b: 1
 a: 2
 ```
+
 Result: Error - "Expansion conflict at path 'a' (object vs primitive)"
 
 Decoding - conflict LWW (strict=false):
 
 Input with options `{expandPaths: "safe", strict: false}`:
+
 ```
 a.b: 1
 a: 2
 ```
+
 Output: `{"a": 2}`
 
 ## Appendix B: Parsing Helpers (Informative)
@@ -1204,6 +1279,7 @@ The reference test suite provides validation for implementations but is not exha
 ### Test Coverage
 
 The reference test suite covers:
+
 - Primitive encoding/decoding, quoting, control-character escaping.
 - Object key encoding/decoding and order preservation.
 - Primitive arrays (inline), empty arrays.
@@ -1300,20 +1376,25 @@ This appendix provides non-normative guidance on how implementations in differen
 Go implementations commonly normalize the following host types:
 
 Numeric Types:
+
 - `big.Int`: If within `int64` range, convert to number. Otherwise, convert to quoted decimal string per lossless policy.
 - `math.Inf()`, `math.NaN()`: Convert to `null`.
 
 Temporal Types:
+
 - `time.Time`: Convert to ISO 8601 string via `.Format(time.RFC3339)` or `.Format(time.RFC3339Nano)`.
 
 Collection Types:
+
 - `map[K]V`: Convert to object. Keys MUST be strings or convertible to strings via `fmt.Sprint`.
 - `[]T` (slices): Preserve as array.
 
 Struct Types:
+
 - Structs with exported fields: Convert to object using JSON struct tags if present.
 
 Non-Serializable Types:
+
 - `nil`: Maps to `null`.
 - Functions, channels, `unsafe.Pointer`: Not serializable; implementations MUST error or skip these fields.
 
@@ -1322,21 +1403,26 @@ Non-Serializable Types:
 JavaScript implementations commonly normalize the following host types:
 
 Numeric Types:
+
 - `BigInt`: If the value is within `Number.MIN_SAFE_INTEGER` to `Number.MAX_SAFE_INTEGER`, convert to `number`. Otherwise, convert to a quoted decimal string (e.g., `BigInt(9007199254740993)` → `"9007199254740993"`).
 - `NaN`, `Infinity`, `-Infinity`: Convert to `null`.
 - `-0`: Normalize to `0`.
 
 Temporal Types:
+
 - `Date`: Convert to ISO 8601 string via `.toISOString()` (e.g., `"2025-01-01T00:00:00.000Z"`).
 
 Collection Types:
+
 - `Set`: Convert to array by iterating entries and normalizing each element.
 - `Map`: Convert to object using `String(key)` for keys and normalizing values recursively. Non-string keys are coerced to strings.
 
 Object Types:
+
 - Plain objects: Enumerate own enumerable string keys in encounter order; normalize values recursively.
 
 Non-Serializable Types:
+
 - `undefined`, `function`, `Symbol`: Convert to `null`.
 
 ### G.3 Python
@@ -1344,21 +1430,26 @@ Non-Serializable Types:
 Python implementations commonly normalize the following host types:
 
 Numeric Types:
+
 - `decimal.Decimal`: Convert to `float` if representable without loss, OR convert to quoted decimal string for exact preservation (implementation policy).
 - `float('inf')`, `float('-inf')`, `float('nan')`: Convert to `null`.
 - Arbitrary-precision integers (large `int`): Emit as number if within host numeric range, OR as quoted decimal string per lossless policy.
 
 Temporal Types:
+
 - `datetime.datetime`, `datetime.date`, `datetime.time`: Convert to ISO 8601 string representation via `.isoformat()`.
 
 Collection Types:
+
 - `set`, `frozenset`: Convert to list (array).
 - `dict`: Preserve as object with string keys. Non-string keys MUST be coerced to strings.
 
 Object Types:
+
 - Custom objects: Extract attributes via `__dict__` or implement custom serialization; convert to object (dict) with string keys.
 
 Non-Serializable Types:
+
 - `None`: Maps to `null`.
 - Functions, lambdas, modules: Convert to `null`.
 
@@ -1367,22 +1458,27 @@ Non-Serializable Types:
 Rust implementations commonly normalize the following host types (typically using serialization frameworks like `serde`):
 
 Numeric Types:
+
 - `i128`, `u128`: If within `i64`/`u64` range, emit as number. Otherwise, convert to quoted decimal string per lossless policy.
 - `f64::INFINITY`, `f64::NEG_INFINITY`, `f64::NAN`: Convert to `null`.
 
 Temporal Types:
+
 - `chrono::DateTime<T>`: Convert to ISO 8601 string via `.to_rfc3339()`.
 - `chrono::NaiveDate`, `chrono::NaiveTime`: Convert to ISO 8601 partial representations.
 
 Collection Types:
+
 - `HashSet<T>`, `BTreeSet<T>`: Convert to `Vec<T>` (array).
 - `HashMap<K, V>`, `BTreeMap<K, V>`: Convert to object. Keys MUST be strings or convertible to strings via `Display` or `ToString`.
 
 Enum Types:
+
 - Unit variants: Convert to string of variant name (e.g., `Color::Red` → `"Red"`).
 - Tuple/struct variants: Typically convert to object with `"type"` field and data fields per `serde` conventions.
 
 Non-Serializable Types:
+
 - `Option::None`: Convert to `null`.
 - `Option::Some(T)`: Unwrap and normalize `T`.
 - Function pointers, raw pointers: Not serializable; implementations MUST error or skip these fields.
@@ -1390,6 +1486,7 @@ Non-Serializable Types:
 ### G.5 General Guidance
 
 Implementations in any language SHOULD:
+
 1. Document their normalization policy clearly, especially for:
    - Large or arbitrary-precision numbers (lossless string vs. approximate number)
    - Date/time representations (ISO 8601 format details)
@@ -1403,7 +1500,7 @@ This profile captures the most common, memory-friendly rules by reference to nor
 
 - Character set and line endings: As defined in §1 (Core Concepts) and §12.
 - Indentation: MUST conform to §12 (2 spaces per level by default; strict mode enforces indentSize multiples).
-- Keys and colon syntax: MUST conform to §7.2 (unquoted keys match ^[A-Za-z_][A-Za-z0-9_.]*$; quoted otherwise; colon required after keys).
+- Keys and colon syntax: MUST conform to §7.2 (unquoted keys match ^[A-Za-z\_][A-Za-z0-9_.]\*$; quoted otherwise; colon required after keys).
 - Strings and quoting: MUST be quoted as defined in §7.2 (deterministic quoting rules for empty strings, whitespace, reserved literals, control characters, delimiters, leading hyphens, and structural tokens).
 - Escape sequences: MUST conform to §7.1 (only \\, \", \n, \r, \t are valid).
 - Numbers: Encoders MUST emit canonical form per §2; decoders MUST accept input per §4.

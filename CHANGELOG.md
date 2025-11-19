@@ -27,6 +27,7 @@ This major release aligns with **TOON Specification v2.0**, which removes the op
 #### Migration Guide
 
 **Before (v1.x):**
+
 ```php
 use HelgeSverre\Toon\EncodeOptions;
 use HelgeSverre\Toon\Toon;
@@ -42,6 +43,7 @@ $toon = Toon::encode($data, $options);
 ```
 
 **After (v2.0):**
+
 ```php
 use HelgeSverre\Toon\EncodeOptions;
 use HelgeSverre\Toon\Toon;

@@ -2,14 +2,16 @@
 
 [![Packagist Version](https://img.shields.io/packagist/v/helgesverre/toon)](https://packagist.org/packages/helgesverre/toon)
 ![Total Downloads](https://img.shields.io/packagist/dt/helgesverre/toon)
-![License](https://img.shields.io/packagist/l/helgesverre/toon)
+[![License](https://img.shields.io/packagist/l/helgesverre/toon)](https://suno.com/song/ecb121f2-9db7-4f6a-880e-77a2aee7253f)
 [![Try it](https://img.shields.io/badge/try_it-ArrayAlchemy-4E45E2)](https://arrayalchemy.com/?format=toon-php)
 
-A PHP port of [toon-format/toon](https://github.com/toon-format/toon) - a compact data format designed to reduce token consumption when sending structured data to Large Language Models.
+A PHP port of [toon-format/toon](https://github.com/toon-format/toon) - a compact data format designed to reduce token
+consumption when sending structured data to Large Language Models.
 
 ## What is TOON?
 
-TOON is a compact, human-readable format for passing structured data to LLMs while reducing token consumption by 30-60% compared to standard JSON. It achieves this by:
+TOON is a compact, human-readable format for passing structured data to LLMs while reducing token consumption by 30-60%
+compared to standard JSON. It achieves this by:
 
 - Removing redundant syntax (braces, brackets, unnecessary quotes)
 - Using indentation-based nesting (like YAML)
@@ -67,11 +69,13 @@ $readable = EncodeOptions::readable();
 $tabular = EncodeOptions::tabular();
 ```
 
-**New to TOON?** Check out our [step-by-step tutorials](tutorials) to learn how to integrate TOON with OpenAI, Anthropic, Laravel, and more.
+**New to TOON?** Check out our [step-by-step tutorials](tutorials) to learn how to integrate TOON with OpenAI,
+Anthropic, Laravel, and more.
 
 ### Try it Online
 
-Experiment with TOON encoding and decoding at [ArrayAlchemy](https://arrayalchemy.com/?format=toon-php) - an interactive playground for converting between JSON, PHP arrays, and TOON formats. Powered by this package.
+Experiment with TOON encoding and decoding at [ArrayAlchemy](https://arrayalchemy.com/?format=toon-php) - an interactive
+playground for converting between JSON, PHP arrays, and TOON formats. Powered by this package.
 
 ## Basic Usage
 
@@ -424,10 +428,12 @@ For complete working examples with these integrations, see the tutorials below.
 Comprehensive step-by-step guides for learning TOON and integrating it with popular PHP AI/LLM libraries:
 
 ### Getting Started
+
 - **[Getting Started with TOON](tutorials/01-getting-started.md)** (10-15 min)
   Learn the basics: installation, encoding, configuration, and your first LLM integration.
 
 ### Framework Integrations
+
 - **[OpenAI PHP Client Integration](tutorials/02-openai-integration.md)** (15-20 min)
   Integrate TOON with OpenAI's official PHP client. Covers messages, function calling, and streaming.
 
@@ -438,11 +444,12 @@ Comprehensive step-by-step guides for learning TOON and integrating it with popu
   Leverage Claude's 200K context window with TOON optimization. Process large datasets efficiently.
 
 ### Advanced Topics
+
 - **[Token Optimization Strategies](tutorials/04-token-optimization-strategies.md)** (20-25 min)
   Deep dive into token economics, RAG optimization, and cost reduction strategies.
 
-- **[Building a RAG System with Neuron AI](tutorials/05-rag-system-neuron-ai.md)** (30-40 min)
-  Create a production-ready RAG pipeline with TOON, Neuron AI, and vector stores.
+- **[Building a RAG System with TOON and Ollama](tutorials/05-rag-system-ollama.md)** (30-40 min)
+  Create a production-ready RAG pipeline with TOON, Ollama embeddings, and vector similarity search.
 
 See the [`tutorials/`](tutorials) directory for all tutorials and learning paths.
 
@@ -450,12 +457,12 @@ See the [`tutorials/`](tutorials) directory for all tutorials and learning paths
 
 TOON achieves significant token savings compared to JSON and XML:
 
-| Dataset                        | JSON Tokens | XML Tokens | TOON Tokens | vs JSON | vs XML |
-| ------------------------------ | ----------- | ---------- | ----------- | ------- | ------ |
-| GitHub Repositories (100)      | 6,276       | 8,673      | 3,346       | 46.7%   | 61.4%  |
-| Analytics Data (180 days)      | 4,550       | 7,822      | 1,458       | 68.0%   | 81.4%  |
-| E-Commerce Orders (50)         | 4,136       | 6,381      | 2,913       | 29.6%   | 54.3%  |
-| Employee Records (100)         | 3,350       | 4,933      | 1,450       | 56.7%   | 70.6%  |
+| Dataset                   | JSON Tokens | XML Tokens | TOON Tokens | vs JSON | vs XML |
+| ------------------------- | ----------- | ---------- | ----------- | ------- | ------ |
+| GitHub Repositories (100) | 6,276       | 8,673      | 3,346       | 46.7%   | 61.4%  |
+| Analytics Data (180 days) | 4,547       | 7,819      | 1,455       | 68.0%   | 81.4%  |
+| E-Commerce Orders (50)    | 4,136       | 6,381      | 2,913       | 29.6%   | 54.3%  |
+| Employee Records (100)    | 3,350       | 4,933      | 1,450       | 56.7%   | 70.6%  |
 
 **Average savings: 50.2% vs JSON, 66.9% vs XML**
 
@@ -516,7 +523,8 @@ composer analyse
 
 ## Benchmarks
 
-The `benchmarks/` directory contains tools for measuring TOON's token efficiency compared to JSON and XML across realistic datasets.
+The `benchmarks/` directory contains tools for measuring TOON's token efficiency compared to JSON and XML across
+realistic datasets.
 
 ### Running Benchmarks
 
@@ -577,4 +585,4 @@ TOON is not a strict superset or subset of JSON. Key differences:
 
 ## License
 
-MIT License - see LICENSE file for details
+[MIT License](LICENSE)
