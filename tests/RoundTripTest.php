@@ -213,7 +213,38 @@ final class RoundTripTest extends TestCase
     }
 
     // ========================================
-    // Section F: Primitives Round-Trip
+    // Section F: v3.0 Tabular List-Item Pattern
+    // ========================================
+
+    public function test_tabular_first_field_in_list_item_round_trip(): void
+    {
+        // v3.0 spec §10: tabular array as first field of list-item object
+        // Rows at depth +2, sibling fields at depth +1
+        $data = [
+            'items' => [[
+                'users' => [
+                    ['id' => 1, 'name' => 'Ada'],
+                    ['id' => 2, 'name' => 'Bob'],
+                ],
+                'status' => 'active',
+            ]],
+        ];
+
+        $encoded = Toon::encode($data);
+        $decoded = Toon::decode($encoded);
+        $reencoded = Toon::encode($decoded);
+
+        $this->assertEquals($data, $decoded, 'Decoded data should match original');
+        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
+
+        // Verify the v3.0 indentation pattern (rows at 6 spaces, sibling at 4)
+        $this->assertStringContainsString("      1,Ada\n", $encoded);
+        $this->assertStringContainsString("      2,Bob\n", $encoded);
+        $this->assertStringContainsString("    status: active", $encoded);
+    }
+
+    // ========================================
+    // Section G: Primitives Round-Trip
     // ========================================
 
     public function test_primitives_survive_round_trip(): void

@@ -126,6 +126,8 @@ final class TabularArraysTest extends TestCase
 
     public function test_encode_list_format_with_nested_tabular_array(): void
     {
+        // v3.0 spec §10: When tabular array is first field of list-item,
+        // rows appear at depth +2, sibling fields at depth +1
         $input = [
             'items' => [[
                 'users' => [
@@ -135,7 +137,7 @@ final class TabularArraysTest extends TestCase
                 'status' => 'active',
             ]],
         ];
-        $expected = "items[1]:\n  - users[2]{id,name}:\n    1,Ada\n    2,Bob\n    status: active";
+        $expected = "items[1]:\n  - users[2]{id,name}:\n      1,Ada\n      2,Bob\n    status: active";
         $this->assertEquals($expected, Toon::encode($input));
     }
 
@@ -177,8 +179,9 @@ final class TabularArraysTest extends TestCase
 
     public function test_encode_list_format_with_single_property_tabular(): void
     {
+        // v3.0 spec §10: Tabular rows at depth +2, sibling fields at depth +1
         $input = ['items' => [['users' => [['id' => 1], ['id' => 2]], 'note' => 'x']]];
-        $expected = "items[1]:\n  - users[2]{id}:\n    1\n    2\n    note: x";
+        $expected = "items[1]:\n  - users[2]{id}:\n      1\n      2\n    note: x";
         $this->assertEquals($expected, Toon::encode($input));
     }
 

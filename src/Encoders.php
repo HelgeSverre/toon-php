@@ -114,7 +114,9 @@ final class Encoders
                 $header = $this->detectTabularHeader($array);
                 if ($header !== null && $this->isTabularArray($array, $header)) {
                     $this->writer->push($depth, $prefix.$this->formatArrayHeader(count($array), $header, $key));
-                    $this->writeTabularRows($array, $header, $depth + 1);
+                    // v3.0 spec §10: When tabular array is first field of list-item, rows at depth +2
+                    $rowDepth = $isListItem ? $depth + 2 : $depth + 1;
+                    $this->writeTabularRows($array, $header, $rowDepth);
 
                     return;
                 }

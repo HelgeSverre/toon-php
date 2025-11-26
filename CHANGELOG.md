@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **TOON Specification v3.0 compliance**: Updated encoder to follow v3.0 breaking change in Section 10 (Objects as List Items)
+  - When a list-item object has a tabular array as its first field, tabular rows now appear at depth +2 (was depth +1)
+  - Sibling fields remain at depth +1 from the hyphen line
+  - Example: `- users[2]{id,name}:` with rows indented 6 spaces (not 4) and siblings at 4 spaces
+- **Decoder**: Already correctly handles both old and new indentation patterns (no changes required)
+
+### Added
+
+- **v3.0 spec tests**: Added `tests/Spec/Version3BreakingChangesTest.php` with 6 tests verifying v3.0 compliance
+- **Round-trip test**: Added `test_tabular_first_field_in_list_item_round_trip` to verify v3.0 format survives encode/decode cycles
+
 ## [2.0.0] - 2025-11-13
 
 ### Breaking Changes
