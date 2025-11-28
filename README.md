@@ -8,15 +8,14 @@
 A PHP port of [toon-format/toon](https://github.com/toon-format/toon) - a compact data format designed to reduce token
 consumption when sending structured data to Large Language Models.
 
+## Contents
+
+- [Quick Start](#quick-start) · [Basic Usage](#basic-usage) · [Decoding](#decoding-toon) · [Configuration](#configuration-options)
+- [Tutorials](#tutorials) · [Version Compatibility](#version-compatibility) · [Development](#development)
+
 ## What is TOON?
 
-TOON is a compact, human-readable format for passing structured data to LLMs while reducing token consumption by 30-60%
-compared to standard JSON. It achieves this by:
-
-- Removing redundant syntax (braces, brackets, unnecessary quotes)
-- Using indentation-based nesting (like YAML)
-- Employing tabular format for uniform data rows (like CSV)
-- Including explicit array lengths and field declarations
+TOON is a compact, human-readable format for structured data optimized for LLM contexts. For format details and efficiency analysis, see the [TOON Specification](https://github.com/toon-format/spec).
 
 ## Installation
 
@@ -32,50 +31,20 @@ composer require helgesverre/toon
 
 ## Quick Start
 
-TOON provides convenient helper functions for common use cases:
-
 ```php
-// Basic encoding
-echo toon(['user' => 'Alice', 'score' => 95]);
+use HelgeSverre\Toon\Toon;
+
+// Encode data
+echo Toon::encode(['user' => 'Alice', 'score' => 95]);
 // user: Alice
 // score: 95
 
-// Compact format (minimal indentation)
-echo toon_compact($largeDataset);
-
-// Readable format (generous indentation)
-echo toon_readable($debugData);
-
-// Compare token savings
-$stats = toon_compare($myData);
-echo "Savings: {$stats['savings_percent']}";
-// Savings: 45.3%
+// Decode back to PHP
+$data = Toon::decode("user: Alice\nscore: 95");
+// ['user' => 'Alice', 'score' => 95]
 ```
 
-### Preset Configurations
-
-Choose the right format for your use case:
-
-```php
-use HelgeSverre\Toon\EncodeOptions;
-
-// Maximum compactness (production)
-$compact = EncodeOptions::compact();
-
-// Human-readable (debugging)
-$readable = EncodeOptions::readable();
-
-// Tab-delimited (spreadsheets)
-$tabular = EncodeOptions::tabular();
-```
-
-**New to TOON?** Check out our [step-by-step tutorials](tutorials) to learn how to integrate TOON with OpenAI,
-Anthropic, Laravel, and more.
-
-### Try it Online
-
-Experiment with TOON encoding and decoding at [ArrayAlchemy](https://arrayalchemy.com/?format=toon-php) - an interactive
-playground for converting between JSON, PHP arrays, and TOON formats. Powered by this package.
+Try it online at [ArrayAlchemy](https://arrayalchemy.com/?format=toon-php).
 
 ## Basic Usage
 
@@ -145,19 +114,15 @@ $result = Toon::decode($toon);
 
 **Note**: TOON objects are decoded as PHP associative arrays, not objects.
 
-## Advanced Examples
+## Tabular Format
 
-### Nested Objects
+TOON's most efficient format is for uniform object arrays:
 
 ```php
 echo Toon::encode([
-    'user' => [
-        'id' => 123,
-        'email' => 'ada@example.com',
-        'metadata' => [
-            'active' => true,
-            'score' => 9.5
-        ]
+    'users' => [
+        ['id' => 1, 'name' => 'Alice', 'role' => 'admin'],
+        ['id' => 2, 'name' => 'Bob', 'role' => 'user'],
     ]
 ]);
 ```
@@ -165,88 +130,14 @@ echo Toon::encode([
 Output:
 
 ```
-user:
-  id: 123
-  email: ada@example.com
-  metadata:
-    active: true
-    score: 9.5
+users[2]{id,name,role}:
+  1,Alice,admin
+  2,Bob,user
 ```
 
-### Primitive Arrays
+Field names are declared once in the header, then each row contains only values. This is where TOON achieves the largest token savings compared to JSON.
 
-```php
-echo Toon::encode([
-    'tags' => ['reading', 'gaming', 'coding']
-]);
-```
-
-Output:
-
-```
-tags[3]: reading,gaming,coding
-```
-
-### Tabular Arrays (Uniform Objects)
-
-When all objects in an array have the same keys with primitive values, TOON uses an efficient tabular format:
-
-```php
-echo Toon::encode([
-    'items' => [
-        ['sku' => 'A1', 'qty' => 2, 'price' => 9.99],
-        ['sku' => 'B2', 'qty' => 1, 'price' => 14.5]
-    ]
-]);
-```
-
-Output:
-
-```
-items[2]{sku,qty,price}:
-  A1,2,9.99
-  B2,1,14.5
-```
-
-### Non-uniform Object Arrays
-
-When objects have different keys, TOON falls back to list format:
-
-```php
-echo Toon::encode([
-    'items' => [
-        ['id' => 1, 'name' => 'First'],
-        ['id' => 2, 'name' => 'Second', 'extra' => true]
-    ]
-]);
-```
-
-Output:
-
-```
-items[2]:
-  - id: 1
-    name: First
-  - id: 2
-    name: Second
-    extra: true
-```
-
-### Array of Arrays
-
-```php
-echo Toon::encode([
-    'pairs' => [['a', 'b'], ['c', 'd']]
-]);
-```
-
-Output:
-
-```
-pairs[2]:
-  - [2]: a,b
-  - [2]: c,d
-```
+See [docs/EXAMPLES.md](docs/EXAMPLES.md) for more encoding examples.
 
 ## Configuration Options
 
@@ -379,53 +270,9 @@ $size = toon_size($data);
 $tokens = toon_estimate_tokens($data);
 ```
 
-## Real-World Examples
-
-### OpenAI Integration
-
-```php
-use OpenAI\Client;
-
-$client = OpenAI::client($apiKey);
-
-// Encode large context data with TOON
-$userData = [...]; // Your data
-$context = toon_compact($userData);
-
-$response = $client->chat()->create([
-    'model' => 'gpt-4o-mini',
-    'messages' => [
-        ['role' => 'system', 'content' => 'Data is in TOON format.'],
-        ['role' => 'user', 'content' => $context],
-    ],
-]);
-```
-
-### Anthropic/Claude Integration
-
-```php
-use Anthropic\Anthropic;
-use Anthropic\Resources\Messages\MessageParam;
-
-$client = Anthropic::factory()->withApiKey($apiKey)->make();
-
-$largeDataset = [...]; // Your data
-$toonContext = toon_compact($largeDataset);
-
-$response = $client->messages()->create([
-    'model' => 'claude-sonnet-4-20250514',
-    'max_tokens' => 1000,
-    'messages' => [
-        MessageParam::with(role: 'user', content: $toonContext),
-    ],
-]);
-```
-
-For complete working examples with these integrations, see the tutorials below.
-
 ## Tutorials
 
-Comprehensive step-by-step guides for learning TOON and integrating it with popular PHP AI/LLM libraries:
+Step-by-step guides for integrating TOON with LLM providers:
 
 ### Getting Started
 
@@ -453,18 +300,21 @@ Comprehensive step-by-step guides for learning TOON and integrating it with popu
 
 See the [`tutorials/`](tutorials) directory for all tutorials and learning paths.
 
-## Token Savings
+## Version Compatibility
 
-TOON achieves significant token savings compared to JSON and XML:
+This library tracks the [TOON Specification](https://github.com/toon-format/spec). Major versions align with spec versions.
 
-| Dataset                   | JSON Tokens | XML Tokens | TOON Tokens | vs JSON | vs XML |
-| ------------------------- | ----------- | ---------- | ----------- | ------- | ------ |
-| GitHub Repositories (100) | 6,276       | 8,673      | 3,346       | 46.7%   | 61.4%  |
-| Analytics Data (180 days) | 4,547       | 7,819      | 1,455       | 68.0%   | 81.4%  |
-| E-Commerce Orders (50)    | 4,136       | 6,381      | 2,913       | 29.6%   | 54.3%  |
-| Employee Records (100)    | 3,350       | 4,933      | 1,450       | 56.7%   | 70.6%  |
+| Library | Spec | Key Changes |
+|---------|------|-------------|
+| v3.0.0 | v3.0 | List-item objects with tabular first field use depth +2 for rows |
+| v2.0.0 | v2.0 | Removed `[#N]` length marker; decoder rejects legacy format |
+| v1.4.0 | v1.3 | Full decoder, strict mode |
+| v1.3.0 | v1.3 | PHP enum support |
+| v1.2.0 | v1.3 | Empty array fix |
+| v1.1.0 | v1.3 | Benchmarks, justfile |
+| v1.0.0 | v1.3 | Initial release |
 
-**Average savings: 50.2% vs JSON, 66.9% vs XML**
+For format details and token efficiency analysis, see the [TOON Specification](https://github.com/toon-format/spec).
 
 ## Format Rules
 
@@ -500,63 +350,6 @@ echo Toon::encode($data);    // "123": value (quoted as string)
 
 The library handles this by quoting numeric keys when encoding.
 
-## Testing
-
-Run the test suite:
-
-```bash
-composer test
-```
-
-Run with code coverage:
-
-```bash
-composer test:coverage       # Generates HTML report in coverage/
-composer test:coverage-text  # Shows coverage in terminal
-```
-
-Run static analysis:
-
-```bash
-composer analyse
-```
-
-## Benchmarks
-
-The `benchmarks/` directory contains tools for measuring TOON's token efficiency compared to JSON and XML across
-realistic datasets.
-
-### Running Benchmarks
-
-```bash
-cd benchmarks
-composer install
-composer run benchmark
-```
-
-The benchmark tests four dataset types:
-
-- **GitHub Repositories** (100 records) - Repository metadata
-- **Analytics Data** (180 days) - Time-series metrics
-- **E-Commerce Orders** (50 orders) - Nested order structures
-- **Employee Records** (100 records) - Tabular data
-
-Results are saved to `benchmarks/results/token-efficiency.md` with detailed comparisons and visualizations.
-
-### Token Counting
-
-For accurate token counts, set your Anthropic API key:
-
-```bash
-cd benchmarks
-cp .env.example .env
-# Add your ANTHROPIC_API_KEY to .env
-```
-
-Without an API key, the benchmark uses character/word-based estimation.
-
-See [benchmarks/README.md](benchmarks/README.md) for detailed documentation.
-
 ## Use Cases
 
 TOON is ideal for:
@@ -586,3 +379,21 @@ TOON is not a strict superset or subset of JSON. Key differences:
 ## License
 
 [MIT License](LICENSE)
+
+## Development
+
+### Testing
+
+```bash
+composer test                # Run tests
+composer test:coverage       # Generate coverage report
+composer analyse             # Static analysis
+```
+
+### Benchmarks
+
+```bash
+cd benchmarks && composer install && composer run benchmark
+```
+
+See [benchmarks/README.md](benchmarks/README.md) for details.

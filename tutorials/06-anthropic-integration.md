@@ -134,7 +134,6 @@ declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
 use Anthropic\Anthropic;
-use Anthropic\Resources\Messages\MessageParam;
 use HelgeSverre\Toon\EncodeOptions;
 use HelgeSverre\Toon\Toon;
 
@@ -143,10 +142,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 // Initialize Anthropic client
-$apiKey = $_ENV['ANTHROPIC_API_KEY'];
-$client = Anthropic::factory()
-    ->withApiKey($apiKey)
-    ->make();
+$client = Anthropic::client($_ENV['ANTHROPIC_API_KEY']);
 
 // Generate sample dataset of 50 customer support tickets
 $supportTickets = [];
@@ -188,12 +184,12 @@ echo str_repeat('-', 70)."\n\n";
 // Send to Claude with TOON-encoded context
 try {
     $response = $client->messages()->create([
-        'model' => 'claude-sonnet-4-20250514',
+        'model' => 'claude-sonnet-4-5',
         'max_tokens' => 300,
         'messages' => [
-            MessageParam::with(
-                role: 'user',
-                content: <<<EOT
+            [
+                'role' => 'user',
+                'content' => <<<EOT
 Here is a dataset of customer support tickets in TOON format (a compact, readable format).
 Please analyze the tickets and provide a summary of:
 1. High priority open tickets
@@ -203,7 +199,7 @@ Please analyze the tickets and provide a summary of:
 Data:
 {$toonEncoded}
 EOT
-            ),
+            ],
         ],
     ]);
 
@@ -228,7 +224,7 @@ This example demonstrates several key concepts:
 
 1. **Large Dataset**: We're working with 50 tickets - a realistic batch for analysis
 2. **Compact Encoding**: Using `EncodeOptions::compact()` for maximum compression
-3. **Claude's Model**: Using `claude-sonnet-4-20250514` for analysis
+3. **Claude's Model**: Using `claude-sonnet-4-5` for analysis
 4. **Token Estimation**: Claude's tokenization is similar but not identical to OpenAI's
 5. **Context Window**: Showing how much more you can fit with TOON
 
@@ -258,7 +254,6 @@ declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
 use Anthropic\Anthropic;
-use Anthropic\Resources\Messages\MessageParam;
 use HelgeSverre\Toon\EncodeOptions;
 use HelgeSverre\Toon\Toon;
 
@@ -267,9 +262,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 // Initialize Anthropic client
-$client = Anthropic::factory()
-    ->withApiKey($_ENV['ANTHROPIC_API_KEY'])
-    ->make();
+$client = Anthropic::client($_ENV['ANTHROPIC_API_KEY']);
 
 // Create more detailed support tickets
 $detailedTickets = [
@@ -387,13 +380,10 @@ try {
     echo "Estimated tokens: " . ceil(strlen($analysisPrompt) / 4) . "\n\n";
 
     $response = $client->messages()->create([
-        'model' => 'claude-sonnet-4-20250514',
+        'model' => 'claude-sonnet-4-5',
         'max_tokens' => 800,
         'messages' => [
-            MessageParam::with(
-                role: 'user',
-                content: $analysisPrompt
-            ),
+            ['role' => 'user', 'content' => $analysisPrompt],
         ],
     ]);
 
@@ -438,11 +428,10 @@ try {
 
 ### Key Differences from OpenAI
 
-1. **Model Names**: Claude uses different model identifiers (`claude-sonnet-4-20250514`)
-2. **Message Format**: Uses `MessageParam::with()` for structured messages
-3. **Token Counting**: Claude returns actual token usage in the response
-4. **Pricing Structure**: Claude pricing is per million tokens, not per 1K
-5. **Context Window**: Claude's 200K context window vs OpenAI's 128K (GPT-4 Turbo)
+1. **Model Names**: Claude uses different model identifiers (e.g., `claude-sonnet-4-5`)
+2. **Token Counting**: Claude returns actual token usage in the response
+3. **Pricing Structure**: Claude pricing is per million tokens, not per 1K
+4. **Context Window**: Claude's 200K context window vs OpenAI's 128K (GPT-4 Turbo)
 
 ## Section 4: Best Practices for Claude
 
@@ -455,7 +444,6 @@ declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
 use Anthropic\Anthropic;
-use Anthropic\Resources\Messages\MessageParam;
 use HelgeSverre\Toon\Toon;
 
 /**
@@ -464,14 +452,12 @@ use HelgeSverre\Toon\Toon;
 class ClaudeHelper
 {
     private $client;
-    private $defaultModel = 'claude-sonnet-4-20250514';
+    private $defaultModel = 'claude-sonnet-4-5';
     private $metrics = [];
 
     public function __construct(string $apiKey)
     {
-        $this->client = Anthropic::factory()
-            ->withApiKey($apiKey)
-            ->make();
+        $this->client = Anthropic::client($apiKey);
 
         $this->metrics = [
             'total_requests' => 0,
@@ -504,10 +490,7 @@ class ClaudeHelper
                 'model' => $options['model'] ?? $this->defaultModel,
                 'max_tokens' => $options['max_tokens'] ?? 1000,
                 'messages' => [
-                    MessageParam::with(
-                        role: 'user',
-                        content: $fullMessage
-                    ),
+                    ['role' => 'user', 'content' => $fullMessage],
                 ],
             ]);
 
