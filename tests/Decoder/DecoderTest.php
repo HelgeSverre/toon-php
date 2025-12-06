@@ -63,10 +63,21 @@ final class DecoderTest extends TestCase
 
     public function test_decode_leading_zero_strings(): void
     {
-        // Per §4.3: leading zeros make it a string
+        // Per §2.4: leading zeros in integer part make it a string
         $this->assertSame('05', Toon::decode('05'));
         $this->assertSame('0001', Toon::decode('0001'));
         $this->assertSame('0777', Toon::decode('0777'));
+        
+        // Negative numbers with leading zeros are also strings
+        $this->assertSame('-05', Toon::decode('-05'));
+        $this->assertSame('-0001', Toon::decode('-0001'));
+        $this->assertSame('-0777', Toon::decode('-0777'));
+        
+        // But 0.5, 0e1, -0.5, -0e1 are valid numbers
+        $this->assertSame(0.5, Toon::decode('0.5'));
+        $this->assertSame(0.0, Toon::decode('0e1'));
+        $this->assertSame(-0.5, Toon::decode('-0.5'));
+        $this->assertSame(0.0, Toon::decode('-0e1'));
     }
 
     public function test_decode_boolean_like_strings(): void

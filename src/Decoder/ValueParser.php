@@ -192,34 +192,40 @@ final class ValueParser
     /**
      * Check if a token has a forbidden leading zero.
      *
-     * Per §4.3: "05", "0001" are strings, but "0", "0.5", "0e10" are numbers.
+     * Per §2.4: "05", "0001", "-05", "-0001" are strings, but "0", "0.5", "0e10", "-0", "-0.5", "-0e1" are numbers.
      *
      * @param  string  $token  Token to check
      * @return bool True if token has leading zero and should be treated as string
      */
     private static function hasLeadingZero(string $token): bool
     {
+        // Handle negative numbers
+        $checkToken = $token;
+        if (str_starts_with($token, '-')) {
+            $checkToken = substr($token, 1);
+        }
+
         // Must start with '0'
-        if (! str_starts_with($token, '0')) {
+        if (! str_starts_with($checkToken, '0')) {
             return false;
         }
 
-        // "0" alone is valid
-        if ($token === '0') {
+        // "0" or "-0" alone is valid
+        if ($checkToken === '0') {
             return false;
         }
 
-        // "0." (decimal) is valid
-        if (str_starts_with($token, '0.')) {
+        // "0." or "-0." (decimal) is valid
+        if (str_starts_with($checkToken, '0.')) {
             return false;
         }
 
-        // "0e" or "0E" (scientific notation) is valid
-        if (str_starts_with($token, '0e') || str_starts_with($token, '0E')) {
+        // "0e" or "0E" or "-0e" or "-0E" (scientific notation) is valid
+        if (str_starts_with($checkToken, '0e') || str_starts_with($checkToken, '0E')) {
             return false;
         }
 
-        // Otherwise: "05", "0001", etc. are invalid numbers
+        // Otherwise: "05", "0001", "-05", "-0001", etc. are invalid numbers
         return true;
     }
 
