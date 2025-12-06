@@ -390,6 +390,18 @@ composer test:coverage       # Generate coverage report
 composer analyse             # Static analysis
 ```
 
+### Specification Sync
+
+Keep the library aligned with upstream spec changes:
+
+```bash
+just sync-spec    # Download latest SPEC.md from upstream
+just diff-spec    # Show diff after download
+just autofix      # Sync spec and launch Claude Code for compliance review
+```
+
+The `autofix` command downloads the latest specification, then launches Claude Code in plan mode with the `/spec-review` prompt to analyze changes and propose implementation updates.
+
 ### Benchmarks
 
 ```bash

@@ -40,6 +40,20 @@ sync-spec:
     @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/CHANGELOG.md -o docs/CHANGELOG.md
     @echo "Done! Review changes: git diff docs/SPEC.md"
 
+[doc('Download latest SPEC.md from upstream and show diff')]
+[group('spec')]
+diff-spec: sync-spec
+    @echo "Showing differences for SPEC.md..."
+    @git diff docs/SPEC.md
+
+
+[doc('Sync spec and launch Claude Code for compliance review')]
+[group('spec')]
+autofix: sync-spec
+    claude /spec-review --permission-mode plan
+
+
+
 # === Testing ===
 
 [doc('Run all tests')]
