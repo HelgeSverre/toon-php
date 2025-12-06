@@ -306,6 +306,7 @@ This library tracks the [TOON Specification](https://github.com/toon-format/spec
 
 | Library | Spec | Key Changes |
 |---------|------|-------------|
+| v3.1.0 | v3.0 | toJSON() method support, negative leading zeros fix |
 | v3.0.0 | v3.0 | List-item objects with tabular first field use depth +2 for rows |
 | v2.0.0 | v2.0 | Removed `[#N]` length marker; decoder rejects legacy format |
 | v1.4.0 | v1.3 | Full decoder, strict mode |
