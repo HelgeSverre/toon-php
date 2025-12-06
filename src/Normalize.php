@@ -77,7 +77,17 @@ final class Normalize
 
         // Handle objects
         if (is_object($value)) {
-            // Handle JsonSerializable first (preferred method)
+            // Handle toJSON method first (highest priority for custom serialization)
+            if (method_exists($value, 'toJSON')) {
+                $serialized = $value->toJSON();
+
+                // Guard against infinite recursion - if toJSON returns the same object, fall through
+                if ($serialized !== $value) {
+                    return self::normalizeValue($serialized);
+                }
+            }
+
+            // Handle JsonSerializable (standard PHP interface)
             if ($value instanceof JsonSerializable) {
                 return self::normalizeValue($value->jsonSerialize());
             }

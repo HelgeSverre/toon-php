@@ -135,6 +135,84 @@ final class NormalizationTest extends TestCase
         $this->assertSame(0, $normalized);
     }
 
+    public function test_normalize_value_handles_toJSON_method(): void
+    {
+        $obj = new class
+        {
+            private int $privateValue = 42;
+            public int $publicValue = 99;
+
+            public function toJSON(): mixed
+            {
+                return ['via' => 'toJSON', 'value' => $this->privateValue];
+            }
+        };
+
+        // toJSON should take priority over public properties
+        $expected = "via: toJSON\nvalue: 42";
+        $this->assertEquals($expected, Toon::encode($obj));
+    }
+
+    public function test_toJSON_takes_priority_over_JsonSerializable(): void
+    {
+        $obj = new class implements JsonSerializable
+        {
+            public function toJSON(): mixed
+            {
+                return ['via' => 'toJSON'];
+            }
+
+            public function jsonSerialize(): mixed
+            {
+                return ['via' => 'jsonSerialize'];
+            }
+        };
+
+        // toJSON should take priority
+        $expected = "via: toJSON";
+        $this->assertEquals($expected, Toon::encode($obj));
+    }
+
+    public function test_toJSON_recursion_protection(): void
+    {
+        $obj = new class
+        {
+            public int $value = 42;
+
+            public function toJSON(): mixed
+            {
+                // Returns itself - should fallback to default serialization
+                return $this;
+            }
+        };
+
+        // Should fallback to public properties when toJSON returns self
+        $expected = "value: 42";
+        $this->assertEquals($expected, Toon::encode($obj));
+    }
+
+    public function test_toJSON_result_is_normalized_recursively(): void
+    {
+        $obj = new class
+        {
+            public function toJSON(): mixed
+            {
+                return [
+                    'nested' => new class {
+                        public function toJSON(): mixed
+                        {
+                            return ['deep' => 'value'];
+                        }
+                    },
+                    'number' => INF, // Should be normalized to null
+                ];
+            }
+        };
+
+        $expected = "nested:\n  deep: value\nnumber: null";
+        $this->assertEquals($expected, Toon::encode($obj));
+    }
+
     public function test_normalize_value_handles_associative_arrays(): void
     {
         $input = ['key' => 'value', 'number' => 42];
