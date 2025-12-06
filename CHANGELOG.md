@@ -15,10 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example: `- users[2]{id,name}:` with rows indented 6 spaces (not 4) and siblings at 4 spaces
 - **Decoder**: Already correctly handles both old and new indentation patterns (no changes required)
 
+### Fixed
+
+- **Decoder**: Now correctly treats negative numbers with leading zeros (e.g., `-05`, `-0001`) as strings per TOON Specification §2.4
+
 ### Added
 
 - **v3.0 spec tests**: Added `tests/Spec/Version3BreakingChangesTest.php` with 6 tests verifying v3.0 compliance
 - **Round-trip test**: Added `test_tabular_first_field_in_list_item_round_trip` to verify v3.0 format survives encode/decode cycles
+- **toJSON() support**: Objects with a `toJSON()` method can now provide custom serialization, similar to `JSON.stringify` in JavaScript. The method takes priority over `JsonSerializable` interface and includes recursion protection
 
 ## [2.0.0] - 2025-11-13
 
