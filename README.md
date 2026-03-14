@@ -114,6 +114,27 @@ $result = Toon::decode($toon);
 
 **Note**: TOON objects are decoded as PHP associative arrays, not objects.
 
+## Validating TOON
+
+You can validate TOON input without decoding it to PHP values:
+
+```php
+use HelgeSverre\Toon\DecodeOptions;
+use HelgeSverre\Toon\Toon;
+
+// Strict validation (default)
+$isValid = Toon::validate("user: Alice\nscore: 95");
+// true
+
+// Invalid TOON
+$isValid = Toon::validate('[3]: a,b');
+// false
+
+// Lenient validation
+$isValid = Toon::validate('[3]: a,b', DecodeOptions::lenient());
+// true
+```
+
 ## Tabular Format
 
 TOON's most efficient format is for uniform object arrays:
@@ -249,6 +270,12 @@ $data = toon_decode($toonString);
 
 // Lenient decoding (forgiving parsing)
 $data = toon_decode_lenient($toonString);
+
+// Strict validation
+$isValid = toon_validate($toonString);
+
+// Lenient validation
+$isValid = toon_validate_lenient($toonString);
 
 // Compact (minimal indentation)
 $compact = toon_compact($data);
