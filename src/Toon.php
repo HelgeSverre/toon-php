@@ -62,6 +62,31 @@ final class Toon
         return $parser->parse($lines);
     }
 
+    /**
+     * Validate TOON input without decoding it to PHP values.
+     *
+     * Runs the decoder grammar and strict-mode checks while avoiding decoded
+     * value materialization, making it suitable for fast syntax/structure checks.
+     *
+     * @param  string  $toon  The TOON-formatted string to validate
+     * @param  DecodeOptions|null  $options  Optional decoding options (indent, strict mode)
+     * @return bool True when the document is valid for the given options, false otherwise
+     */
+    public static function validate(string $toon, ?DecodeOptions $options = null): bool
+    {
+        $options ??= DecodeOptions::default();
+
+        try {
+            $lines = Decoder\Tokenizer::tokenize($toon, $options);
+            $validator = new Decoder\Validator($options);
+            $validator->validate($lines);
+
+            return true;
+        } catch (Exceptions\DecodeException) {
+            return false;
+        }
+    }
+
     private function __construct()
     {
         // Prevent instantiation

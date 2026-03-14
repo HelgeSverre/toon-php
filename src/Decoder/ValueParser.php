@@ -256,4 +256,96 @@ final class ValueParser
         // Unquoted identifier
         return $token;
     }
+
+    /**
+     * Validate a token without materializing a PHP value.
+     *
+     * Validation only enforces lexical correctness. Unquoted non-empty tokens
+     * are always valid value tokens because ambiguous numeric forms decode as
+     * strings rather than syntax errors.
+     *
+     * @param  string  $token  Token to validate
+     * @param  int  $lineNumber  Line number for error reporting
+     *
+     * @throws SyntaxException If token is invalid
+     */
+    public static function validateValue(string $token, int $lineNumber = 0): void
+    {
+        $token = trim($token);
+
+        if ($token === '') {
+            throw new SyntaxException('Empty token', $lineNumber);
+        }
+
+        if (str_starts_with($token, '"')) {
+            self::validateQuotedString($token, $lineNumber);
+        }
+    }
+
+    /**
+     * Validate a key token without materializing it.
+     *
+     * @param  string  $token  Key token
+     * @param  int  $lineNumber  Line number for error reporting
+     *
+     * @throws SyntaxException If key is invalid
+     */
+    public static function validateKey(string $token, int $lineNumber = 0): void
+    {
+        $token = trim($token);
+
+        if ($token === '') {
+            throw new SyntaxException('Empty key', $lineNumber);
+        }
+
+        if (str_starts_with($token, '"')) {
+            self::validateQuotedString($token, $lineNumber);
+        }
+    }
+
+    /**
+     * Validate quoted string syntax and escape sequences.
+     *
+     * @param  string  $token  Quoted string token
+     * @param  int  $lineNumber  Line number for error reporting
+     *
+     * @throws SyntaxException If string is invalid
+     */
+    private static function validateQuotedString(string $token, int $lineNumber): void
+    {
+        if (! str_starts_with($token, '"') || ! str_ends_with($token, '"')) {
+            throw new SyntaxException(
+                'Unterminated quoted string',
+                $lineNumber,
+                $token
+            );
+        }
+
+        $len = strlen($token);
+
+        for ($i = 1; $i < $len - 1; $i++) {
+            $char = $token[$i];
+
+            if ($char === '\\') {
+                if ($i + 1 >= $len - 1) {
+                    throw new SyntaxException(
+                        'Unterminated quoted string',
+                        $lineNumber,
+                        $token
+                    );
+                }
+
+                $next = $token[$i + 1];
+                if (! in_array($next, ['\\', '"', 'n', 'r', 't'], true)) {
+                    throw new SyntaxException(
+                        "Invalid escape sequence: \\{$next}",
+                        $lineNumber,
+                        $token
+                    );
+                }
+
+                $i++;
+            }
+        }
+    }
 }
