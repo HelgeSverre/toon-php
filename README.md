@@ -10,7 +10,7 @@ consumption when sending structured data to Large Language Models.
 
 ## Contents
 
-- [Quick Start](#quick-start) · [Basic Usage](#basic-usage) · [Decoding](#decoding-toon) · [Configuration](#configuration-options)
+- [Quick Start](#quick-start) · [Basic Usage](#basic-usage) · [Decoding](#decoding-toon) · [Validating](#validating-toon) · [Configuration](#configuration-options)
 - [Tutorials](#tutorials) · [Version Compatibility](#version-compatibility) · [Development](#development)
 
 ## What is TOON?
