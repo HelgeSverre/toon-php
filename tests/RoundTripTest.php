@@ -243,6 +243,20 @@ final class RoundTripTest extends TestCase
         $this->assertStringContainsString("    status: active", $encoded);
     }
 
+    public function testQuotedKeysWithDoubleColonsRoundTrip(): void
+    {
+        $data = [
+            'service_locator.c2fADeB.App\Api\Exercise\Action\GetSimilarExercises::__invoke()' => 'Symfony\Component\DependencyInjection\ServiceLocator',
+        ];
+
+        $encoded = Toon::encode($data);
+        $decoded = Toon::decode($encoded);
+        $reencoded = Toon::encode($decoded);
+
+        $this->assertEquals($data, $decoded, 'Decoded data should match original');
+        $this->assertSame($encoded, $reencoded, 'Re-encoded output should match original encoding');
+    }
+
     // ========================================
     // Section G: Primitives Round-Trip
     // ========================================

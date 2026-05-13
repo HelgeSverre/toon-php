@@ -69,6 +69,16 @@ final class ObjectsTest extends TestCase
         $this->assertEquals('"a,b": 1', Toon::encode(['a,b' => 1]));
     }
 
+    public function testDecodeObjectKeysWithColons(): void
+    {
+        $input = "\"order:id\": 7\n\"service::method\": handler";
+
+        $this->assertSame([
+            'order:id' => 7,
+            'service::method' => 'handler',
+        ], Toon::decode($input));
+    }
+
     public function test_encode_object_keys_with_spaces(): void
     {
         $this->assertEquals('"full name": Ada', Toon::encode(['full name' => 'Ada']));

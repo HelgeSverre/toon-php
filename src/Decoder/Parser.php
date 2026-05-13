@@ -74,6 +74,11 @@ final class Parser
 
     private function containsUnquotedColon(string $line): bool
     {
+        return $this->findUnquotedColon($line) !== null;
+    }
+
+    private function findUnquotedColon(string $line): ?int
+    {
         $inQuotes = false;
         $len = strlen($line);
 
@@ -82,11 +87,11 @@ final class Parser
             if ($char === '"' && ($i === 0 || $line[$i - 1] !== '\\')) {
                 $inQuotes = ! $inQuotes;
             } elseif ($char === ':' && ! $inQuotes) {
-                return true;
+                return $i;
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -195,8 +200,11 @@ final class Parser
         }
 
         // Standard key-value parsing
-        $colonPos = strpos($content, ':');
-        // @phpstan-ignore-next-line - strpos won't return false here because StrictValidator::validateColonPresent already validated
+        $colonPos = $this->findUnquotedColon($content);
+        if ($colonPos === null) {
+            throw new SyntaxException('Missing colon after key', $line['line'], $content);
+        }
+
         $keyPart = substr($content, 0, $colonPos);
         $valuePart = trim(substr($content, $colonPos + 1));
 
