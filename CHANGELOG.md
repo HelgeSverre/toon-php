@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-07-08
+
 ### Added
 
 - **TOON Specification v3.3 compliance** (upstream advanced v3.0 → v3.3). See `docs/SPEC.md` and `docs/CHANGELOG.md`.
@@ -32,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Decoder — empty inline/tabular tokens (§9.1/§11.2)**: decode to the empty string instead of throwing (e.g. `[3]: a,,b` → `['a','','b']`).
 - **Decoder — backslash handling (§7.1/§11.2)**: an unquoted backslash is a literal character (escapes apply only inside quoted strings), and colon detection tracks quote state so a key ending in an escaped backslash (`"a\\": c`) parses.
 - **Options (§12)**: `EncodeOptions`/`DecodeOptions` reject `indent < 1` (indent `0` cannot represent nesting); `EncodeOptions::compact()` now uses `indent: 1` so nested output round-trips.
-- **Validation**: `Toon::validate()` was corrected in lockstep with the decoder so it agrees with `decode()` on all of the above.
+- **Validation**: `Toon::validate()` now runs the full decoder internally and returns `false` only when `decode()` throws, so validation and decoding can never disagree. The separate validator implementation (which had drifted from the decoder on duplicate keys, malformed brackets, and over-indented list fields) was removed.
 
 ## [3.1.0] - 2025-12-06
 
@@ -301,6 +303,7 @@ $toon = Toon::encode($data, $options);
 - Comprehensive PHPUnit test coverage
 - Follows PHP-FIG coding standards (via Laravel Pint)
 
+[3.2.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.2.0
 [3.1.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.1.0
 [3.0.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.0.0
 [2.0.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v2.0.0
