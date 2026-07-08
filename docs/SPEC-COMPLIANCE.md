@@ -1,20 +1,37 @@
 # TOON Specification Compliance Report
 
 **Library:** toon-php
-**Version:** 2.0.0
-**Spec Version:** TOON Specification v2.0
-**Date:** 2025-11-13
-**Status:** ✅ FULLY CONFORMANT
+**Version:** 3.2.0
+**Spec Version:** TOON Specification v3.3
+**Date:** 2026-07-08
+**Status:** ✅ CONFORMANT
 
 ---
 
 ## Test Results
 
-- **Total Tests:** 544
-- **Passing:** 544 (100%)
+- **Total Tests:** 658
+- **Passing:** 658 (100%)
 - **Failing:** 0
 - **PHPStan Level:** 9 (maximum strictness)
 - **PHPStan Errors:** 0
+
+---
+
+## v3.1–v3.3 Compliance Notes
+
+Aligns with **TOON Specification v3.3**. Changes since v3.0:
+
+- **§7.1 Unicode escapes**: encoder emits C0 control characters (U+0000–U+001F except `\n`, `\r`, `\t`) as `\uXXXX`; decoder accepts `\uXXXX` (case-insensitive hex), rejecting lone surrogates and escapes with fewer than four hex digits. Control characters are preserved as data, never stripped (§15).
+- **§9.1 Empty arrays**: decoder accepts the canonical `[]` and `key: []` forms in addition to the legacy `[0]:` / `key[0]:` forms. The encoder continues to emit the legacy `key[0]:` form, which the spec explicitly permits (`MAY`).
+- **§2 Numbers**: canonical decimal for `n = 0` or `1e-6 ≤ |n| < 1e21`; exponent notation (lowercase `e`, explicit sign) outside that range. Numbers are never quoted as strings.
+- **§6 / §14.2 Strict headers**: leading-zero and malformed bracket lengths (`[03]`, `[-1]`) are rejected in strict mode; non-strict treats them as literal keys.
+- **§8 / §14.4 Duplicate keys**: strict mode errors on duplicate sibling keys; non-strict applies last-write-wins in document order.
+
+### Known deviations / follow-ups
+
+- **§6 / §14.2 header delimiter mismatch**: a header whose bracket delimiter differs from its field-list delimiter (e.g. `rows[2|]{a,b}:`) is rejected, but currently via a row-level error rather than a dedicated line-1 header syntax error. Tracked as a diagnostic-quality follow-up.
+- **§9.1 encoder output**: the encoder emits the legacy `key[0]:` form rather than the `SHOULD`-preferred `key: []`. Both are spec-conformant; the legacy form is retained for output stability.
 
 ---
 

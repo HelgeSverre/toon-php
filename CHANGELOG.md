@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **TOON Specification v3.3 compliance** (upstream advanced v3.0 → v3.3). See `docs/SPEC.md` and `docs/CHANGELOG.md`.
+- **Unicode escapes (§7.1)**: encoder emits C0 control characters (U+0000–U+001F except `\n`, `\r`, `\t`) as `\uXXXX`; decoder accepts `\uXXXX` (case-insensitive hex) and rejects lone surrogates and escapes with fewer than four hex digits.
+- **Empty-array decoding (§9.1)**: decoder now accepts the canonical `[]` and `key: []` forms in addition to the legacy `[0]:` / `key[0]:` forms.
+- **Validation API**: `Toon::validate()`, `toon_validate()` and `toon_validate_lenient()` for checking TOON syntax without decoding.
+- Spec conformance tests in `tests/Spec/Version31To33ComplianceTest.php`.
+
+### Changed
+
+- **Number formatting (§2)**: finite numbers use canonical decimal only for `n = 0` or `1e-6 ≤ |n| < 1e21`; values outside that range use exponent notation (lowercase `e`, explicit sign, e.g. `1e+21`, `1e-7`). Large in-domain floats are no longer quoted as strings, and very small numbers no longer underflow to `0`.
+- **Control characters**: no longer rejected on encode — they are escaped and preserved as data (§15).
+- **Strict decoding**: now rejects leading-zero / malformed bracket lengths such as `[03]` (§6, §14.2) and duplicate sibling keys at the same depth (§8, §14.4). Non-strict mode treats malformed bracket tokens as literal keys and applies last-write-wins for duplicate keys.
+
+### Fixed
+
+- **Decoder**: quoted object keys containing colons (e.g. `"App\\Controller::method"`) now decode correctly (#4, #5).
+- **Decoder**: `key: []` previously decoded to `null` and a bare `[]` crashed with an uninitialized-offset warning; both now decode to an empty array.
+
 ## [3.1.0] - 2025-12-06
 
 ### Added

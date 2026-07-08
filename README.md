@@ -333,6 +333,7 @@ This library tracks the [TOON Specification](https://github.com/toon-format/spec
 
 | Library | Spec | Key Changes |
 |---------|------|-------------|
+| v3.2.0 | v3.3 | `\uXXXX` control-character escapes, empty-array decoding (`[]`, `key: []`), strict rejection of `[03]` and duplicate keys, number canonical range, quoted-key colon fix, validation API |
 | v3.1.0 | v3.0 | toJSON() method support, negative leading zeros fix |
 | v3.0.0 | v3.0 | List-item objects with tabular first field use depth +2 for rows |
 | v2.0.0 | v2.0 | Removed `[#N]` length marker; decoder rejects legacy format |
