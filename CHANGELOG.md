@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-07-08
+
+### Fixed
+
+- **Decoder round-trip regression (§6/§7.1)**: quoted string values containing `[` or `{` — for example `k: "a[3]b"`, or log lines carrying ANSI escape sequences such as `"[31m…"` — were misread as array headers and raised `SyntaxException: Unterminated quoted string` on decode. Header detection now locates the `:` separator and the `[`/`{` markers outside quoted spans, so encoder output round-trips through `Toon::decode()` for every string value. Regression introduced in v3.2.0 (v3.1.0 was unaffected). Added comprehensive bidirectional round-trip test coverage (`tests/Spec/RoundTripSpecialStringsTest.php`, `tests/Spec/ComprehensiveRoundTripTest.php`).
+
 ## [3.2.0] - 2026-07-08
 
 ### Added
@@ -303,6 +309,7 @@ $toon = Toon::encode($data, $options);
 - Comprehensive PHPUnit test coverage
 - Follows PHP-FIG coding standards (via Laravel Pint)
 
+[3.2.1]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.2.1
 [3.2.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.2.0
 [3.1.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.1.0
 [3.0.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.0.0
