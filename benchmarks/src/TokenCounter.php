@@ -6,15 +6,25 @@ use GuzzleHttp\Client;
 
 class TokenCounter
 {
+    /**
+     * Default model used for API-based token counting. Must be a currently
+     * available model ID — retired IDs cause the count_tokens endpoint to
+     * return 404. Override with the ANTHROPIC_MODEL environment variable.
+     */
+    private const DEFAULT_MODEL = 'claude-sonnet-5';
+
     private ?string $apiKey;
+
+    private string $model;
 
     private Client $client;
 
     private bool $useApi;
 
-    public function __construct(?string $apiKey = null)
+    public function __construct(?string $apiKey = null, ?string $model = null)
     {
         $this->apiKey = $apiKey ?: getenv('ANTHROPIC_API_KEY') ?: null;
+        $this->model = $model ?: getenv('ANTHROPIC_MODEL') ?: self::DEFAULT_MODEL;
         $this->client = new Client([
             'base_uri' => 'https://api.anthropic.com',
             'timeout' => 30,
@@ -47,7 +57,7 @@ class TokenCounter
                     'content-type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => 'claude-3-5-sonnet-20241022',
+                    'model' => $this->model,
                     'messages' => [
                         [
                             'role' => 'user',
