@@ -6,6 +6,7 @@ namespace HelgeSverre\Toon\Tests;
 
 use HelgeSverre\Toon\DecodeOptions;
 use HelgeSverre\Toon\EncodeOptions;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class HelpersTest extends TestCase
@@ -193,5 +194,24 @@ TOON;
         $decoded = toon_decode($encoded, new DecodeOptions(indent: 4));
 
         $this->assertEquals($original, $decoded);
+    }
+
+    #[DataProvider('lenientValidationInputs')]
+    public function test_toon_validate_lenient_supports_all_documented_lenient_cases(string $toon): void
+    {
+        $this->assertFalse(toon_validate($toon));
+        $this->assertTrue(toon_validate_lenient($toon));
+    }
+
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function lenientValidationInputs(): iterable
+    {
+        yield 'count mismatch inline array' => ['[3]: a,b'];
+        yield 'irregular indentation' => ["key:\n   value: test"];
+        yield 'blank line in list array' => ["[3]:\n  - a\n\n  - b\n  - c"];
+        yield 'tab indentation' => ["\tid: 1"];
+        yield 'empty input' => [''];
     }
 }

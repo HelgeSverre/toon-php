@@ -173,3 +173,40 @@ if (! function_exists('toon_decode_lenient')) {
         return Toon::decode($toon, DecodeOptions::lenient());
     }
 }
+
+if (! function_exists('toon_validate')) {
+    /**
+     * Validate a TOON string without decoding it.
+     *
+     * Returns false instead of throwing when the input is invalid for the
+     * provided decode options.
+     *
+     * @param  string  $toon  The TOON-formatted string to validate
+     * @param  DecodeOptions|null  $options  Optional decoding options
+     * @return bool True if the document is valid, false otherwise
+     */
+    function toon_validate(string $toon, ?DecodeOptions $options = null): bool
+    {
+        return Toon::validate($toon, $options);
+    }
+}
+
+if (! function_exists('toon_validate_lenient')) {
+    /**
+     * Validate a TOON string with lenient parsing rules.
+     *
+     * Uses lenient mode for forgiving validation of hand-written TOON:
+     * - Allows count mismatches
+     * - Allows irregular indentation
+     * - Allows blank lines in arrays
+     * - Allows tabs in indentation
+     * - Allows empty input
+     *
+     * @param  string  $toon  The TOON-formatted string to validate
+     * @return bool True if the document is valid under lenient rules, false otherwise
+     */
+    function toon_validate_lenient(string $toon): bool
+    {
+        return Toon::validate($toon, DecodeOptions::lenient());
+    }
+}
