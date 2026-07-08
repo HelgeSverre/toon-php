@@ -6,7 +6,6 @@ namespace HelgeSverre\Toon\Tests;
 
 use HelgeSverre\Toon\Primitives;
 use HelgeSverre\Toon\Toon;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class PrimitivesTest extends TestCase
@@ -404,31 +403,31 @@ final class PrimitivesTest extends TestCase
 
     public function test_encode_null_byte_as_unicode_escape(): void
     {
-        // NULL byte (0x00) has no short escape; emit   (§7.1)
+        // NULL byte (0x00) has no short escape; emit \u0000 (§7.1)
         $this->assertEquals('"text\\u0000with\\u0000null"', Toon::encode("text\x00with\x00null"));
     }
 
     public function test_encode_bell_character_as_unicode_escape(): void
     {
-        // BEL character (0x07) ->  (§7.1)
+        // BEL character (0x07) -> \u0007 (§7.1)
         $this->assertEquals('"text\\u0007bell"', Toon::encode("text\x07bell"));
     }
 
     public function test_encode_escape_character_as_unicode_escape(): void
     {
-        // ESC character (0x1B) ->  (§7.1)
+        // ESC character (0x1B) -> \u001b (§7.1)
         $this->assertEquals('"text\\u001bescape"', Toon::encode("text\x1Bescape"));
     }
 
     public function test_encode_form_feed_character_as_unicode_escape(): void
     {
-        // Form feed (0x0C) ->  (§7.1)
+        // Form feed (0x0C) -> \u000c (§7.1)
         $this->assertEquals('"text\\u000cform feed"', Toon::encode("text\fform feed"));
     }
 
     public function test_encode_vertical_tab_character_as_unicode_escape(): void
     {
-        // Vertical tab (0x0B) ->  (§7.1)
+        // Vertical tab (0x0B) -> \u000b (§7.1)
         $this->assertEquals('"text\\u000bvertical tab"', Toon::encode("text\x0Bvertical tab"));
     }
 

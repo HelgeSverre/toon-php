@@ -67,12 +67,12 @@ final class DecoderTest extends TestCase
         $this->assertSame('05', Toon::decode('05'));
         $this->assertSame('0001', Toon::decode('0001'));
         $this->assertSame('0777', Toon::decode('0777'));
-        
+
         // Negative numbers with leading zeros are also strings
         $this->assertSame('-05', Toon::decode('-05'));
         $this->assertSame('-0001', Toon::decode('-0001'));
         $this->assertSame('-0777', Toon::decode('-0777'));
-        
+
         // But 0.5, 0e1, -0.5, -0e1 are valid numbers
         $this->assertSame(0.5, Toon::decode('0.5'));
         $this->assertSame(0.0, Toon::decode('0e1'));

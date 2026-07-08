@@ -138,11 +138,12 @@ final class NormalizationTest extends TestCase
         $this->assertSame(0, $normalized);
     }
 
-    public function test_normalize_value_handles_toJSON_method(): void
+    public function test_normalize_value_handles_to_json_method(): void
     {
         $obj = new class
         {
             private int $privateValue = 42;
+
             public int $publicValue = 99;
 
             public function toJSON(): mixed
@@ -156,7 +157,7 @@ final class NormalizationTest extends TestCase
         $this->assertEquals($expected, Toon::encode($obj));
     }
 
-    public function test_toJSON_takes_priority_over_JsonSerializable(): void
+    public function test_to_json_takes_priority_over_json_serializable(): void
     {
         $obj = new class implements JsonSerializable
         {
@@ -172,11 +173,11 @@ final class NormalizationTest extends TestCase
         };
 
         // toJSON should take priority
-        $expected = "via: toJSON";
+        $expected = 'via: toJSON';
         $this->assertEquals($expected, Toon::encode($obj));
     }
 
-    public function test_toJSON_recursion_protection(): void
+    public function test_to_json_recursion_protection(): void
     {
         $obj = new class
         {
@@ -190,18 +191,19 @@ final class NormalizationTest extends TestCase
         };
 
         // Should fallback to public properties when toJSON returns self
-        $expected = "value: 42";
+        $expected = 'value: 42';
         $this->assertEquals($expected, Toon::encode($obj));
     }
 
-    public function test_toJSON_result_is_normalized_recursively(): void
+    public function test_to_json_result_is_normalized_recursively(): void
     {
         $obj = new class
         {
             public function toJSON(): mixed
             {
                 return [
-                    'nested' => new class {
+                    'nested' => new class
+                    {
                         public function toJSON(): mixed
                         {
                             return ['deep' => 'value'];

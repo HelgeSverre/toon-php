@@ -95,6 +95,12 @@ fix: _ensure-vendor
     @echo "Fixing PHP code style..."
     composer format
 
+[doc('Check code style without modifying files')]
+[group('dev')]
+lint: _ensure-vendor
+    @echo "Checking PHP code style..."
+    composer lint
+
 # Hidden aliases for common spellings/tools
 [private]
 analyze: analyse
@@ -122,9 +128,9 @@ quality: fix analyse test
 pr: quality
     @echo "Ready for PR!"
 
-[doc('CI pipeline: analyse + test (no formatting)')]
+[doc('CI pipeline: lint + analyse + test (no formatting)')]
 [group('workflow')]
-ci: analyse test
+ci: lint analyse test
     @echo "CI pipeline complete!"
 
 [doc('Quick check: analyse only (no test)')]

@@ -240,10 +240,10 @@ final class RoundTripTest extends TestCase
         // Verify the v3.0 indentation pattern (rows at 6 spaces, sibling at 4)
         $this->assertStringContainsString("      1,Ada\n", $encoded);
         $this->assertStringContainsString("      2,Bob\n", $encoded);
-        $this->assertStringContainsString("    status: active", $encoded);
+        $this->assertStringContainsString('    status: active', $encoded);
     }
 
-    public function testQuotedKeysWithDoubleColonsRoundTrip(): void
+    public function test_quoted_keys_with_double_colons_round_trip(): void
     {
         $data = [
             'service_locator.c2fADeB.App\Api\Exercise\Action\GetSimilarExercises::__invoke()' => 'Symfony\Component\DependencyInjection\ServiceLocator',

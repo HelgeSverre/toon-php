@@ -56,7 +56,7 @@ final class Version3BreakingChangesTest extends TestCase
 
         // Hyphen line at 2 spaces, siblings at 4 spaces (depth +1)
         $this->assertStringContainsString("    status: active\n", $result);
-        $this->assertStringContainsString("    count: 1", $result);
+        $this->assertStringContainsString('    count: 1', $result);
     }
 
     public function test_decoder_accepts_v3_format(): void
@@ -154,6 +154,6 @@ final class Version3BreakingChangesTest extends TestCase
         $this->assertStringContainsString("  - name: test\n", $result);
         $this->assertStringContainsString("    users[2]{id}:\n", $result);
         $this->assertStringContainsString("      1\n", $result);
-        $this->assertStringContainsString("      2", $result);
+        $this->assertStringContainsString('      2', $result);
     }
 }

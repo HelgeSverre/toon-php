@@ -69,7 +69,7 @@ final class ObjectsTest extends TestCase
         $this->assertEquals('"a,b": 1', Toon::encode(['a,b' => 1]));
     }
 
-    public function testDecodeObjectKeysWithColons(): void
+    public function test_decode_object_keys_with_colons(): void
     {
         $input = "\"order:id\": 7\n\"service::method\": handler";
 
