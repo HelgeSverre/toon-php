@@ -1,15 +1,17 @@
 /vendor/
 /coverage/
 composer.lock
-.*
-!.gitignore
-!.github
-.claude/commands/spec-review.md
+.phpunit.result.cache
+.phpunit.cache
+.DS_Store
+.idea/
 wip/
 *.swp
 *.swo
 *~
 
+# Claude Code
+.claude/settings.local.json
 
 # Benchmarks
 /benchmarks/vendor/
