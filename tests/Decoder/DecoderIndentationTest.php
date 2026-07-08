@@ -137,11 +137,11 @@ final class DecoderIndentationTest extends TestCase
     {
         $options = DecodeOptions::lenient();
 
-        // 1 space / 2 = floor(0.5) = 0
+        // 1 space / 2 = floor(0.5) = 0, so both keys are siblings at depth 0.
+        // The childless bare "key:" now decodes to an empty object ([] in PHP, §8).
         $result = Toon::decode("key:\n value: test", $options);
 
-        // Since depth becomes 0, it's treated as sibling, not child
-        $this->assertEquals(['key' => null, 'value' => 'test'], $result);
+        $this->assertEquals(['key' => [], 'value' => 'test'], $result);
     }
 
     public function test_lenient_indentation_3_spaces_floor_to_depth_1(): void
@@ -207,16 +207,12 @@ final class DecoderIndentationTest extends TestCase
     // D. Edge Case Tests - 4 tests
     // ========================================
 
-    public function test_zero_indent_size_all_lines_depth_0(): void
+    public function test_zero_indent_size_is_rejected(): void
     {
-        $options = new DecodeOptions(indent: 0);
-
-        // With indent size 0, all lines should be depth 0
-        $toon = "a: 1\n  b: 2\n    c: 3";
-        $result = Toon::decode($toon, $options);
-
-        // All treated as siblings at root level
-        $this->assertEquals(['a' => 1, 'b' => 2, 'c' => 3], $result);
+        // indent 0 cannot express depth, so it is rejected at construction (§12).
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
+        new DecodeOptions(indent: 0);
     }
 
     public function test_deeply_nested_valid_indentation(): void

@@ -212,6 +212,5 @@ TOON;
         yield 'irregular indentation' => ["key:\n   value: test"];
         yield 'blank line in list array' => ["[3]:\n  - a\n\n  - b\n  - c"];
         yield 'tab indentation' => ["\tid: 1"];
-        yield 'empty input' => [''];
     }
 }

@@ -19,11 +19,12 @@ final class EncodeOptionsTest extends TestCase
         $this->assertEquals(Constants::DEFAULT_DELIMITER, $options->delimiter);
     }
 
-    public function test_compact_creates_options_with_zero_indent(): void
+    public function test_compact_creates_options_with_single_space_indent(): void
     {
+        // compact() uses the minimal valid indent (1) so nested output round-trips.
         $options = EncodeOptions::compact();
 
-        $this->assertEquals(0, $options->indent);
+        $this->assertEquals(1, $options->indent);
         $this->assertEquals(',', $options->delimiter);
     }
 
@@ -54,7 +55,7 @@ final class EncodeOptionsTest extends TestCase
     public function test_constructor_validates_negative_indent(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Indent must be non-negative');
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
         new EncodeOptions(indent: -1);
     }
 
@@ -78,7 +79,7 @@ final class EncodeOptionsTest extends TestCase
     public function test_with_indent_validates_negative_indent(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Indent must be non-negative');
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
         $options = EncodeOptions::default();
         $options->withIndent(-1);
     }
@@ -113,9 +114,16 @@ final class EncodeOptionsTest extends TestCase
 
     // Phase 3.2: Feature Combinations
 
-    public function test_encode_zero_indent_with_deeply_nested_structure(): void
+    public function test_encode_zero_indent_is_rejected(): void
     {
-        // Test indent: 0 with 5-level nesting
+        // indent 0 cannot represent nesting (§12), so it is rejected at construction.
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
+        new EncodeOptions(indent: 0);
+    }
+
+    public function test_encode_single_space_indent_with_deeply_nested_structure(): void
+    {
         $input = [
             'level1' => [
                 'level2' => [
@@ -128,12 +136,12 @@ final class EncodeOptionsTest extends TestCase
             ],
         ];
 
-        $options = new EncodeOptions(indent: 0);
-        $result = \HelgeSverre\Toon\Toon::encode($input, $options);
+        $result = \HelgeSverre\Toon\Toon::encode($input, new EncodeOptions(indent: 1));
 
-        // With zero indentation, all lines should start at column 0
-        $expected = "level1:\nlevel2:\nlevel3:\nlevel4:\nlevel5: deep value";
+        // Single-space indentation preserves nesting and round-trips.
+        $expected = "level1:\n level2:\n  level3:\n   level4:\n    level5: deep value";
         $this->assertEquals($expected, $result);
+        $this->assertSame($input, \HelgeSverre\Toon\Toon::decode($result, new \HelgeSverre\Toon\DecodeOptions(indent: 1)));
     }
 
     public function test_encode_pipe_delimiter_with_unicode_and_escapes(): void

@@ -7,7 +7,7 @@ namespace HelgeSverre\Toon\Tests;
 use HelgeSverre\Toon\Toon;
 use PHPUnit\Framework\TestCase;
 
-final class pArraysTest extends TestCase
+final class ArraysTest extends TestCase
 {
     public function test_encode_primitive_array(): void
     {

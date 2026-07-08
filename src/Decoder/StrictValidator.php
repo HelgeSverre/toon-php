@@ -24,24 +24,6 @@ use HelgeSverre\Toon\Exceptions\SyntaxException;
 final class StrictValidator
 {
     /**
-     * Validate empty input (§14.10, REQ-14.10).
-     *
-     * In strict mode, empty input MUST error.
-     * Empty = no non-empty lines after ignoring trailing newlines and blank lines outside arrays.
-     *
-     * @param  array<int, array{content: string, depth: int, line: int, indent: int, blank?: bool}>  $lines  Tokenized lines
-     * @param  DecodeOptions  $options  Decode options
-     *
-     * @throws StrictModeException If input is empty in strict mode
-     */
-    public static function validateNotEmpty(array $lines, DecodeOptions $options): void
-    {
-        if ($options->strict && empty($lines)) {
-            throw new StrictModeException('Empty input not allowed in strict mode', 0);
-        }
-    }
-
-    /**
      * Validate indentation is multiple of indentSize (§14.7, REQ-14.7, §12.7, REQ-12.7).
      *
      * Leading spaces MUST be exact multiple of indentSize; otherwise MUST error in strict mode.

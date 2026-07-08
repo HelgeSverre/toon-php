@@ -184,13 +184,14 @@ final class EdgeCasesTest extends TestCase
 
     // Phase 2.4: Indentation tests
 
-    public function test_encode_zero_indentation_consistent_across_levels(): void
+    public function test_encode_single_space_indentation_consistent_across_levels(): void
     {
-        // Zero indentation should produce no spaces at all nesting levels
+        // indent 0 is rejected (§12); the minimal valid indent (1) preserves nesting.
         $input = ['a' => ['b' => ['c' => 'd']]];
-        $options = new EncodeOptions(indent: 0);
-        $expected = "a:\nb:\nc: d";
+        $options = new EncodeOptions(indent: 1);
+        $expected = "a:\n b:\n  c: d";
         $this->assertEquals($expected, Toon::encode($input, $options));
+        $this->assertSame($input, Toon::decode($expected, new \HelgeSverre\Toon\DecodeOptions(indent: 1)));
     }
 
     public function test_encode_custom_indentation_applied_to_all_levels(): void

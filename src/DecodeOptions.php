@@ -11,17 +11,19 @@ final class DecodeOptions
     /**
      * Create new decoding options.
      *
-     * @param  int  $indent  Expected number of spaces per indentation level (default: 2)
+     * @param  int  $indent  Expected number of spaces per indentation level (default: 2, minimum: 1)
      * @param  bool  $strict  Enable strict mode validation (default: true)
      *
-     * @throws InvalidArgumentException If indent is negative
+     * @throws InvalidArgumentException If indent is less than 1
      */
     public function __construct(
         public readonly int $indent = 2,
         public readonly bool $strict = true,
     ) {
-        if ($this->indent < 0) {
-            throw new InvalidArgumentException('Indent must be non-negative');
+        // §12: depth is measured in indentSize-space units; indent 0 makes every
+        // line depth 0 and cannot recover nesting, so it is not a valid setting.
+        if ($this->indent < 1) {
+            throw new InvalidArgumentException('Indent must be a positive integer (at least 1)');
         }
     }
 

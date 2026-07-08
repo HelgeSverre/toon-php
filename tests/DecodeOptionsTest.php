@@ -29,16 +29,16 @@ final class DecodeOptionsTest extends TestCase
     public function test_constructor_validates_negative_indent(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Indent must be non-negative');
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
         new DecodeOptions(indent: -1);
     }
 
-    public function test_constructor_accepts_zero_indent(): void
+    public function test_constructor_rejects_zero_indent(): void
     {
-        $options = new DecodeOptions(indent: 0);
-
-        $this->assertEquals(0, $options->indent);
-        $this->assertEquals(true, $options->strict);
+        // indent 0 makes every line depth 0, so nesting is unrecoverable (§12).
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
+        new DecodeOptions(indent: 0);
     }
 
     public function test_constructor_accepts_custom_indent(): void
@@ -70,7 +70,7 @@ final class DecodeOptionsTest extends TestCase
     public function test_with_indent_validates_negative_indent(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Indent must be non-negative');
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
         $options = DecodeOptions::default();
         $options->withIndent(-1);
     }
@@ -139,15 +139,11 @@ final class DecodeOptionsTest extends TestCase
         $this->assertEquals(['outer' => ['nested' => 'value']], $result);
     }
 
-    public function test_zero_indent_with_lenient_mode(): void
+    public function test_zero_indent_rejected_even_in_lenient_mode(): void
     {
-        // Test zero indent (compact format) works
-        // With zero indent, all lines are at the same level
-        $toon = "key1: value1\nkey2: value2"; // No indentation
-
-        $options = new DecodeOptions(indent: 0, strict: false);
-        $result = \HelgeSverre\Toon\Toon::decode($toon, $options);
-
-        $this->assertEquals(['key1' => 'value1', 'key2' => 'value2'], $result);
+        // indent 0 is invalid regardless of strict mode.
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
+        new DecodeOptions(indent: 0, strict: false);
     }
 }

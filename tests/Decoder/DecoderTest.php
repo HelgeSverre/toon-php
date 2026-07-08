@@ -271,8 +271,9 @@ final class DecoderTest extends TestCase
 
     public function test_decode_empty_input_lenient_mode(): void
     {
+        // §5: empty document decodes to an empty object ({} = [] in PHP).
         $options = DecodeOptions::lenient();
-        $this->assertNull(Toon::decode('', $options));
+        $this->assertSame([], Toon::decode('', $options));
     }
 
     // ========================================

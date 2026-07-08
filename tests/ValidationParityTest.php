@@ -42,6 +42,8 @@ final class ValidationParityTest extends TestCase
      */
     public static function strictValidDocuments(): iterable
     {
+        yield 'empty document' => [''];
+        yield 'whitespace only document' => ["   \n  \n   "];
         yield 'unquoted primitive' => ['hello'];
         yield 'quoted primitive' => ['"hello world"'];
         yield 'integer primitive' => ['42'];
@@ -83,8 +85,6 @@ final class ValidationParityTest extends TestCase
         yield 'unterminated string' => ['"hello'];
         yield 'missing colon in object' => ["id: 1\nname Alice"];
         yield 'missing colon after key' => ["id 123\nname: Alice"];
-        yield 'empty input' => [''];
-        yield 'whitespace only input' => ["   \n  \n   "];
         yield 'tab indentation' => ["\tid: 1"];
         yield 'indent not multiple' => ["key:\n   value: test"];
         yield 'custom indent mismatch' => ["key:\n  value: test", new DecodeOptions(indent: 4)];

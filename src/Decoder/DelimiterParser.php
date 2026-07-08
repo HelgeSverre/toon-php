@@ -32,7 +32,9 @@ final class DelimiterParser
 
                 continue;
             }
-            if ($char === '\\') {
+            // Escapes only exist inside quoted strings/keys (§7.1). An unquoted
+            // backslash is a literal character and MUST NOT escape the delimiter.
+            if ($char === '\\' && $inQuotes) {
                 $current .= $char;
                 $escaped = true;
 

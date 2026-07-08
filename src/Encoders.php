@@ -345,7 +345,8 @@ final class Encoders
     {
         $keys = array_keys($object);
         if (empty($keys)) {
-            $this->writer->push($depth, Constants::LIST_ITEM_PREFIX);
+            // §10: an empty-object list item is a bare "-" (no trailing space, §12).
+            $this->writer->push($depth, Constants::LIST_ITEM_MARKER);
 
             return;
         }

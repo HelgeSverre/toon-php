@@ -22,8 +22,7 @@ final class Validator
         $nonBlankLines = array_filter($lines, fn ($line) => ! ($line['blank'] ?? false));
 
         if (empty($nonBlankLines)) {
-            StrictValidator::validateNotEmpty($nonBlankLines, $this->options);
-
+            // §5: an empty document is valid (decodes to an empty object) in both modes.
             return;
         }
 
@@ -70,19 +69,39 @@ final class Validator
 
     private function containsUnquotedColon(string $line): bool
     {
+        return $this->findUnquotedColon($line) !== null;
+    }
+
+    private function findUnquotedColon(string $line): ?int
+    {
         $inQuotes = false;
         $len = strlen($line);
 
         for ($i = 0; $i < $len; $i++) {
             $char = $line[$i];
-            if ($char === '"' && ($i === 0 || $line[$i - 1] !== '\\')) {
-                $inQuotes = ! $inQuotes;
-            } elseif ($char === ':' && ! $inQuotes) {
-                return true;
+
+            if ($inQuotes) {
+                // Inside quotes, a backslash escapes the next character (§7.1).
+                if ($char === '\\' && $i + 1 < $len) {
+                    $i++;
+
+                    continue;
+                }
+                if ($char === '"') {
+                    $inQuotes = false;
+                }
+
+                continue;
+            }
+
+            if ($char === '"') {
+                $inQuotes = true;
+            } elseif ($char === ':') {
+                return $i;
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -173,8 +192,10 @@ final class Validator
             return ['header' => $header, 'expectsNestedValue' => true];
         }
 
-        $colonPos = strpos($content, ':');
-        // @phpstan-ignore-next-line
+        $colonPos = $this->findUnquotedColon($content);
+        if ($colonPos === null) {
+            throw new SyntaxException('Missing colon after key', $line['line'], $content);
+        }
         $keyPart = substr($content, 0, $colonPos);
         $valuePart = trim(substr($content, $colonPos + 1));
 
@@ -249,7 +270,10 @@ final class Validator
         $valueStrings = DelimiterParser::split($header['inlineValues'], $header['delimiter'], $lineNumber);
 
         foreach ($valueStrings as $valueStr) {
-            ValueParser::validateValue($valueStr, $lineNumber);
+            // §9.1: empty tokens are valid and decode to "".
+            if (trim($valueStr) !== '') {
+                ValueParser::validateValue($valueStr, $lineNumber);
+            }
         }
 
         if ($header['length'] !== null) {
@@ -387,7 +411,9 @@ final class Validator
             return $itemIndex + 1;
         }
 
-        if (str_contains($valueStr, ':')) {
+        // A list item is an object only when it carries an UNQUOTED colon (§9.4);
+        // a quoted colon (e.g. - "x: y") is a primitive string.
+        if ($this->findUnquotedColon($valueStr) !== null) {
             $this->validateVirtualObject($valueStr, $lines, $itemIndex, $line);
 
             return $itemIndex + 1;
@@ -528,7 +554,9 @@ final class Validator
             StrictValidator::validateTabularRowWidth(count($header['fields']), count($valueStrings), $line['line'], $rowContent);
 
             foreach ($valueStrings as $valueStr) {
-                ValueParser::validateValue($valueStr, $line['line']);
+                if (trim($valueStr) !== '') {
+                    ValueParser::validateValue($valueStr, $line['line']);
+                }
             }
 
             $actualLength++;
@@ -596,7 +624,9 @@ final class Validator
             StrictValidator::validateTabularRowWidth(count($header['fields']), count($valueStrings), $current['line'], $rowContent);
 
             foreach ($valueStrings as $valueStr) {
-                ValueParser::validateValue($valueStr, $current['line']);
+                if (trim($valueStr) !== '') {
+                    ValueParser::validateValue($valueStr, $current['line']);
+                }
             }
 
             $actualLength++;

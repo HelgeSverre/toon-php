@@ -79,6 +79,12 @@ final class HeaderParser
         }
 
         $key = trim(substr($keyPart, 0, $headerStart));
+
+        // A quoted key prefix (e.g. "my-key"[3]:) MUST be unescaped per §7.4.
+        if ($key !== '' && str_starts_with($key, '"')) {
+            $key = ValueParser::parseKey($key, 0);
+        }
+
         $headerAndValue = substr($keyPart, $headerStart).':'.$valuePart;
 
         $header = self::parseDirectArrayHeader($headerAndValue);

@@ -338,21 +338,12 @@ final class EdgeCasesExtendedTest extends TestCase
         $this->assertStringContainsString('        value: 123', $result);
     }
 
-    public function test_zero_indent(): void
+    public function test_zero_indent_is_rejected(): void
     {
-        $data = [
-            'parent' => [
-                'child' => 'value',
-            ],
-        ];
-
-        $options = new EncodeOptions(indent: 0);
-        $result = Toon::encode($data, $options);
-
-        // Should have no indentation
-        $lines = explode("\n", $result);
-        $this->assertEquals('parent:', $lines[0]);
-        $this->assertEquals('child: value', $lines[1]);
+        // indent 0 cannot represent nesting and is rejected at construction (§12).
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Indent must be a positive integer (at least 1)');
+        new EncodeOptions(indent: 0);
     }
 
     public function test_large_indent(): void

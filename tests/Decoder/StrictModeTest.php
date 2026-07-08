@@ -18,27 +18,22 @@ final class StrictModeTest extends TestCase
     // A. Empty Input Tests (§14.10) - 3 tests
     // ========================================
 
-    public function test_strict_mode_rejects_empty_input(): void
+    public function test_strict_mode_decodes_empty_input_to_empty_object(): void
     {
-        $this->expectException(StrictModeException::class);
-        $this->expectExceptionMessage('Empty input');
-
-        Toon::decode('');
+        // §5: an empty document decodes to an empty object ({} = [] in PHP).
+        $this->assertSame([], Toon::decode(''));
     }
 
-    public function test_strict_mode_rejects_whitespace_only_input(): void
+    public function test_strict_mode_decodes_whitespace_only_to_empty_object(): void
     {
-        $this->expectException(StrictModeException::class);
-        $this->expectExceptionMessage('Empty input');
-
-        Toon::decode("   \n  \n   ");
+        $this->assertSame([], Toon::decode("   \n  \n   "));
     }
 
-    public function test_lenient_mode_accepts_empty_input(): void
+    public function test_lenient_mode_decodes_empty_input_to_empty_object(): void
     {
         $options = DecodeOptions::lenient();
-        $this->assertNull(Toon::decode('', $options));
-        $this->assertNull(Toon::decode("  \n  ", $options));
+        $this->assertSame([], Toon::decode('', $options));
+        $this->assertSame([], Toon::decode("  \n  ", $options));
     }
 
     // ========================================

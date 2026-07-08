@@ -11,17 +11,19 @@ final class EncodeOptions
     /**
      * Create new encoding options.
      *
-     * @param  int  $indent  Number of spaces for indentation (default: 2)
+     * @param  int  $indent  Number of spaces per indentation level (default: 2, minimum: 1)
      * @param  string  $delimiter  Field delimiter: comma ',', tab '\t', or pipe '|' (default: comma)
      *
-     * @throws InvalidArgumentException If indent is negative or delimiter is invalid
+     * @throws InvalidArgumentException If indent is less than 1 or delimiter is invalid
      */
     public function __construct(
         public readonly int $indent = 2,
         public readonly string $delimiter = Constants::DEFAULT_DELIMITER,
     ) {
-        if ($this->indent < 0) {
-            throw new InvalidArgumentException('Indent must be non-negative');
+        // §12: indentation is a fixed number of spaces per level; depth is only
+        // recoverable when indentSize >= 1, so indent 0 cannot represent nesting.
+        if ($this->indent < 1) {
+            throw new InvalidArgumentException('Indent must be a positive integer (at least 1)');
         }
 
         if (! in_array($this->delimiter, [Constants::DELIMITER_COMMA, Constants::DELIMITER_TAB, Constants::DELIMITER_PIPE], true)) {
@@ -42,15 +44,15 @@ final class EncodeOptions
     /**
      * Create options optimized for maximum compactness.
      *
-     * Uses minimal indentation and comma delimiter for smallest output size.
-     * Ideal for production use where token count is critical.
+     * Uses minimal (single-space) indentation and comma delimiter for smallest
+     * output size while still preserving nesting so output round-trips.
      *
-     * @return self Compact options (indent: 0, delimiter: comma)
+     * @return self Compact options (indent: 1, delimiter: comma)
      */
     public static function compact(): self
     {
         return new self(
-            indent: 0,
+            indent: 1,
             delimiter: Constants::DELIMITER_COMMA,
         );
     }

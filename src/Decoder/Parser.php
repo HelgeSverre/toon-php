@@ -23,9 +23,9 @@ final class Parser
         $nonBlankLines = array_filter($lines, fn ($line) => ! ($line['blank'] ?? false));
 
         if (empty($nonBlankLines)) {
-            StrictValidator::validateNotEmpty($nonBlankLines, $this->options);
-
-            return null;
+            // §5: an empty document decodes to an empty object ({} = [] in PHP),
+            // in both strict and lenient modes (§14 does not list empty input).
+            return [];
         }
 
         $rootForm = $this->determineRootForm($lines);
@@ -85,9 +85,25 @@ final class Parser
 
         for ($i = 0; $i < $len; $i++) {
             $char = $line[$i];
-            if ($char === '"' && ($i === 0 || $line[$i - 1] !== '\\')) {
-                $inQuotes = ! $inQuotes;
-            } elseif ($char === ':' && ! $inQuotes) {
+
+            if ($inQuotes) {
+                // Inside a quoted string, a backslash escapes the next character
+                // (§7.1), so an escaped quote does not end the string.
+                if ($char === '\\' && $i + 1 < $len) {
+                    $i++;
+
+                    continue;
+                }
+                if ($char === '"') {
+                    $inQuotes = false;
+                }
+
+                continue;
+            }
+
+            if ($char === '"') {
+                $inQuotes = true;
+            } elseif ($char === ':') {
                 return $i;
             }
         }
@@ -233,7 +249,10 @@ final class Parser
         $key = ValueParser::parseKey($keyPart, $line['line']);
 
         if ($valuePart === '') {
-            return ['key' => $key, 'value' => null];
+            // §8: a bare "key:" (no value, no children) is an empty/nested object,
+            // NOT an empty array or null ({} = [] in PHP). If deeper lines follow,
+            // parseObject overrides this with the nested structure.
+            return ['key' => $key, 'value' => []];
         }
 
         // Check if value part is an array header
@@ -300,7 +319,8 @@ final class Parser
 
         $values = [];
         foreach ($valueStrings as $valueStr) {
-            $values[] = ValueParser::parseValue($valueStr, $lineNumber);
+            // §9.1/§11.2: empty tokens (including whitespace-only) decode to "".
+            $values[] = trim($valueStr) === '' ? '' : ValueParser::parseValue($valueStr, $lineNumber);
         }
 
         if ($header['length'] !== null) {
@@ -375,16 +395,43 @@ final class Parser
                 }
 
                 if (DelimiterParser::isArrayHeader($nestedLines[0]['content'])) {
-                    $value = $this->parseArray($nestedLines, 0, $line['depth'] + 1);
+                    // §9.4: an inner array's items sit at depth +1 relative to the
+                    // hyphen line, so parseArray (whose items are at expectedDepth+1)
+                    // must receive the hyphen depth, not depth+1.
+                    $value = $this->parseArray($nestedLines, 0, $line['depth']);
                 } else {
+                    // Object fields sit at the same depth as the synthetic first
+                    // field (depth+1), which is parseObject's expected depth.
                     $value = $this->parseObject($nestedLines, 0, $line['depth'] + 1);
                 }
 
                 $i = $j - 1;
-            } elseif ($valueStr !== '') {
-                $value = ValueParser::parseValue($valueStr, $line['line']);
             } else {
-                $value = null;
+                // No deeper child lines: the whole list item sits on the hyphen line.
+                // Dispatch by shape (§9.2/§9.4/§10). Order matters — the array-header
+                // check must precede the colon check because inner headers (- [M]: …)
+                // also contain a colon.
+                $syntheticLines = [[
+                    'content' => $valueStr,
+                    'depth' => $line['depth'] + 1,
+                    'line' => $line['line'],
+                    'indent' => $line['indent'] + $this->options->indent,
+                ]];
+
+                if ($valueStr === '') {
+                    // §10: bare "-" is an empty-object list item ([] in PHP).
+                    $value = [];
+                } elseif (DelimiterParser::isArrayHeader($valueStr)) {
+                    // §9.2/§9.4: inner array header fully on the hyphen line (- [M]: …).
+                    $value = $this->parseArray($syntheticLines, 0, $line['depth'] + 1);
+                } elseif ($this->findUnquotedColon($valueStr) !== null) {
+                    // §9.4/§10: object with its first field on the hyphen line. A genuine
+                    // primitive can never carry an unquoted colon or leading bracket (§7.2).
+                    $value = $this->parseObject($syntheticLines, 0, $line['depth'] + 1);
+                } else {
+                    // §9.4: primitive list item (no colon, no array header).
+                    $value = ValueParser::parseValue($valueStr, $line['line']);
+                }
             }
 
             $items[] = $value;
@@ -448,7 +495,9 @@ final class Parser
 
             $rowObject = [];
             foreach ($fields as $index => $field) {
-                $rowObject[$field] = ValueParser::parseValue($valueStrings[$index], $line['line']);
+                // §11.2: empty tabular cells decode to the empty string.
+                $cell = $valueStrings[$index];
+                $rowObject[$field] = trim($cell) === '' ? '' : ValueParser::parseValue($cell, $line['line']);
             }
 
             $rows[] = $rowObject;
