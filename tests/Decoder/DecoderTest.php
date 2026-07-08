@@ -135,11 +135,28 @@ final class DecoderTest extends TestCase
         Toon::decode('"\\x41"');
     }
 
-    public function test_decode_invalid_unicode_escape_throws(): void
+    public function test_decode_unicode_escape(): void
+    {
+        // \uXXXX decodes to the corresponding character (§7.1)
+        $this->assertEquals('A', Toon::decode('"\\u0041"'));
+        $this->assertEquals('café', Toon::decode('"caf\\u00e9"'));
+        // Hex digits are case-insensitive
+        $this->assertEquals('é', Toon::decode('"\\u00E9"'));
+        // Control characters decode as data
+        $this->assertEquals("a\x01b", Toon::decode('"a\\u0001b"'));
+    }
+
+    public function test_decode_incomplete_unicode_escape_throws(): void
     {
         $this->expectException(SyntaxException::class);
-        $this->expectExceptionMessage('Invalid escape sequence: \u');
-        Toon::decode('"\\u0041"');
+        Toon::decode('"\\u12"');
+    }
+
+    public function test_decode_lone_surrogate_escape_throws(): void
+    {
+        $this->expectException(SyntaxException::class);
+        $this->expectExceptionMessage('lone surrogate');
+        Toon::decode('"\\ud83d"');
     }
 
     public function test_decode_unterminated_string_throws(): void

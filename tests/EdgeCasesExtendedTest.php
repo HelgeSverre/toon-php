@@ -493,10 +493,9 @@ final class EdgeCasesExtendedTest extends TestCase
 
         // Verify epsilon is preserved with full precision
         $this->assertStringContainsString('epsilon:', $result);
-        // PHP_FLOAT_EPSILON is approximately 2.220446049250313e-16
-        // TOON encodes this in decimal notation with full precision
-        $this->assertIsString($result);
-        $this->assertStringContainsString('0.00000000000000022204', $result);
+        // PHP_FLOAT_EPSILON is ~2.22e-16, below the canonical decimal range (1e-6);
+        // it is encoded in exponent notation and round-trips exactly (§2).
+        $this->assertStringContainsString('epsilon: 2.220446049250313e-16', $result);
 
         // Verify 1.0 + epsilon shows the precision difference
         $this->assertStringContainsString('one_plus_epsilon: 1.0000000000000002', $result);
@@ -504,8 +503,9 @@ final class EdgeCasesExtendedTest extends TestCase
 
     public function test_encode_subnormal_floats(): void
     {
-        // Test very small floats near zero (subnormal/denormal numbers)
-        // PHP converts these extremely small values to 0 during normalization
+        // Very small floats near zero (subnormal/denormal numbers). These are far
+        // below the canonical decimal range (1e-6), so they use exponent notation
+        // and round-trip exactly rather than underflowing to 0 (§2).
         $data = [
             'tiny1' => 1.0e-308,  // Near smallest normal float
             'tiny2' => 5.0e-324,  // Smallest positive subnormal
@@ -514,16 +514,12 @@ final class EdgeCasesExtendedTest extends TestCase
 
         $result = Toon::encode($data);
 
-        // Verify keys are present
-        $this->assertStringContainsString('tiny1:', $result);
-        $this->assertStringContainsString('tiny2:', $result);
-        $this->assertStringContainsString('tiny3:', $result);
+        $this->assertStringContainsString('tiny1: 1e-308', $result);
+        $this->assertStringContainsString('tiny2: 5e-324', $result);
+        $this->assertStringContainsString('tiny3: 2.2250738585072014e-308', $result);
 
-        // These subnormal values are so small they underflow to 0 in PHP
-        // Verify they encode as 0
-        $this->assertStringContainsString('tiny1: 0', $result);
-        $this->assertStringContainsString('tiny2: 0', $result);
-        $this->assertStringContainsString('tiny3: 0', $result);
+        // Round-trips exactly under strict decoding
+        $this->assertSame($data, Toon::decode($result));
     }
 
     public function test_encode_object_with_reserved_php_keywords_as_keys(): void

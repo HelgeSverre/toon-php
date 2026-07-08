@@ -128,7 +128,17 @@ final class HeaderParser
             }
 
             if ($pos > $numStart) {
-                $result['length'] = (int) substr($line, $numStart, $pos - $numStart);
+                $numStr = substr($line, $numStart, $pos - $numStart);
+
+                // Reject leading-zero lengths like [03] (§6): these MUST NOT be
+                // interpreted as bracket segments. Returning null lets non-strict
+                // callers fall through to key-value parsing; strict mode errors
+                // on the resulting bracket-bearing key (see Parser).
+                if (strlen($numStr) > 1 && $numStr[0] === '0') {
+                    return null;
+                }
+
+                $result['length'] = (int) $numStr;
             }
 
             // TOON v2.0: Also check for # after digits (catches [N#] pattern)
@@ -156,6 +166,12 @@ final class HeaderParser
                 return null;
             }
             $pos++; // skip ]
+
+            // "[]" (or "[|]", "[\t]") with no digits is the canonical empty
+            // array (§9.1). Legacy "[0]" is handled by the digit parse above.
+            if ($result['length'] === null) {
+                $result['length'] = 0;
+            }
         }
 
         // Parse fields section {field1,field2}
@@ -187,13 +203,20 @@ final class HeaderParser
             $result['format'] = 'tabular';
 
             $pos = $braceEnd + 1; // move past }
-        } elseif ($result['length'] === null && $line[$pos] === '{') {
+        } elseif ($result['length'] === null && $pos < $len && $line[$pos] === '{') {
             // Standalone {fields}: format (tabular continuation)
             return self::parseDirectArrayHeader('[0]'.substr($line, $pos));
         }
 
         // Expect : after header
         if ($pos >= $len || $line[$pos] !== ':') {
+            // Bare "[]" literal on its own — root/standalone empty array (§5, §9.1).
+            if ($pos >= $len && $result['length'] === 0 && $result['fields'] === null) {
+                $result['format'] = 'inline';
+
+                return $result;
+            }
+
             return null;
         }
         $pos++; // skip :

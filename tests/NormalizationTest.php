@@ -89,19 +89,22 @@ final class NormalizationTest extends TestCase
         $this->assertEquals('value: 0', Toon::encode(['value' => -0.0]));
     }
 
-    public function test_normalize_large_floats_no_scientific_notation(): void
+    public function test_normalize_large_floats(): void
     {
-        // Very large numbers (>10^20) should be quoted per §2.9 for exact precision
-        $this->assertEquals('"1000000000000000000000"', Toon::encode(1e21));
-        // Numbers at exactly 10^20 are still within range, not quoted
+        // Within the canonical decimal range (|n| < 1e21): plain decimal (§2)
         $this->assertEquals('100000000000000000000', Toon::encode(1e20));
+        $this->assertEquals('500000000000000000000', Toon::encode(5e20));
+        // At or above 1e21: exponent notation with lowercase e and explicit sign (§2)
+        $this->assertEquals('1e+21', Toon::encode(1e21));
+        $this->assertEquals('1e+25', Toon::encode(1e25));
     }
 
-    public function test_normalize_small_floats_no_scientific_notation(): void
+    public function test_normalize_small_floats(): void
     {
-        // Small numbers should expand scientific notation
+        // 1e-6 is the lower bound of the canonical decimal range: plain decimal (§2)
         $this->assertEquals('0.000001', Toon::encode(1e-6));
-        $this->assertEquals('0.0000001', Toon::encode(1e-7));
+        // Below 1e-6: exponent notation (§2)
+        $this->assertEquals('1e-7', Toon::encode(1e-7));
     }
 
     public function test_normalize_locale_independent_floats(): void

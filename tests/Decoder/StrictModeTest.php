@@ -181,12 +181,18 @@ final class StrictModeTest extends TestCase
         Toon::decode('"test\\xAB"');
     }
 
-    public function test_strict_mode_invalid_escape_sequence_u(): void
+    public function test_strict_mode_accepts_unicode_escape(): void
+    {
+        // \uXXXX is a valid escape and decodes to its character (§7.1)
+        $this->assertEquals('testA', Toon::decode('"test\\u0041"'));
+    }
+
+    public function test_strict_mode_invalid_unicode_escape_length(): void
     {
         $this->expectException(SyntaxException::class);
-        $this->expectExceptionMessage('Invalid escape sequence');
+        $this->expectExceptionMessage('four hex digits');
 
-        Toon::decode('"test\\u0041"');
+        Toon::decode('"test\\u00"');
     }
 
     public function test_strict_mode_unterminated_string(): void

@@ -6,6 +6,7 @@ namespace HelgeSverre\Toon\Decoder;
 
 use HelgeSverre\Toon\DecodeOptions;
 use HelgeSverre\Toon\Exceptions\DecodeException;
+use HelgeSverre\Toon\Exceptions\StrictModeException;
 use HelgeSverre\Toon\Exceptions\SyntaxException;
 
 final class Parser
@@ -163,6 +164,12 @@ final class Parser
                 }
             }
 
+            // Duplicate sibling keys at the same depth (§8, §14.4): strict mode
+            // errors; non-strict applies last-write-wins silently in document order.
+            if (array_key_exists($key, $result) && $this->options->strict) {
+                throw new StrictModeException("Duplicate object key: {$key}", $line['line']);
+            }
+
             $result[$key] = $value;
             $i++;
         }
@@ -207,6 +214,21 @@ final class Parser
 
         $keyPart = substr($content, 0, $colonPos);
         $valuePart = trim(substr($content, $colonPos + 1));
+
+        // A valid array header would have been handled above. In strict mode, an
+        // unquoted key still carrying bracket characters signals a malformed array
+        // header — e.g. [03], [-1], [bar], [2]extra: — which MUST error (§6, §14.2).
+        // Non-strict mode falls through, treating the whole thing as a literal key.
+        $trimmedKeyPart = trim($keyPart);
+        if ($this->options->strict
+            && ! str_starts_with($trimmedKeyPart, '"')
+            && (str_contains($trimmedKeyPart, '[') || str_contains($trimmedKeyPart, ']'))) {
+            throw new SyntaxException(
+                'Malformed array header (invalid bracket length or content before colon)',
+                $line['line'],
+                $content
+            );
+        }
 
         $key = ValueParser::parseKey($keyPart, $line['line']);
 

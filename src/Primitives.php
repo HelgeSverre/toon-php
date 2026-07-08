@@ -11,10 +11,11 @@ final class Primitives
     /**
      * Encode a primitive value (null, bool, int, float, string) to TOON format.
      *
-     * Numbers are encoded without exponential notation (§2). Negative zero is
-     * normalized to zero (§2). Very large numbers (>10^20) are quoted as strings
-     * for precision preservation (§2.9). Sufficient precision is maintained for
-     * round-trip fidelity (§2.7).
+     * Numbers are encoded in canonical decimal form when n = 0 or
+     * 1e-6 <= |n| < 1e21 (§2). Finite numbers outside that range use exponent
+     * notation with a lowercase "e" and explicit sign. Negative zero is
+     * normalized to zero (§2). Sufficient precision is maintained for
+     * round-trip fidelity so decode(encode(x)) equals x (§2).
      *
      * @param  mixed  $value  The primitive value to encode
      * @param  string  $delimiter  The delimiter used in the context (affects string quoting)
@@ -45,12 +46,12 @@ final class Primitives
 
             // Expand scientific notation for floats
             if (is_float($value)) {
-                // Very large numbers are quoted as strings for exact precision
-                if (abs($value) > 1e20) {
-                    // Use number_format for locale-independent formatting
-                    $str = number_format($value, 0, '.', '');
+                $abs = abs($value);
 
-                    return Constants::DOUBLE_QUOTE.$str.Constants::DOUBLE_QUOTE;
+                // Finite numbers outside the canonical decimal range
+                // (non-zero |n| < 1e-6, or |n| >= 1e21) use exponent notation (§2).
+                if ($abs >= 1e21 || ($abs !== 0.0 && $abs < 1e-6)) {
+                    return self::formatExponential($value);
                 }
 
                 // Use json_encode for locale-independent formatting
@@ -59,9 +60,9 @@ final class Primitives
                     throw new InvalidArgumentException('Failed to encode float value');
                 }
 
-                // If result contains scientific notation, expand it
+                // If result contains scientific notation, expand it to canonical decimal
                 if (stripos($result, 'e') !== false) {
-                    if (abs($value) >= 1) {
+                    if ($abs >= 1) {
                         // Large numbers: use integer format if whole number
                         if ($value == floor($value)) {
                             // Use number_format for locale-independent formatting
@@ -92,6 +93,40 @@ final class Primitives
         }
 
         throw new InvalidArgumentException('Unsupported primitive type');
+    }
+
+    /**
+     * Format a float outside the canonical decimal range in exponent notation (§2).
+     *
+     * Uses the shortest round-trippable mantissa, a lowercase "e", and an explicit
+     * exponent sign (e.g. 1e+21, 1e-7) for byte-for-byte determinism.
+     *
+     * @param  float  $value  The value to format (|value| >= 1e21 or 0 < |value| < 1e-6)
+     * @return string The exponent-notation representation
+     */
+    private static function formatExponential(float $value): string
+    {
+        $encoded = json_encode($value);
+        if ($encoded === false) {
+            throw new InvalidArgumentException('Failed to encode float value');
+        }
+
+        // PHP already emits a round-trippable form; normalize it to lowercase "e"
+        // with an explicit exponent sign and no trailing-zero mantissa.
+        $encoded = strtolower($encoded);
+        if (! str_contains($encoded, 'e')) {
+            return $encoded;
+        }
+
+        [$mantissa, $exponent] = explode('e', $encoded, 2);
+        if (str_contains($mantissa, '.')) {
+            $mantissa = rtrim(rtrim($mantissa, '0'), '.');
+        }
+        if ($exponent === '' || ($exponent[0] !== '+' && $exponent[0] !== '-')) {
+            $exponent = '+'.$exponent;
+        }
+
+        return $mantissa.'e'.$exponent;
     }
 
     /**
@@ -134,36 +169,31 @@ final class Primitives
     /**
      * Escape special characters in a string for use in quoted strings.
      *
-     * Escapes backslashes, double quotes, newlines, carriage returns, and tabs.
-     *
-     * Per TOON v2.0 §7.1: Only \n, \r, and \t control characters are supported.
-     * Strings containing other control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
-     * are rejected as the spec provides no escape sequences for them.
+     * Per TOON §7.1: backslash, double quote, LF, CR and HTAB use their short
+     * escapes (\\, \", \n, \r, \t). All other C0 control characters
+     * (U+0000-U+0008, U+000B, U+000C, U+000E-U+001F) are emitted as \uXXXX with
+     * lowercase hex. Control characters are preserved as data, never stripped (§15).
      *
      * @param  string  $value  The string to escape
      * @return string The escaped string
-     *
-     * @throws InvalidArgumentException If string contains unsupported control characters
      */
     public static function escapeString(string $value): string
     {
-        // Check for unsupported control characters (§7.1)
-        // Allowed: \n (0x0A), \r (0x0D), \t (0x09)
-        // Rejected: All other control chars (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
-        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $value)) {
-            throw new InvalidArgumentException(
-                'String contains unsupported control characters. '.
-                'Only \\n (newline), \\r (carriage return), and \\t (tab) are allowed per TOON Spec §7.1.'
-            );
-        }
-
         $escaped = str_replace(Constants::BACKSLASH, Constants::BACKSLASH.Constants::BACKSLASH, $value);
         $escaped = str_replace(Constants::DOUBLE_QUOTE, Constants::BACKSLASH.Constants::DOUBLE_QUOTE, $escaped);
         $escaped = str_replace("\n", '\n', $escaped);
         $escaped = str_replace("\r", '\r', $escaped);
         $escaped = str_replace("\t", '\t', $escaped);
 
-        return $escaped;
+        // Remaining C0 control characters have no short escape; emit \uXXXX (§7.1).
+        $result = preg_replace_callback(
+            '/[\x00-\x08\x0B\x0C\x0E-\x1F]/',
+            fn (array $m): string => sprintf('\u%04x', ord($m[0])),
+            $escaped
+        );
+        assert($result !== null);
+
+        return $result;
     }
 
     /**

@@ -78,7 +78,8 @@ final class ValidationParityTest extends TestCase
     public static function strictInvalidDocuments(): iterable
     {
         yield 'invalid escape x' => ['"\\x41"'];
-        yield 'invalid escape u' => ['"\\u0041"'];
+        yield 'incomplete unicode escape' => ['"\\u12"'];
+        yield 'lone surrogate escape' => ['"\\ud83d"'];
         yield 'unterminated string' => ['"hello'];
         yield 'missing colon in object' => ["id: 1\nname Alice"];
         yield 'missing colon after key' => ["id 123\nname: Alice"];

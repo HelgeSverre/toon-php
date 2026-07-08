@@ -93,6 +93,14 @@ final class ValueParser
             if ($char === '\\' && $i + 1 < $len) {
                 $next = $str[$i + 1];
 
+                // Unicode escape \uXXXX (§7.1)
+                if ($next === 'u') {
+                    $result .= self::decodeUnicodeEscape($str, $i, $lineNumber, $original);
+                    $i += 6;
+
+                    continue;
+                }
+
                 // Valid escapes (§7.1.1)
                 $result .= match ($next) {
                     '\\' => '\\',
@@ -115,6 +123,46 @@ final class ValueParser
         }
 
         return $result;
+    }
+
+    /**
+     * Decode a \uXXXX escape sequence starting at the backslash position (§7.1).
+     *
+     * Hex digits are case-insensitive; lone surrogates (U+D800-U+DFFF) are
+     * rejected; fewer than four hex digits is an error.
+     *
+     * @param  string  $str  Full (unquoted) string content
+     * @param  int  $backslashPos  Index of the backslash beginning the escape
+     * @param  int  $lineNumber  Line number for error reporting
+     * @param  string  $original  Original token for error context
+     * @return string The decoded character as UTF-8
+     *
+     * @throws SyntaxException If the escape is malformed or a lone surrogate
+     */
+    private static function decodeUnicodeEscape(string $str, int $backslashPos, int $lineNumber, string $original): string
+    {
+        $hex = substr($str, $backslashPos + 2, 4);
+
+        if (strlen($hex) < 4 || ! ctype_xdigit($hex)) {
+            throw new SyntaxException(
+                'Invalid escape sequence: \\u requires four hex digits',
+                $lineNumber,
+                $original
+            );
+        }
+
+        $code = (int) hexdec($hex);
+
+        // Lone surrogates cannot be decoded from \uXXXX (§7.1)
+        if ($code >= 0xD800 && $code <= 0xDFFF) {
+            throw new SyntaxException(
+                "Invalid escape sequence: lone surrogate \\u{$hex}",
+                $lineNumber,
+                $original
+            );
+        }
+
+        return mb_chr($code, 'UTF-8');
     }
 
     /**
@@ -336,6 +384,33 @@ final class ValueParser
                 }
 
                 $next = $token[$i + 1];
+
+                // Unicode escape \uXXXX (§7.1)
+                if ($next === 'u') {
+                    // Hex digits live inside the quotes, i.e. before index $len - 1.
+                    $hex = substr($token, $i + 2, 4);
+                    if ($i + 6 > $len - 1 || strlen($hex) < 4 || ! ctype_xdigit($hex)) {
+                        throw new SyntaxException(
+                            'Invalid escape sequence: \\u requires four hex digits',
+                            $lineNumber,
+                            $token
+                        );
+                    }
+
+                    $code = (int) hexdec($hex);
+                    if ($code >= 0xD800 && $code <= 0xDFFF) {
+                        throw new SyntaxException(
+                            "Invalid escape sequence: lone surrogate \\u{$hex}",
+                            $lineNumber,
+                            $token
+                        );
+                    }
+
+                    $i += 5; // advance past \uXXXX (loop adds the 6th)
+
+                    continue;
+                }
+
                 if (! in_array($next, ['\\', '"', 'n', 'r', 't'], true)) {
                     throw new SyntaxException(
                         "Invalid escape sequence: \\{$next}",
