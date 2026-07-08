@@ -36,14 +36,17 @@ final class HeaderParser
             return null;
         }
 
-        // Check if this is a key-value line with array header: key[N]: value
-        $colonPos = strpos($line, ':');
+        // Check if this is a key-value line with array header: key[N]: value.
+        // The ':' separator and the '['/'{' marker must both lie OUTSIDE any
+        // quoted span, otherwise a quoted value such as "a[3]b" (or an ANSI
+        // escape like "\e[31m...") would be misread as an array header (§7.1).
+        $colonPos = self::findUnquoted($line, ':');
         if ($colonPos !== false) {
             $beforeColon = substr($line, 0, $colonPos);
             $afterColon = substr($line, $colonPos + 1);
 
-            // Check if beforeColon contains an array header
-            if (strpos($beforeColon, '[') !== false || strpos($beforeColon, '{') !== false) {
+            // Check if beforeColon contains an (unquoted) array header marker
+            if (self::findUnquoted($beforeColon, '[{') !== false) {
                 /** @var array{key: ?string, length: ?int, delimiter: string, fields: ?array<string>, inlineValues: ?string, format: string}|null */
                 return self::parseKeyedArrayHeader($beforeColon, $afterColon);
             }
@@ -59,13 +62,51 @@ final class HeaderParser
     }
 
     /**
+     * Position of the first character from $needles that lies outside a quoted
+     * span, or false if none is found. Mirrors the decoder's quote handling:
+     * inside a quoted string a backslash escapes the next character (§7.1), so
+     * an escaped quote does not end the string.
+     */
+    private static function findUnquoted(string $line, string $needles): int|false
+    {
+        $inQuotes = false;
+        $len = strlen($line);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $line[$i];
+
+            if ($inQuotes) {
+                if ($char === '\\' && $i + 1 < $len) {
+                    $i++;
+
+                    continue;
+                }
+                if ($char === '"') {
+                    $inQuotes = false;
+                }
+
+                continue;
+            }
+
+            if ($char === '"') {
+                $inQuotes = true;
+            } elseif (str_contains($needles, $char)) {
+                return $i;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return array{key: ?string, length: ?int, delimiter: string, fields: ?array<string>, inlineValues: ?string, format: string}|null
      */
     private static function parseKeyedArrayHeader(string $keyPart, string $valuePart): ?array
     {
-        // Find where the array header starts in the key
-        $bracketPos = strpos($keyPart, '[');
-        $bracePos = strpos($keyPart, '{');
+        // Find where the array header starts in the key, scanning outside quotes
+        // so a quoted key prefix like "a[b]"[3] is not split on its inner bracket.
+        $bracketPos = self::findUnquoted($keyPart, '[');
+        $bracePos = self::findUnquoted($keyPart, '{');
 
         $headerStart = false;
         if ($bracketPos !== false && ($bracePos === false || $bracketPos < $bracePos)) {

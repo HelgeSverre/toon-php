@@ -54,6 +54,9 @@ final class MutationKillersTest extends TestCase
             '#20 strict [1]{id,name}:\\n  1,' => ["[1]{id,name}:\n  1,", true, [['id' => 1, 'name' => '']]],
             '#24 strict [2]:\\n  -\\n  - x' => ["[2]:\n  -\n  - x", true, [[], 'x']],
             '#25 strict "my key"[2]: a,b' => ['"my key"[2]: a,b', true, ['my key' => ['a', 'b']]],
+            // A quoted key containing a colon must parse as a keyed inline array;
+            // the ':' inside the quotes is not the key/value separator (regression).
+            '#23 strict "a:b"[2]: x,y' => ['"a:b"[2]: x,y', true, ['a:b' => ['x', 'y']]],
             '#26 lenient x: "\\"' => ['x: "\\"', false, ['x' => '\\']],
             '#27 lenient k: "aAb"' => ['k: "aAb"', false, ['k' => 'aAb']],
             '#28 lenient k: "a\\nb"' => ['k: "a\\nb"', false, ['k' => "a\nb"]],
@@ -102,7 +105,6 @@ final class MutationKillersTest extends TestCase
             '#14 strict [1]:\\n  - [abc]:\\n    x' => ["[1]:\n  - [abc]:\n    x", true, DecodeException::class],
             '#21 strict [1]{id,name}:\\n      1,A' => ["[1]{id,name}:\n      1,A", true, DecodeException::class],
             '#22 strict [1]:\\n      - a' => ["[1]:\n      - a", true, DecodeException::class],
-            '#23 strict "a:b"[2]: x,y' => ['"a:b"[2]: x,y', true, SyntaxException::class],
             '#30 lenient k: "\\uD800"' => ['k: "\\uD800"', false, SyntaxException::class],
             '#31 lenient k: "\\uDFFF"' => ['k: "\\uDFFF"', false, SyntaxException::class],
             '#37 lenient [3;: a,b,c' => ['[3;: a,b,c', false, DecodeException::class],
