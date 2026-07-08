@@ -10,6 +10,12 @@
     "guzzlehttp/guzzle": "^7.8",
     "symfony/console": "^6.0|^7.0"
   },
+  "require-dev": {
+    "yethee/tiktoken": "^1.1"
+  },
+  "suggest": {
+    "yethee/tiktoken": "Adds a local tiktoken (o200k) token counter to the benchmark, matching OpenAI's tokenizer without an API key."
+  },
   "repositories": [
     {
       "type": "path",
