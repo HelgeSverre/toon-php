@@ -1,5 +1,7 @@
 # Breaking Changes Analysis: v1.3.0 → v1.4.0
 
+> **Historical document.** This analyses the v1.3.0 → v1.4.0 upgrade only. Later releases changed the API — notably, the `lengthMarker` option and `EncodeOptions::withLengthMarkers()` referenced below were **removed in v2.0.0**. See the root `CHANGELOG.md` for current behavior.
+
 **Status: ✅ NO BREAKING CHANGES**
 
 **Version Type: MINOR (New Features)**

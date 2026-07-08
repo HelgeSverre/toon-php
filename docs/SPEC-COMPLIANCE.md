@@ -10,8 +10,8 @@
 
 ## Test Results
 
-- **Total Tests:** 658
-- **Passing:** 658 (100%)
+- **Total Tests:** 806
+- **Passing:** 806 (100%)
 - **Failing:** 0
 - **PHPStan Level:** 9 (maximum strictness)
 - **PHPStan Errors:** 0
@@ -44,17 +44,15 @@ This release aligns with **TOON Specification v2.0**, which removes the optional
 - **Decoder**: Rejects `[#N]` format with `SyntaxException`
 - **Breaking Change**: Removed `lengthMarker` parameter and related methods from `EncodeOptions`
 
-### Control Character Handling
+### Control Character Handling (§7.1, updated in v3.1)
 
-Per TOON Spec §7.1, only three control characters have defined escape sequences:
+Per TOON Spec §7.1, backslash, double quote, and three control characters use short escapes:
 
-- `\n` (newline, 0x0A)
-- `\r` (carriage return, 0x0D)
-- `\t` (tab, 0x09)
+- `\n` (newline, 0x0A), `\r` (carriage return, 0x0D), `\t` (tab, 0x09)
 
-**Implementation Policy**: Strings containing other control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) are **rejected** with `InvalidArgumentException`, as the spec provides no escape sequences for them. This prevents potential security issues from raw control characters in output.
+**Implementation Policy**: All other C0 control characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) are emitted as `\uXXXX` (lowercase hex) and preserved as data, never stripped (§15). On decode, `\uXXXX` is accepted (case-insensitive hex) and lone surrogates are rejected.
 
-**Test Coverage**: `PrimitivesTest.php` includes 5 tests verifying rejection of unsupported control characters (NULL, BEL, ESC, FF, VT)
+**Test Coverage**: `PrimitivesTest.php` and `Version31To33ComplianceTest.php` verify `\uXXXX` escaping on encode, decoding, and round-trip preservation of control characters.
 
 ---
 
@@ -94,9 +92,9 @@ Conforming encoders MUST:
   - ✅ `Encoders::encodeObject()` iterates keys in order
   - ✅ Test coverage: `ArraysTest.php`, `TabularArraysTest.php`
 
-- [x] **Normalize numbers to non-exponential decimal form (§2)**
+- [x] **Canonical number form (§2)**
   - ✅ Implemented in `Primitives.php:encodePrimitive()`
-  - ✅ Converts exponential notation to decimal
+  - ✅ Canonical decimal for `n = 0` or `1e-6 ≤ |n| < 1e21`; exponent notation (lowercase `e`, explicit sign) outside that range
   - ✅ Uses locale-independent `number_format()` with explicit '.' decimal separator
   - ✅ Test coverage: `NormalizationTest.php`, `PrimitivesTest.php`
 
@@ -260,26 +258,26 @@ Post-refactoring benchmarks show:
 
 - Minimal performance impact (< 3% worst case, often better)
 - Some metrics improved (throughput +6.65%)
-- All 539 tests pass
+- All 806 tests pass
 - PHPStan Level 9 clean
 
 ---
 
 ## Conclusion
 
-**Status: ✅ FULLY CONFORMANT WITH TOON SPECIFICATION v1.3**
+**Status: ✅ CONFORMANT WITH TOON SPECIFICATION v3.3**
 
-The toon-php library successfully implements all MUST requirements for:
+The toon-php library successfully implements the MUST requirements for:
 
-- Encoder conformance (10/10 requirements)
-- Decoder conformance (7/7 requirements)
-- Strict mode validation (11/11 requirements)
+- Encoder conformance (§13.1)
+- Decoder conformance (§13.2)
+- Strict mode validation (§14)
 
-The library is ready for release as v1.3.0 with confidence in its:
+The library is ready for release as v3.2.0 with confidence in its:
 
 - Specification compliance
 - Type safety (PHPStan Level 9)
-- Test coverage (539 passing tests)
+- Test coverage (806 passing tests)
 - Code quality (clean architecture)
 - Performance characteristics (benchmarked)
 
@@ -287,8 +285,8 @@ The library is ready for release as v1.3.0 with confidence in its:
 
 ## References
 
-- TOON Specification v1.3: `/docs/SPEC.md`
+- TOON Specification v3.3: `/docs/SPEC.md`
 - Encoder Implementation: `/src/Encoders.php`, `/src/Toon.php`
 - Decoder Implementation: `/src/Decoder/` directory
-- Test Suite: `/tests/` directory (539 tests)
+- Test Suite: `/tests/` directory (806 tests)
 - Benchmarks: `/benchmarks/results/`

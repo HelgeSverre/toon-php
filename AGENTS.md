@@ -19,7 +19,7 @@ Quick reference for AI coding agents working on TOON PHP.
 - **Encoding pipeline**: Normalize → Encoders → Primitives → LineWriter
 - **Decoding pipeline**: Decoder classes in `src/Decoder/`
 - **No runtime dependencies** - only dev deps (PHPUnit, PHPStan, Pint)
-- **Spec compliance**: All changes MUST conform to `docs/SPEC.md` (TOON v1.3+)
+- **Spec compliance**: All changes MUST conform to `docs/SPEC.md` (TOON v3.3)
 
 ## Code Style
 

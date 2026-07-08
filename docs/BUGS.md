@@ -3,7 +3,7 @@
 This document records the deviations from `docs/SPEC.md` (TOON v3.3) that were
 reported, adversarially verified against the spec and codebase, and resolved.
 
-**Status baseline (after fixes):** `vendor/bin/phpunit` — 752+ tests, all passing;
+**Status baseline (after fixes):** `vendor/bin/phpunit` — 806 tests, all passing;
 PHPStan level 9 clean; Laravel Pint clean. Regression suite:
 `tests/Spec/BugFixesTest.php`.
 

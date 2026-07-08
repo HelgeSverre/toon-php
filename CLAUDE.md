@@ -36,16 +36,13 @@ just test
 # Run tests with coverage
 just test-coverage
 
-# Watch mode for testing
-just watch-test
-
 # Run benchmarks
 just benchmark
 ```
 
 ## Architecture
 
-TOON PHP is a port of the TOON (Token-Oriented Object Notation) format specification, which achieves 30-60% token reduction vs JSON for LLM contexts. The implementation strictly follows the **TOON Specification v1.3+** (see `docs/SPEC.md`).
+TOON PHP is a port of the TOON (Token-Oriented Object Notation) format specification, which achieves 30-60% token reduction vs JSON for LLM contexts. The implementation strictly follows the **TOON Specification v3.3** (see `docs/SPEC.md`).
 
 ### Core Components
 
@@ -105,7 +102,7 @@ The encoder automatically selects the optimal format:
 **When adding features:**
 
 1. **Check the spec** - Review `docs/SPEC.md` to ensure proposed change conforms to TOON specification
-2. **Check spec requirements** - Review `docs/spec-requirements.md` for normative requirements (142 total requirements)
+2. **Check spec requirements** - Review the relevant §§ in `docs/SPEC.md` and the per-version notes in `docs/CHANGELOG.md`
 3. Write tests first in appropriate test file under `tests/`
 4. Implement in relevant src file following spec requirements
 5. Run `just dev` to format and test
@@ -252,30 +249,23 @@ just ci
 
 ## Specification Compliance
 
-**CRITICAL**: This library implements the official TOON Specification v1.3+ (docs/SPEC.md). All code changes MUST conform to the specification.
+**CRITICAL**: This library implements the official TOON Specification v3.3 (docs/SPEC.md). All code changes MUST conform to the specification.
 
 ### Key Specification Requirements
 
-The specification defines 142 normative requirements across 19 sections:
-
-- 104 MUST/REQUIRED requirements (critical)
-- 12 MUST NOT prohibitions (critical)
-- 17 SHOULD recommendations (high priority)
-- 9 MAY/OPTIONAL features (low priority)
-
 **Before making changes**:
 
-1. Read relevant sections in `docs/SPEC.md`
-2. Check `docs/spec-requirements.md` for specific requirements
+1. Read relevant sections in `docs/SPEC.md` (the upstream spec, synced via `just sync-spec`)
+2. Review `docs/CHANGELOG.md` for the per-version normative changes
 3. Validate your implementation against encoder/decoder conformance checklists (§13 of spec)
 
-**Encoder Conformance (Section 13.1)**: Encoders MUST produce UTF-8 output with LF line endings, use consistent indentation (no tabs), escape exactly 5 characters (\\, ", \n, \r, \t), quote delimiter-containing strings, emit accurate array lengths, preserve key order, normalize numbers to non-exponential form, convert -0 to 0, convert NaN/±Infinity to null, and emit no trailing spaces or newlines.
+**Encoder Conformance (Section 13.1)**: Encoders MUST produce UTF-8 output with LF line endings, use consistent indentation (no tabs), escape backslash/quote/\n/\r/\t and emit other C0 control characters as `\uXXXX`, quote delimiter-containing strings, emit accurate array lengths, preserve key order, use canonical decimal form for `n = 0` or `1e-6 ≤ |n| < 1e21` (exponent notation outside that range), convert -0 to 0, convert NaN/±Infinity to null, and emit no trailing spaces or newlines.
 
-**Decoder Conformance (Section 13.2)**: Decoders MUST parse array headers correctly, split only on active delimiters, unescape valid escapes only, type unquoted primitives correctly, enforce strict-mode rules when enabled, accept optional # length markers, and preserve array/object order.
+**Decoder Conformance (Section 13.2)**: Decoders MUST parse array headers correctly, split only on active delimiters, unescape valid escapes only (including `\uXXXX`), type unquoted primitives correctly, enforce strict-mode rules when enabled, and preserve array/object order.
 
 ## Important Reminders
 
-1. **Follow the spec** - ALL code changes must conform to TOON Specification v1.3+ in `docs/SPEC.md`
+1. **Follow the spec** - ALL code changes must conform to TOON Specification v3.3 in `docs/SPEC.md`
 2. **Use justfile commands** - Always prefer `just` over raw composer/vendor commands
 3. **Keep CHANGELOG.md updated** - Document all user-facing changes
 4. **No scattered test files** - All tests go in `tests/` directory only

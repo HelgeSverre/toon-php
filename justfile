@@ -75,12 +75,6 @@ coverage: _ensure-vendor
         composer coverage
     fi
 
-[doc('Watch files and run tests on change (requires entr)')]
-[group('test')]
-watch-test: _ensure-vendor
-    @echo "Watching for changes... (press Ctrl+C to stop)"
-    @find src tests -name '*.php' | entr -c composer test
-
 # === Development Tools ===
 
 [doc('Run PHPStan static analysis')]
@@ -157,12 +151,6 @@ ci: lint analyse test
 [group('workflow')]
 quick: analyse
     @echo "Quick check complete!"
-
-[doc('Watch mode: format + test on file changes (requires entr)')]
-[group('workflow')]
-watch: _ensure-vendor
-    @echo "Watching for changes (format + test)... (press Ctrl+C to stop)"
-    @find src tests -name '*.php' | entr -c bash -c 'just fix && just test'
 
 [doc('Clean cache and generated files')]
 [group('workflow')]
