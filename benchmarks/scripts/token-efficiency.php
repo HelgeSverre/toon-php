@@ -25,14 +25,28 @@ if (file_exists(__DIR__.'/../.env')) {
 
 echo "TOON Token Efficiency Benchmark\n\n";
 
+// Count with one previous-generation model (Haiku 4.5, older tokenizer) and one
+// current-generation model (Sonnet 5, newer tokenizer) so the tokenizer-generation
+// difference in token counts is visible.
+$models = ['claude-haiku-4-5', 'claude-sonnet-5'];
+$apiKey = getenv('ANTHROPIC_API_KEY') ?: null;
+
 // Initialize components
 $datasets = new Datasets;
-$tokenCounter = new TokenCounter;
-$report = new Report($tokenCounter->getMethod());
 
-echo "Token Counting Method: {$tokenCounter->getMethod()}\n";
-if (! $tokenCounter->isUsingApi()) {
-    echo "⚠️  Using estimation method. For accurate results, set ANTHROPIC_API_KEY in .env\n";
+/** @var array<string, TokenCounter> $counters */
+$counters = [];
+foreach ($models as $model) {
+    $counters[$model] = new TokenCounter($apiKey, $model);
+}
+$primary = $counters[$models[0]];
+$report = new Report($primary->getMethod(), $models);
+
+echo 'Models: '.implode(', ', $models)."\n";
+echo "Token Counting Method: {$primary->getMethod()}\n";
+if (! $primary->isUsingApi()) {
+    echo "⚠️  Using estimation method (model-agnostic, so per-model counts will be identical).\n";
+    echo "   Set ANTHROPIC_API_KEY in .env to see real per-model tokenizer differences.\n";
 }
 echo "\n";
 
@@ -76,33 +90,38 @@ foreach ($benchmarks as $index => $benchmark) {
     $xml = Formatters::toXml($data, 'root');
     echo " ✓\n";
 
-    // Count tokens
+    // Count tokens with every model
     echo '  → Counting tokens...';
-    $tokens = [
-        'toon' => $tokenCounter->count($toon),
-        'json' => $tokenCounter->count($json),
-        'xml' => $tokenCounter->count($xml),
-    ];
+    $tokensByModel = [];
+    foreach ($models as $model) {
+        $tokensByModel[$model] = [
+            'toon' => $counters[$model]->count($toon),
+            'json' => $counters[$model]->count($json),
+            'xml' => $counters[$model]->count($xml),
+        ];
+    }
     echo " ✓\n";
 
-    // Display results
+    // Display per-model results
     echo "  → Results:\n";
-    echo '      TOON: '.number_format($tokens['toon'])." tokens\n";
-    echo '      JSON: '.number_format($tokens['json'])." tokens\n";
-    echo '      XML:  '.number_format($tokens['xml'])." tokens\n";
-
-    // Calculate savings
-    $jsonSavings = (($tokens['json'] - $tokens['toon']) / $tokens['json']) * 100;
-    $xmlSavings = (($tokens['xml'] - $tokens['toon']) / $tokens['xml']) * 100;
-
-    echo '  → TOON saves '.number_format($jsonSavings, 1).'% vs JSON, ';
-    echo number_format($xmlSavings, 1)."% vs XML\n";
+    foreach ($models as $model) {
+        $t = $tokensByModel[$model];
+        $jsonSavings = $t['json'] > 0 ? (($t['json'] - $t['toon']) / $t['json']) * 100 : 0;
+        echo sprintf(
+            "      %-16s TOON %s | JSON %s | XML %s  (TOON saves %s%% vs JSON)\n",
+            $model,
+            number_format($t['toon']),
+            number_format($t['json']),
+            number_format($t['xml']),
+            number_format($jsonSavings, 1)
+        );
+    }
 
     // Add to report
     $report->addResult(
         $benchmark['name'],
         $benchmark['description'],
-        $tokens
+        $tokensByModel
     );
 
     echo "\n";

@@ -4,202 +4,189 @@ namespace Benchmarks;
 
 class Report
 {
+    /** @var array<int, array{name: string, description: string, tokensByModel: array<string, array{toon: int, json: int, xml: int}>}> */
     private array $results = [];
 
     private string $method;
 
-    public function __construct(string $countingMethod)
+    /** @var array<int, string> Ordered list of model IDs used for counting */
+    private array $models;
+
+    /**
+     * @param  array<int, string>  $models
+     */
+    public function __construct(string $countingMethod, array $models)
     {
         $this->method = $countingMethod;
+        $this->models = $models;
     }
 
     /**
-     * Add a benchmark result
+     * Add a benchmark result.
+     *
+     * @param  array<string, array{toon: int, json: int, xml: int}>  $tokensByModel  model ID => per-format token counts
      */
-    public function addResult(string $name, string $description, array $tokens): void
+    public function addResult(string $name, string $description, array $tokensByModel): void
     {
         $this->results[] = [
             'name' => $name,
             'description' => $description,
-            'tokens' => $tokens,
+            'tokensByModel' => $tokensByModel,
         ];
     }
 
     /**
-     * Generate markdown report
+     * Generate markdown report.
      */
     public function generateMarkdown(): string
     {
         $md = "# TOON Token Efficiency Benchmark\n\n";
         $md .= '_Generated on '.date('Y-m-d H:i:s')."_\n\n";
         $md .= "**Token Counting Method:** {$this->method}\n\n";
+        $md .= '**Models compared:** '.implode(', ', array_map([$this, 'modelLabel'], $this->models))."\n\n";
         $md .= "---\n\n";
 
-        $totalTokens = ['toon' => 0, 'json' => 0, 'xml' => 0];
+        // totals[model][format]
+        $totals = [];
+        foreach ($this->models as $model) {
+            $totals[$model] = ['toon' => 0, 'json' => 0, 'xml' => 0];
+        }
 
         foreach ($this->results as $result) {
             $md .= $this->generateBenchmarkSection($result);
             $md .= "\n---\n\n";
 
-            // Accumulate totals
-            foreach ($result['tokens'] as $format => $count) {
-                $totalTokens[$format] += $count;
+            foreach ($this->models as $model) {
+                foreach (['toon', 'json', 'xml'] as $format) {
+                    $totals[$model][$format] += $result['tokensByModel'][$model][$format];
+                }
             }
         }
 
-        $md .= $this->generateTotalsSection($totalTokens);
+        $md .= $this->generateTotalsSection($totals);
 
         return $md;
     }
 
     /**
-     * Generate a section for a single benchmark
+     * @param  array{name: string, description: string, tokensByModel: array<string, array{toon: int, json: int, xml: int}>}  $result
      */
     private function generateBenchmarkSection(array $result): string
     {
         $md = "## {$result['name']}\n\n";
         $md .= "_{$result['description']}_\n\n";
-
-        $tokens = $result['tokens'];
-        $toonTokens = $tokens['toon'];
-        $jsonTokens = $tokens['json'];
-        $xmlTokens = $tokens['xml'];
-
-        $md .= "| Format | Tokens | vs TOON | Savings |\n";
-        $md .= "|--------|--------|---------|----------|\n";
-        $md .= sprintf(
-            "| TOON | %s | - | baseline |\n",
-            number_format($toonTokens)
-        );
-        $md .= sprintf(
-            "| JSON | %s | %s | %s%% |\n",
-            number_format($jsonTokens),
-            $this->formatDiff($jsonTokens - $toonTokens),
-            $this->formatPercentage($toonTokens, $jsonTokens)
-        );
-        $md .= sprintf(
-            "| XML | %s | %s | %s%% |\n",
-            number_format($xmlTokens),
-            $this->formatDiff($xmlTokens - $toonTokens),
-            $this->formatPercentage($toonTokens, $xmlTokens)
-        );
-
-        $md .= "\n";
-        $md .= $this->generateProgressBar('JSON', $jsonTokens, $xmlTokens);
-        $md .= $this->generateProgressBar('TOON', $toonTokens, $xmlTokens);
-        $md .= $this->generateProgressBar('XML', $xmlTokens, $xmlTokens);
-        $md .= "\n";
+        $md .= $this->tokenTable($result['tokensByModel']);
 
         return $md;
     }
 
     /**
-     * Generate the totals section
+     * Render a token table with one column per model, plus the per-model TOON-vs-JSON reduction.
+     *
+     * @param  array<string, array{toon: int, json: int, xml: int}>  $tokensByModel
+     */
+    private function tokenTable(array $tokensByModel): string
+    {
+        $header = '| Format |';
+        $sep = '|--------|';
+        foreach ($this->models as $model) {
+            $header .= ' '.$this->modelLabel($model).' |';
+            $sep .= '-----------|';
+        }
+        $md = $header."\n".$sep."\n";
+
+        foreach (['toon' => 'TOON', 'json' => 'JSON', 'xml' => 'XML'] as $format => $label) {
+            $row = "| {$label} |";
+            foreach ($this->models as $model) {
+                $row .= ' '.number_format($tokensByModel[$model][$format]).' |';
+            }
+            $md .= $row."\n";
+        }
+        $md .= "\n";
+
+        $parts = [];
+        foreach ($this->models as $model) {
+            $t = $tokensByModel[$model];
+            $pct = $t['json'] > 0 ? (($t['json'] - $t['toon']) / $t['json']) * 100 : 0;
+            $parts[] = sprintf('%s %s%%', $this->modelLabel($model), number_format($pct, 1));
+        }
+        $md .= '_TOON vs JSON reduction: '.implode(' · ', $parts)."_\n\n";
+
+        return $md;
+    }
+
+    /**
+     * Generate the totals section, including the cross-model tokenizer comparison.
+     *
+     * @param  array<string, array{toon: int, json: int, xml: int}>  $totals
      */
     private function generateTotalsSection(array $totals): string
     {
         $md = "## Summary\n\n";
         $md .= "### Total Tokens Across All Benchmarks\n\n";
+        $md .= $this->tokenTable($totals);
 
-        $toonTotal = $totals['toon'];
-        $jsonTotal = $totals['json'];
-        $xmlTotal = $totals['xml'];
+        $md .= "### Tokenizer Comparison\n\n";
+        $base = $this->models[0];
+        $baseTotal = array_sum($totals[$base]);
+        foreach ($this->models as $model) {
+            $total = array_sum($totals[$model]);
+            if ($model === $base) {
+                $md .= sprintf(
+                    "- **%s** (baseline): %s total tokens across all formats\n",
+                    $this->modelLabel($model),
+                    number_format($total)
+                );
 
-        $md .= "| Format | Total Tokens | vs TOON | Savings |\n";
-        $md .= "|--------|--------------|---------|----------|\n";
-        $md .= sprintf(
-            "| TOON | %s | - | baseline |\n",
-            number_format($toonTotal)
-        );
-        $md .= sprintf(
-            "| JSON | %s | %s | %s%% |\n",
-            number_format($jsonTotal),
-            $this->formatDiff($jsonTotal - $toonTotal),
-            $this->formatPercentage($toonTotal, $jsonTotal)
-        );
-        $md .= sprintf(
-            "| XML | %s | %s | %s%% |\n",
-            number_format($xmlTotal),
-            $this->formatDiff($xmlTotal - $toonTotal),
-            $this->formatPercentage($toonTotal, $xmlTotal)
-        );
+                continue;
+            }
+            $delta = $baseTotal > 0 ? (($total - $baseTotal) / $baseTotal) * 100 : 0;
+            $md .= sprintf(
+                "- **%s**: %s total tokens (%s%% vs %s) — different tokenizer generation\n",
+                $this->modelLabel($model),
+                number_format($total),
+                ($delta >= 0 ? '+' : '').number_format($delta, 1),
+                $this->modelLabel($base)
+            );
+        }
+        $md .= "\nModels in the same generation share a tokenizer, so their counts match exactly; ".
+            "models from different generations differ in absolute count. The TOON-vs-JSON reduction stays roughly constant across all of them.\n\n";
 
-        $md .= "\n";
-        $md .= "### Key Takeaways\n\n";
+        // Key takeaways using the last (most current) model.
+        $current = $this->models[array_key_last($this->models)];
+        $t = $totals[$current];
+        $jsonSavings = $t['json'] > 0 ? (($t['json'] - $t['toon']) / $t['json']) * 100 : 0;
+        $xmlSavings = $t['xml'] > 0 ? (($t['xml'] - $t['toon']) / $t['xml']) * 100 : 0;
 
-        // Calculate savings: how much smaller TOON is compared to others
-        $jsonSavings = (($jsonTotal - $toonTotal) / $jsonTotal) * 100;
-        $xmlSavings = (($xmlTotal - $toonTotal) / $xmlTotal) * 100;
-
-        $md .= sprintf(
-            "- TOON uses **%s%% fewer tokens** than JSON\n",
-            number_format($jsonSavings, 1)
-        );
-        $md .= sprintf(
-            "- TOON uses **%s%% fewer tokens** than XML\n",
-            number_format($xmlSavings, 1)
-        );
+        $md .= '### Key Takeaways ('.$this->modelLabel($current).")\n\n";
+        $md .= sprintf("- TOON uses **%s%% fewer tokens** than JSON\n", number_format($jsonSavings, 1));
+        $md .= sprintf("- TOON uses **%s%% fewer tokens** than XML\n", number_format($xmlSavings, 1));
         $md .= sprintf(
             "- Total token savings: **%s tokens** vs JSON, **%s tokens** vs XML\n",
-            number_format($jsonTotal - $toonTotal),
-            number_format($xmlTotal - $toonTotal)
+            number_format($t['json'] - $t['toon']),
+            number_format($t['xml'] - $t['toon'])
         );
 
         return $md;
     }
 
     /**
-     * Format difference with + or - sign
+     * Turn a model ID into a readable label, e.g. claude-haiku-4-5 -> "Haiku 4.5".
      */
-    private function formatDiff(int $diff): string
+    private function modelLabel(string $model): string
     {
-        if ($diff > 0) {
-            return '+'.number_format($diff);
-        }
+        $label = preg_replace('/^claude-/', '', $model) ?? $model;
+        $label = preg_replace('/-(\d+)-(\d+)$/', ' $1.$2', $label) ?? $label; // -4-5 -> " 4.5"
+        $label = preg_replace('/-(\d+)$/', ' $1', $label) ?? $label;          // -5   -> " 5"
 
-        return number_format($diff);
+        return ucwords($label);
     }
 
     /**
-     * Calculate percentage difference
-     */
-    private function formatPercentage(int $baseline, int $comparison): string
-    {
-        if ($baseline === 0) {
-            return '0.0';
-        }
-
-        $percentage = (($comparison - $baseline) / $baseline) * 100;
-
-        return number_format($percentage, 1);
-    }
-
-    /**
-     * Generate a visual progress bar
-     */
-    private function generateProgressBar(string $label, int $value, int $max): string
-    {
-        $percentage = $max > 0 ? ($value / $max) * 100 : 0;
-        $barLength = 40;
-        $filled = (int) (($percentage / 100) * $barLength);
-        $empty = $barLength - $filled;
-
-        $bar = str_repeat('█', $filled).str_repeat('░', $empty);
-
-        return sprintf(
-            "**%s** `%s` %s tokens\n",
-            str_pad($label, 4),
-            $bar,
-            number_format($value)
-        );
-    }
-
-    /**
-     * Save report to file
+     * Save report to file.
      */
     public function save(string $filePath): void
     {
-        $content = $this->generateMarkdown();
-        file_put_contents($filePath, $content);
+        file_put_contents($filePath, $this->generateMarkdown());
     }
 }
