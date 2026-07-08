@@ -32,19 +32,20 @@ install:
 
 # === Specification Sync ===
 
-[doc('Download latest SPEC.md from upstream')]
+[doc('Download latest spec files (SPEC, CHANGELOG, VERSIONING) from upstream')]
 [group('spec')]
 sync-spec:
-    @echo "Downloading SPEC.md from toon-format/spec..."
+    @echo "Downloading spec files from toon-format/spec..."
     @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/SPEC.md -o docs/SPEC.md
     @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/CHANGELOG.md -o docs/CHANGELOG.md
-    @echo "Done! Review changes: git diff docs/SPEC.md"
+    @curl -fsSL https://raw.githubusercontent.com/toon-format/spec/main/VERSIONING.md -o docs/VERSIONING.md
+    @echo "Done! Review changes: git diff docs/SPEC.md docs/CHANGELOG.md docs/VERSIONING.md"
 
-[doc('Download latest SPEC.md from upstream and show diff')]
+[doc('Download latest spec files from upstream and show diffs')]
 [group('spec')]
 diff-spec: sync-spec
-    @echo "Showing differences for SPEC.md..."
-    @git diff docs/SPEC.md
+    @echo "Showing differences for synced spec files..."
+    @git diff docs/SPEC.md docs/CHANGELOG.md docs/VERSIONING.md
 
 
 [doc('Sync spec and launch Claude Code for compliance review')]

@@ -16,10 +16,21 @@ You are a **TOON Specification Compliance Analyst**. The upstream TOON specifica
 
 ## Step 1: Get the Diff
 
-Run:
+The upstream spec is split across separate files: `SPEC.md` (normative text),
+`CHANGELOG.md` (per-version change list), and `VERSIONING.md` (policy). `just sync-spec`
+mirrors all three into `docs/`. Diff every synced file:
+
 ```bash
-git diff docs/SPEC.md
+git diff docs/SPEC.md docs/CHANGELOG.md docs/VERSIONING.md
 ```
+
+**Start with `docs/CHANGELOG.md`.** It enumerates the normative changes version by
+version (Added / Changed / Removed / Fixed) and is the authoritative, tractable list of
+what to review — especially when the local copy is several versions behind and the
+`SPEC.md` diff is large or reorganized. Use it to drive the `SPEC.md` sections you read
+in full. If the working tree is clean (no diff), compare the local `**Version:**` header
+in `docs/SPEC.md` against upstream to detect divergence, then read `docs/CHANGELOG.md`
+for the intervening versions.
 
 ## Step 2: Classify Changes
 
@@ -44,7 +55,7 @@ For each change, assign a category:
 | §9 Arrays | `src/Encoders.php`, `src/Decoder/Parser.php` |
 | §11 Delimiters | `src/Decoder/DelimiterParser.php` |
 | §13 Conformance | All encoder/decoder files |
-| §14 Strict Mode | `src/Decoder/StrictValidator.php` |
+| §14 Strict Mode | `src/Decoder/StrictValidator.php`, `src/Decoder/Parser.php` |
 
 ## Step 4: Output Format
 
@@ -95,4 +106,5 @@ Tests: List new test cases
 
 ## Begin
 
-Run `git diff docs/SPEC.md` now.
+Run `git diff docs/SPEC.md docs/CHANGELOG.md docs/VERSIONING.md` now, and read
+`docs/CHANGELOG.md` first to enumerate the changes.
