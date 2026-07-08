@@ -101,6 +101,26 @@ lint: _ensure-vendor
     @echo "Checking PHP code style..."
     composer lint
 
+# Run Infection mutation testing. Needs a PHP with a coverage driver (pcov/xdebug);
+# uses the default PHP when it has one, otherwise falls back to Homebrew's PHP
+# (Herd's default PHP does not expose a driver to Infection's subprocesses).
+# Pass extra flags through, e.g. `just mutation --filter=src/Decoder/Parser.php`.
+[doc('Run mutation testing (Infection)')]
+[group('dev')]
+mutation *ARGS: _ensure-vendor
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if php -r 'exit(extension_loaded("pcov") || extension_loaded("xdebug") ? 0 : 1);'; then
+        PHP="php"
+    elif [ -x /opt/homebrew/bin/php ] && /opt/homebrew/bin/php -r 'exit(extension_loaded("pcov") || extension_loaded("xdebug") ? 0 : 1);'; then
+        PHP="/opt/homebrew/bin/php -d pcov.enabled=1"
+        echo "Using Homebrew PHP for a coverage driver (default PHP has none)."
+    else
+        echo "No PHP with pcov/xdebug found. Install pcov: 'pecl install pcov'." >&2
+        exit 1
+    fi
+    $PHP vendor/bin/infection --threads=max --only-covering-test-cases --no-interaction {{ARGS}}
+
 # Hidden aliases for common spellings/tools
 [private]
 analyze: analyse
