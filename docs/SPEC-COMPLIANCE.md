@@ -26,12 +26,13 @@ Aligns with **TOON Specification v3.3**. Changes since v3.0:
 - **§9.1 Empty arrays**: decoder accepts the canonical `[]` and `key: []` forms in addition to the legacy `[0]:` / `key[0]:` forms. The encoder continues to emit the legacy `key[0]:` form, which the spec explicitly permits (`MAY`).
 - **§2 Numbers**: canonical decimal for `n = 0` or `1e-6 ≤ |n| < 1e21`; exponent notation (lowercase `e`, explicit sign) outside that range. Numbers are never quoted as strings.
 - **§6 / §14.2 Strict headers**: leading-zero and malformed bracket lengths (`[03]`, `[-1]`) are rejected in strict mode; non-strict treats them as literal keys.
+- **§6 / §14.2 Header delimiter mismatch**: a header whose bracket delimiter differs from its field-list delimiter (e.g. `rows[2|]{a,b}:`) is not a valid header. Strict mode reports a header syntax error on the header line, independent of row width/count checks; non-strict falls through to key-value parsing.
 - **§8 / §14.4 Duplicate keys**: strict mode errors on duplicate sibling keys; non-strict applies last-write-wins in document order.
 
-### Known deviations / follow-ups
+### Deliberate conformant choices
 
-- **§6 / §14.2 header delimiter mismatch**: a header whose bracket delimiter differs from its field-list delimiter (e.g. `rows[2|]{a,b}:`) is rejected, but currently via a row-level error rather than a dedicated line-1 header syntax error. Tracked as a diagnostic-quality follow-up.
-- **§9.1 encoder output**: the encoder emits the legacy `key[0]:` form rather than the `SHOULD`-preferred `key: []`. Both are spec-conformant; the legacy form is retained for output stability.
+- **§9.1 encoder output**: the encoder emits the legacy `key[0]:` form rather than the `SHOULD`-preferred `key: []`. Both are spec-conformant; the legacy form is retained for output stability. The decoder accepts both forms.
+- **§5 root empty array**: `encode([])` emits an empty document (decodes to `{}`) rather than `[]`, because PHP cannot distinguish an empty array from an empty object at the root. The decoder still accepts the canonical `[]` token.
 
 ---
 

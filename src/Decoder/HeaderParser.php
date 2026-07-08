@@ -187,16 +187,30 @@ final class HeaderParser
 
             $fieldsStr = substr($line, $pos, $braceEnd - $pos);
 
-            // Use DelimiterParser to split fields by active delimiter
-            $result['fields'] = DelimiterParser::split($fieldsStr, $result['delimiter'], 0);
+            // Split the field list using the delimiter declared in the bracket segment.
+            $rawFields = DelimiterParser::split($fieldsStr, $result['delimiter'], 0);
 
-            // Clean field names
+            // Clean field names, detecting a header delimiter mismatch (§6, §14.2):
+            // the field list MUST use the same active delimiter as the bracket segment.
+            // If an unquoted field still contains a different delimiter character, the
+            // two segments disagree, so this is not a valid header. Returning null lets
+            // the caller reject it in strict mode (malformed bracket key) or fall through
+            // to key-value parsing in non-strict mode.
             $cleanFields = [];
-            foreach ($result['fields'] as $field) {
+            foreach ($rawFields as $field) {
                 $field = trim($field);
-                if (str_starts_with($field, '"') && str_ends_with($field, '"')) {
+                $isQuoted = strlen($field) >= 2 && str_starts_with($field, '"') && str_ends_with($field, '"');
+
+                if (! $isQuoted) {
+                    foreach ([',', '|', "\t"] as $otherDelimiter) {
+                        if ($otherDelimiter !== $result['delimiter'] && str_contains($field, $otherDelimiter)) {
+                            return null;
+                        }
+                    }
+                } else {
                     $field = substr($field, 1, -1);
                 }
+
                 $cleanFields[] = $field;
             }
             $result['fields'] = $cleanFields;

@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Number formatting (§2)**: finite numbers use canonical decimal only for `n = 0` or `1e-6 ≤ |n| < 1e21`; values outside that range use exponent notation (lowercase `e`, explicit sign, e.g. `1e+21`, `1e-7`). Large in-domain floats are no longer quoted as strings, and very small numbers no longer underflow to `0`.
 - **Control characters**: no longer rejected on encode — they are escaped and preserved as data (§15).
-- **Strict decoding**: now rejects leading-zero / malformed bracket lengths such as `[03]` (§6, §14.2) and duplicate sibling keys at the same depth (§8, §14.4). Non-strict mode treats malformed bracket tokens as literal keys and applies last-write-wins for duplicate keys.
+- **Strict decoding**: now rejects leading-zero / malformed bracket lengths such as `[03]` (§6, §14.2), header delimiter mismatches where the bracket delimiter differs from the field-list delimiter, e.g. `rows[2|]{a,b}:` (§6, §14.2), and duplicate sibling keys at the same depth (§8, §14.4). Non-strict mode treats malformed bracket tokens as literal keys and applies last-write-wins for duplicate keys.
 
 ### Fixed
 

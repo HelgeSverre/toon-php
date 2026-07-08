@@ -121,6 +121,37 @@ final class Version31To33ComplianceTest extends TestCase
         $this->assertSame(['a' => 2], Toon::decode("a: 1\na: 2", new DecodeOptions(strict: false)));
     }
 
+    // ---- v3.2 §6/§14.2 header delimiter mismatch ----
+
+    public function test_strict_errors_on_header_delimiter_mismatch(): void
+    {
+        // Bracket declares pipe, field list uses comma: header syntax error on the
+        // header line, independent of row width/count checks (§6, §14.2).
+        try {
+            Toon::decode("rows[2|]{a,b}:\n1|2\n3|4", new DecodeOptions(strict: true));
+            $this->fail('Expected a header syntax error');
+        } catch (\HelgeSverre\Toon\Exceptions\SyntaxException $e) {
+            $this->assertSame(1, $e->getToonLine(), 'Error must be reported on the header line');
+        }
+    }
+
+    public function test_valid_pipe_tabular_header_still_decodes(): void
+    {
+        $this->assertSame(
+            ['users' => [['id' => 1, 'name' => 'Ada'], ['id' => 2, 'name' => 'Bob']]],
+            Toon::decode("users[2|]{id|name}:\n  1|Ada\n  2|Bob"),
+        );
+    }
+
+    public function test_quoted_field_name_containing_other_delimiter_is_allowed(): void
+    {
+        // A field name containing the "other" delimiter is fine when quoted.
+        $this->assertSame(
+            ['rows' => [['a,b' => 1, 'c' => 2]]],
+            Toon::decode("rows[1|]{\"a,b\"|c}:\n  1|2"),
+        );
+    }
+
     // ---- v3.3 §2 number canonical range ----
 
     public function test_canonical_decimal_within_range(): void
