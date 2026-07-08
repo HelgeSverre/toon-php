@@ -12,13 +12,9 @@ final class Constants
     public const LIST_ITEM_PREFIX = '- ';
 
     // Structural Characters
-    public const COMMA = ',';
-
     public const COLON = ':';
 
     public const SPACE = ' ';
-
-    public const PIPE = '|';
 
     // Brackets and Braces
     public const OPEN_BRACKET = '[';
@@ -42,10 +38,6 @@ final class Constants
     public const DOUBLE_QUOTE = '"';
 
     public const NEWLINE = "\n";
-
-    public const CARRIAGE_RETURN = "\r";
-
-    public const TAB = "\t";
 
     // Delimiters
     public const DELIMITER_COMMA = ',';
