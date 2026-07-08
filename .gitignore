@@ -13,6 +13,12 @@ wip/
 # Claude Code
 .claude/settings.local.json
 
+# Infection mutation testing (config is committed; logs/reports are not)
+infection.log
+infection-summary.log
+/infection-html/
+.infection.cache/
+
 # Benchmarks
 /benchmarks/vendor/
 /benchmarks/composer.lock

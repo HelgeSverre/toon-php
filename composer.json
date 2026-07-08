@@ -32,7 +32,8 @@
     "phpunit/phpunit": "^10.0",
     "phpstan/phpstan": "^1.10",
     "laravel/pint": "^1.10",
-    "phpbench/phpbench": "^1.4"
+    "phpbench/phpbench": "^1.4",
+    "infection/infection": "*"
   },
   "autoload": {
     "psr-4": {
@@ -58,5 +59,10 @@
     "analyse": "phpstan analyse",
     "pint": "@format",
     "analyze": "@analyse"
+  },
+  "config": {
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
   }
 }

@@ -1,0 +1,16 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"]
+    },
+    "mutators": {
+        "@default": true
+    },
+    "phpUnit": {
+        "customPath": "vendor/bin/phpunit"
+    },
+    "logs": {
+        "text": "infection.log",
+        "summary": "infection-summary.log"
+    }
+}

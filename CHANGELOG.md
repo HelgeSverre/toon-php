@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Decoder**: quoted object keys containing colons (e.g. `"App\\Controller::method"`) now decode correctly (#4, #5).
 - **Decoder**: `key: []` previously decoded to `null` and a bare `[]` crashed with an uninitialized-offset warning; both now decode to an empty array.
+- **Decoder — single-line list items (§9.2/§9.4/§10)**: a list item whose entire content is on the hyphen line now decodes by shape instead of as a plain string — `- [M]: …` → inner array, `- key: …` → object, bare `-` → empty object. This fixes round-trips for arrays of arrays and lists of single-field objects. Nested arrays of objects/arrays as list items also round-trip now.
+- **Decoder — empty document (§5)**: an empty or whitespace-only document decodes to an empty object (`[]`) in both modes, instead of throwing (strict) or returning `null` (lenient).
+- **Decoder — bare `key:` (§8)**: decodes to an empty object (`[]`), not `null`.
+- **Decoder — quoted header keys (§7.4)**: a quoted key prefix such as `"my-key"[3]:` is unescaped.
+- **Decoder — empty inline/tabular tokens (§9.1/§11.2)**: decode to the empty string instead of throwing (e.g. `[3]: a,,b` → `['a','','b']`).
+- **Decoder — backslash handling (§7.1/§11.2)**: an unquoted backslash is a literal character (escapes apply only inside quoted strings), and colon detection tracks quote state so a key ending in an escaped backslash (`"a\\": c`) parses.
+- **Options (§12)**: `EncodeOptions`/`DecodeOptions` reject `indent < 1` (indent `0` cannot represent nesting); `EncodeOptions::compact()` now uses `indent: 1` so nested output round-trips.
+- **Validation**: `Toon::validate()` was corrected in lockstep with the decoder so it agrees with `decode()` on all of the above.
 
 ## [3.1.0] - 2025-12-06
 
