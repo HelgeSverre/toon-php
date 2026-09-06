@@ -64,23 +64,25 @@ final class Primitives
 
                 // If result contains scientific notation, expand it to canonical decimal
                 if (stripos($result, 'e') !== false) {
-                    if ($abs >= 1) {
-                        // Large numbers: use integer format if whole number
-                        if ($value == floor($value)) {
-                            // Use number_format for locale-independent formatting
-                            $result = number_format($value, 0, '.', '');
-                        } else {
-                            // Use fixed-point with sufficient precision, then trim trailing zeros
-                            // number_format is locale-independent when decimal separator is explicit
-                            $result = rtrim(rtrim(number_format($value, 14, '.', ''), '0'), '.');
-                        }
+                    // Move the decimal point in PHP's round-trippable mantissa.
+                    // Fixed-place rounding loses significant digits near 1e-6.
+                    [$mantissa, $exponent] = explode('e', strtolower($result), 2);
+                    $negative = str_starts_with($mantissa, '-');
+                    $mantissa = ltrim($mantissa, '-');
+                    $parts = explode('.', $mantissa, 2);
+                    $digits = rtrim($parts[0].($parts[1] ?? ''), '0');
+                    $position = strlen($parts[0]) + (int) $exponent;
+
+                    if ($position <= 0) {
+                        $result = '0.'.str_repeat('0', -$position).$digits;
+                    } elseif ($position >= strlen($digits)) {
+                        $result = $digits.str_repeat('0', $position - strlen($digits));
                     } else {
-                        // Small numbers: use fixed-point and trim trailing zeros
-                        // number_format is locale-independent when decimal separator is explicit
-                        $result = rtrim(rtrim(number_format($value, 20, '.', ''), '0'), '.');
-                        if ($result === '' || $result === '-') {
-                            $result = '0';
-                        }
+                        $result = substr($digits, 0, $position).'.'.substr($digits, $position);
+                    }
+
+                    if ($negative) {
+                        $result = '-'.$result;
                     }
                 }
 

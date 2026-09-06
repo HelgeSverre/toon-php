@@ -38,15 +38,21 @@ final class Fields
         }
 
         $expected = null;
+        $propertyMaps = [];
         foreach ($objects as $object) {
             // Every element must be a non-empty object; an empty object
             // disqualifies the whole table (§9.3).
-            if (! Normalize::isJsonObject($object) || get_object_vars($object) === []) {
+            if (! Normalize::isJsonObject($object)) {
                 return null;
             }
 
-            $keys = array_map(strval(...), array_keys(get_object_vars($object)));
-            sort($keys);
+            $properties = get_object_vars($object);
+            if ($properties === []) {
+                return null;
+            }
+
+            $keys = array_map(strval(...), array_keys($properties));
+            sort($keys, SORT_STRING);
 
             if ($expected === null) {
                 $expected = $keys;
@@ -54,20 +60,17 @@ final class Fields
                 // All objects MUST have the same set of keys (order MAY vary).
                 return null;
             }
-        }
 
-        $first = $objects[0];
-        if (! $first instanceof \stdClass) {
-            return null;
+            $propertyMaps[] = $properties;
         }
 
         $fields = [];
-        foreach (array_keys(get_object_vars($first)) as $name) {
+        foreach (array_keys($propertyMaps[0]) as $name) {
             $column = [];
-            foreach ($objects as $object) {
-                /** @var mixed $cell */
-                $cell = $object instanceof \stdClass ? ($object->{$name} ?? null) : null;
-                $column[] = $cell;
+            foreach ($propertyMaps as $properties) {
+                // Array access preserves NUL-prefixed keys that PHP cannot read
+                // through dynamic object-property access.
+                $column[] = $properties[$name] ?? null;
             }
 
             if (self::isUniformPrimitiveColumn($column)) {
@@ -123,10 +126,11 @@ final class Fields
      */
     public static function cells(array $fields, mixed $object, string $delimiter): array
     {
+        $properties = $object instanceof \stdClass ? get_object_vars($object) : [];
         $cells = [];
         foreach ($fields as $field) {
             /** @var mixed $value */
-            $value = $object instanceof \stdClass ? ($object->{$field['name']} ?? null) : null;
+            $value = $properties[$field['name']] ?? null;
 
             if ($field['children'] === null) {
                 $cells[] = Primitives::encodePrimitive($value, $delimiter);
