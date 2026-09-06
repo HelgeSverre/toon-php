@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working in this repository. Read `AGENTS.md` for the shared commands and compatibility rules, and `docs/multi-version.md` for the detailed versioning contract. Keep this guidance consistent with those files.
 
 ## Project Overview
 
@@ -27,14 +27,14 @@ just dev
 # Prepare for PR (format + analyse + test)
 just pr
 
-# Run CI checks (analyse + test, no formatting)
+# Run CI checks (lint + analyse + test, no formatting)
 just ci
 
 # Run tests only
 just test
 
 # Run tests with coverage
-just test-coverage
+just coverage
 
 # Run benchmarks
 just benchmark
@@ -42,43 +42,51 @@ just benchmark
 
 ## Architecture
 
-TOON PHP is a port of the TOON (Token-Oriented Object Notation) format specification, which achieves 30-60% token reduction vs JSON for LLM contexts. The implementation strictly follows the **TOON Specification v3.3** (see `docs/SPEC.md`).
+The package supports multiple TOON wire-format versions in one release. The Composer package version does not select the syntax. Existing calls use the **3.3 compatibility profile**, preserving release 3.2.1 behavior; **4.1 is explicitly opt-in**. Symfony AI Mate is a downstream consumer of the default API.
+
+### Public API and Version Selection
+
+```php
+use HelgeSverre\Toon\DecodeOptions;
+use HelgeSverre\Toon\EncodeOptions;
+use HelgeSverre\Toon\SpecVersion;
+use HelgeSverre\Toon\Toon;
+
+$data = ['message' => '#hello'];
+$legacy = Toon::encode($data); // Existing 3.3 behavior.
+
+$encode41 = new EncodeOptions(version: SpecVersion::V4_1);
+$decode41 = new DecodeOptions(version: SpecVersion::V4_1);
+$wire = Toon::encode($data, $encode41);
+$decoded = Toon::decode($wire, $decode41);
+$valid = Toon::validate($wire, $decode41);
+
+$readable41 = EncodeOptions::readable()->withVersion(SpecVersion::V4_1);
+$lenient41 = $decode41->withStrict(false);
+```
+
+- Select the version per call. Never auto-detect syntax, retry with another grammar, or use mutable global configuration.
+- `strict` is independent of `version`: leniency adjusts validation within the selected grammar.
+- Preserve existing named and positional constructor arguments. Copies made with `withIndent()`, `withDelimiter()`, or `withStrict()` retain the selected version.
+- Existing presets and convenience helpers default to 3.3. Helpers accepting options can select 4.1; `toon_readable()` itself remains a legacy helper.
 
 ### Core Components
 
-1. **Toon** (`src/Toon.php`) - Main entry point with single static `encode()` method
-2. **Normalize** (`src/Normalize.php`) - Converts PHP values to JSON-compatible structures
-3. **Encoders** (`src/Encoders.php`) - Core encoding logic with format detection
-4. **Primitives** (`src/Primitives.php`) - Encodes primitive values with smart quoting
-5. **LineWriter** (`src/LineWriter.php`) - Manages output lines and indentation
-6. **EncodeOptions** (`src/EncodeOptions.php`) - Configuration with presets
-7. **Constants** (`src/Constants.php`) - Shared syntax tokens
-8. **Helpers** (`src/helpers.php`) - Global helper functions
+1. **Toon** (`src/Toon.php`) exposes `encode()`, `decode()`, and `validate()`. It dispatches to an internal codec once per encode/decode call.
+2. **Codec interface** (`src/Codec/Codec.php`) defines the encoding/decoding boundary.
+3. **3.3 codec** (`src/Codec/V33.php`) wraps the original root-level normalizer/encoder/primitives and `src/Decoder/`. Preserve their class names and behavior for direct consumers; these legacy helpers do not dispatch by version.
+4. **4.1 codec** (`src/Codec/V41.php`) owns its implementation under `src/Codec/V41/`, including `Fields.php` for nested and keyed tables. These classes are internal.
+5. **Shared infrastructure** includes options, constants, exceptions, and `src/LineWriter.php`. Share only behavior that is identical across versions.
 
-### Format Selection Logic
+Keep grammar-specific fixes inside the corresponding codec. Avoid scattering version checks across the original parser and encoder.
 
-The encoder automatically selects the optimal format:
+### Format and PHP Representation
 
-1. **Inline format** for arrays of primitives: `[3]: a,b,c`
-2. **Array-of-arrays format** for nested arrays with list items
-3. **Tabular format** for uniform object arrays: `[2]{id,name}: 1,Alice`
-4. **List format** (default) for mixed structures with hyphen markers
+The selected grammar determines format selection. The 4.1 encoder uses mandatory tabular/nested-field or keyed-tabular forms where eligible, inline primitive arrays, and list forms where required. It also handles comment-aware quoting and the 4.1 empty-array forms. Consult the selected spec instead of treating these as interchangeable formatting preferences.
 
-### Key Implementation Details
+Both decoders retain the PHP associative-array API. Empty objects and arrays both decode to `[]`; sequential numeric-key objects can become PHP lists. Do not silently change return types to make JSON shape comparisons pass. The 4.1 encoder uses `stdClass` internally to distinguish objects from lists, including empty objects.
 
-**PHP Array Behavior**: PHP converts numeric string keys to integers. The library handles this by quoting numeric keys when encoding.
-
-**String Quoting Rules**: Strings are quoted only when necessary:
-
-- Reserved words: "true", "false", "null"
-- Numeric strings: "42", "3.14"
-- Strings with special characters
-- Empty strings: ""
-
-**Enum Normalization**:
-
-- `BackedEnum`: Extracts backing value
-- `UnitEnum`: Uses case name as string
+For field maps, preserve arbitrary string keys, including NUL-prefixed keys; read normalized object entries through `get_object_vars()` instead of dynamic property access. Compare key sets using string semantics, preserving first-row field order. Float formatting must preserve round-trip precision without fixed-place re-rounding.
 
 ## Development Guidelines
 
@@ -93,16 +101,17 @@ The encoder automatically selects the optimal format:
 ### File Organization
 
 - **Tests**: All tests MUST go in `tests/` directory. Never create test PHP files elsewhere in the repo.
-- **Documentation**: All documentation MUST go in `docs/` folder if needed. Never create report/summary markdown files in the root.
+- **Documentation**: Reports and documentation go in `docs/`. Maintain root agent instruction files in place; do not create root-level reports.
 - **Examples**: Example code in documentation and examples/ directory must be valid, executable PHP syntax that matches the actual codebase.
-- **Spec Files**: The official TOON specification lives in `docs/SPEC.md`. Always validate implementation changes against the spec.
+- **Spec Files**: Pin specifications under `docs/specs/{version}/SPEC.md` and official fixtures under `tests/Fixtures/spec/{version}/`, retaining licenses and revision metadata. `docs/SPEC.md` remains the legacy document.
+- **Vendored Files**: Preserve upstream fixtures and Mate source verbatim; `pint.json` excludes `tests/Fixtures/`.
 
 ### Development Workflow
 
 **When adding features:**
 
-1. **Check the spec** - Review `docs/SPEC.md` to ensure proposed change conforms to TOON specification
-2. **Check spec requirements** - Review the relevant §§ in `docs/SPEC.md` and the per-version notes in `docs/CHANGELOG.md`
+1. **Select the version** - Identify the affected codec and read its pinned `docs/specs/{version}/SPEC.md`
+2. **Check compatibility** - Read `docs/multi-version.md` and the legacy deviations; do not change default behavior as a side effect of opt-in support
 3. Write tests first in appropriate test file under `tests/`
 4. Implement in relevant src file following spec requirements
 5. Run `just dev` to format and test
@@ -111,10 +120,10 @@ The encoder automatically selects the optimal format:
 
 **When debugging:**
 
-1. Check normalization step (`Normalize.php`)
-2. Trace through `Encoders.php` format detection
-3. Check primitive encoding in `Primitives.php`
-4. Use `toon_readable()` helper for debugging output
+1. Confirm the options select the intended version
+2. Trace normalization and format detection in that codec
+3. Check its primitive encoding and decoder paths
+4. For readable 4.1 output, use `EncodeOptions::readable()->withVersion(SpecVersion::V4_1)`
 5. Run PHP code directly for quick checks (don't create scattered test files)
 
 **When running tests:**
@@ -122,13 +131,13 @@ The encoder automatically selects the optimal format:
 ```bash
 # Use just commands (preferred)
 just test
-just test-coverage
+just coverage
 
 # Run specific test file
 vendor/bin/phpunit tests/PrimitivesTest.php
 
 # Run specific test method
-vendor/bin/phpunit --filter testEncodesStringsWithoutQuotes
+vendor/bin/phpunit --filter test_encode_safe_strings
 ```
 
 ## Release Guidelines
@@ -171,9 +180,9 @@ Must be factual and straightforward:
 
 ### Content Focus
 
-Documentation must focus on **what the package does**, not how it was built.
+User-facing documentation should focus on **what the package does**. Engineering records under `docs/` may document fixture provenance, compatibility comparisons, coverage, and verification evidence.
 
-**Always avoid:**
+**In user-facing documentation, avoid:**
 
 - Development process details
 - Self-referential language ("we verified", "our testing")
@@ -181,7 +190,7 @@ Documentation must focus on **what the package does**, not how it was built.
 - References to comparing against other implementations
 - Details about how features were validated
 
-**Always include:**
+**In user-facing documentation, include:**
 
 - Package features and capabilities
 - User-facing functionality
@@ -229,7 +238,7 @@ When testing quick PHP snippets, run them directly:
 
 ```bash
 # Direct execution (preferred for quick tests)
-php -r "require 'vendor/autoload.php'; echo Toon\Toon::encode(['test' => 'data']);"
+php -r "require 'vendor/autoload.php'; echo \HelgeSverre\Toon\Toon::encode(['test' => 'data']);"
 
 # Never create temporary test files throughout the repo
 ```
@@ -249,23 +258,32 @@ just ci
 
 ## Specification Compliance
 
-**CRITICAL**: This library implements the official TOON Specification v3.3 (docs/SPEC.md). All code changes MUST conform to the specification.
+Changes must respect the selected version's pinned specification and the existing public compatibility contract.
 
-### Key Specification Requirements
+- **3.3**: preserve released behavior. The known differences from upstream fixtures are documented in `docs/legacy-fixture-deviations.md`; this profile is not a claim of perfect conformance. Do not silently correct these differences during 4.1 work.
+- **4.1**: use `docs/specs/4.1/SPEC.md` and its complete pinned fixture suite. Keep 4.1-specific fixes isolated.
+- **No floating spec updates**: the existing `just sync-spec` recipe fetches upstream main into legacy docs. Do not use it for routine multi-version work. Update versioned specs and fixtures deliberately from an exact revision.
 
-**Before making changes**:
+### Fixture and Compatibility Checks
 
-1. Read relevant sections in `docs/SPEC.md` (the upstream spec, synced via `just sync-spec`)
-2. Review `docs/CHANGELOG.md` for the per-version normative changes
-3. Validate your implementation against encoder/decoder conformance checklists (§13 of spec)
+- `tests/VersionedFixturesTest.php` runs official 4.1 expectations and compares legacy cases against the released baseline, including omitted-version calls. Encoding fixtures preserve JSON objects; decoding comparisons use the documented PHP representation.
+- `tests/Fixtures/legacy-3.2.1.json` must remain a release baseline. `tests/Support/capture-legacy.php` verifies pinned source hashes; never regenerate it from the branch under test.
+- Keep version-isolation, option-copy, PHP-specific value/field, canonical-output, round-trip, and Mate compatibility tests. Use PHP-native cases where JSON fixtures cannot express host values.
+- Run the complete suite after codec changes, plus PHPStan and Pint. PHP 8.1–8.5 are covered by CI. Check new 4.1 runtime paths with `php -n tests/Support/check-runtime.php` to avoid hidden dependencies on development polyfills.
+- For coverage, use `just coverage` or the driver-specific command in `docs/coverage-review.md`. Add tests for meaningful public behavior, not reflection tests merely to cover private constructors.
 
-**Encoder Conformance (Section 13.1)**: Encoders MUST produce UTF-8 output with LF line endings, use consistent indentation (no tabs), escape backslash/quote/\n/\r/\t and emit other C0 control characters as `\uXXXX`, quote delimiter-containing strings, emit accurate array lengths, preserve key order, use canonical decimal form for `n = 0` or `1e-6 ≤ |n| < 1e21` (exponent notation outside that range), convert -0 to 0, convert NaN/±Infinity to null, and emit no trailing spaces or newlines.
+### Adding Another Spec Version
 
-**Decoder Conformance (Section 13.2)**: Decoders MUST parse array headers correctly, split only on active delimiters, unescape valid escapes only (including `\uXXXX`), type unquoted primitives correctly, enforce strict-mode rules when enabled, and preserve array/object order.
+1. Pin its specification and fixtures, with licenses and provenance.
+2. Add a `SpecVersion` enum case, an internal codec, and the dispatch arm in `Toon`.
+3. Extend fixture and version-isolation coverage, retaining all legacy snapshots.
+4. Document syntax and representation differences. Do not change the default just because another version is available.
+
+Syntax versions coexist in one package. The integration branch can become main; separate long-lived branches are for maintaining package releases, not for selecting syntax at runtime.
 
 ## Important Reminders
 
-1. **Follow the spec** - ALL code changes must conform to TOON Specification v3.3 in `docs/SPEC.md`
+1. **Respect version boundaries** - Follow the selected pinned spec while preserving the default 3.3 compatibility profile
 2. **Use justfile commands** - Always prefer `just` over raw composer/vendor commands
 3. **Keep CHANGELOG.md updated** - Document all user-facing changes
 4. **No scattered test files** - All tests go in `tests/` directory only
