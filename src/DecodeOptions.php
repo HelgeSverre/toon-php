@@ -19,6 +19,7 @@ final class DecodeOptions
     public function __construct(
         public readonly int $indent = 2,
         public readonly bool $strict = true,
+        public readonly SpecVersion $version = SpecVersion::V3_3,
     ) {
         // §12: depth is measured in indentSize-space units; indent 0 makes every
         // line depth 0 and cannot recover nesting, so it is not a valid setting.
@@ -67,7 +68,7 @@ final class DecodeOptions
      */
     public function withIndent(int $indent): self
     {
-        return new self($indent, $this->strict);
+        return new self($indent, $this->strict, $this->version);
     }
 
     /**
@@ -78,6 +79,12 @@ final class DecodeOptions
      */
     public function withStrict(bool $strict): self
     {
-        return new self($this->indent, $strict);
+        return new self($this->indent, $strict, $this->version);
+    }
+
+    /** Return options for an explicitly selected wire-format version. */
+    public function withVersion(SpecVersion $version): self
+    {
+        return new self($this->indent, $this->strict, $version);
     }
 }

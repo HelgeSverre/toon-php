@@ -25,6 +25,10 @@ final class Constants
 
     public const CLOSE_BRACE = '}';
 
+    public const EMPTY_ARRAY = '[]';
+
+    public const COMMENT_MARKER = '#';
+
     // Literals
     public const NULL_LITERAL = 'null';
 

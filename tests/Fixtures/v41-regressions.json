@@ -1,0 +1,77 @@
+[
+  {
+    "id": "bom-root-encode",
+    "op": "encode",
+    "input": "\ufeffhello",
+    "expected": "\"\ufeffhello\""
+  },
+  {
+    "id": "bom-quoted-decode",
+    "op": "decode",
+    "input": "\"\ufeffhello\"",
+    "expected": "\ufeffhello"
+  },
+  {
+    "id": "keyed-trailing-tab",
+    "op": "decode",
+    "input": "k[1:]{a}:\n  x: value\t",
+    "expected": {
+      "k": {
+        "x": {
+          "a": "value\t"
+        }
+      }
+    }
+  },
+  {
+    "id": "keyed-tab-cell",
+    "op": "decode",
+    "input": "k[1:]{a,b}:\n  x: \t,end",
+    "expected": {
+      "k": {
+        "x": {
+          "a": "\t",
+          "b": "end"
+        }
+      }
+    }
+  },
+  {
+    "id": "inline-tab-cell",
+    "op": "decode",
+    "input": "k[2]: \t,end",
+    "expected": {
+      "k": [
+        "\t",
+        "end"
+      ]
+    }
+  },
+  {
+    "id": "list-stray-field",
+    "op": "decode",
+    "input": "items[1]:\n  - a\n  extra: 1",
+    "shouldError": true
+  },
+  {
+    "id": "list-stray-scalar-lenient",
+    "op": "decode",
+    "input": "k[1]:\n  - x: 1\n  bare",
+    "options": {
+      "strict": false
+    },
+    "shouldError": true
+  },
+  {
+    "id": "empty-root-child",
+    "op": "decode",
+    "input": "[]\n  extra: 1",
+    "shouldError": true
+  },
+  {
+    "id": "inline-root-child",
+    "op": "decode",
+    "input": "[1]: a\n  extra: 1",
+    "shouldError": true
+  }
+]
