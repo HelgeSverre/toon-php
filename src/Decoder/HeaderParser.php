@@ -264,9 +264,6 @@ final class HeaderParser
             $result['format'] = 'tabular';
 
             $pos = $braceEnd + 1; // move past }
-        } elseif ($result['length'] === null && $pos < $len && $line[$pos] === '{') {
-            // Standalone {fields}: format (tabular continuation)
-            return self::parseDirectArrayHeader('[0]'.substr($line, $pos));
         }
 
         // Expect : after header

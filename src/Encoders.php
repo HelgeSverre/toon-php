@@ -43,7 +43,7 @@ final class Encoders
         }
 
         // Handle objects
-        if (Normalize::isJsonObject($value)) { // @phpstan-ignore staticMethod.impossibleType
+        if (Normalize::isJsonObject($value)) {
             $this->encodeObject($value, $depth);
 
             return;
@@ -140,11 +140,11 @@ final class Encoders
         }
 
         // Handle nested objects
-        if (Normalize::isJsonObject($value)) { // @phpstan-ignore staticMethod.impossibleType
+        if (Normalize::isJsonObject($value)) {
             $object = $value;
 
             // Empty object
-            if (empty($object)) { // @phpstan-ignore empty.variable
+            if (empty($object)) {
 
                 $this->writer->push($depth, $prefix.$encodedKey.Constants::COLON);
 
@@ -182,7 +182,7 @@ final class Encoders
             $delimiterKey = $this->getDelimiterKey($this->options->delimiter);
             $this->writer->push($depth, Constants::OPEN_BRACKET.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
-                $inlineArray = $this->formatInlineArray($item); // @phpstan-ignore argument.type
+                $inlineArray = $this->formatInlineArray($item);
                 $this->writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
             }
 
@@ -202,7 +202,7 @@ final class Encoders
             // Fall back to list format
             $this->writer->push($depth, Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
-                $this->encodeObjectAsListItem($item, $depth + 1); // @phpstan-ignore argument.type
+                $this->encodeObjectAsListItem($item, $depth + 1);
             }
 
             return;
@@ -332,7 +332,7 @@ final class Encoders
         foreach ($array as $object) {
             $values = [];
             foreach ($fields as $field) {
-                $values[] = Primitives::encodePrimitive($object[$field], $this->options->delimiter); // @phpstan-ignore offsetAccess.nonOffsetAccessible
+                $values[] = Primitives::encodePrimitive($object[$field], $this->options->delimiter);
             }
             $this->writer->push($depth, implode($this->options->delimiter, $values));
         }
@@ -392,7 +392,7 @@ final class Encoders
         }
 
         // Objects
-        if (Normalize::isJsonObject($item)) { // @phpstan-ignore staticMethod.impossibleType
+        if (Normalize::isJsonObject($item)) {
             $this->encodeObjectAsListItem($item, $depth);
 
             return;

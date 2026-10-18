@@ -327,7 +327,7 @@ final class NormalizationTest extends TestCase
         $this->assertTrue(Normalize::isJsonArray([]));
 
         $this->assertFalse(Normalize::isJsonArray(['key' => 'value']));
-        $this->assertFalse(Normalize::isJsonArray('not an array')); // @phpstan-ignore staticMethod.impossibleType
+        $this->assertFalse(Normalize::isJsonArray('not an array'));
     }
 
     public function test_is_json_object(): void
@@ -337,7 +337,7 @@ final class NormalizationTest extends TestCase
 
         $this->assertFalse(Normalize::isJsonObject([1, 2, 3]));
         $this->assertFalse(Normalize::isJsonObject([])); // Empty array is a list
-        $this->assertFalse(Normalize::isJsonObject(new stdClass)); // @phpstan-ignore staticMethod.impossibleType
+        $this->assertFalse(Normalize::isJsonObject(new stdClass));
     }
 
     public function test_normalize_enum(): void
