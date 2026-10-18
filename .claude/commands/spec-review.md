@@ -92,7 +92,7 @@ Tests: List new test cases
 ### 6. Validation Checklist
 ```
 [ ] just test - All tests pass
-[ ] just analyse - PHPStan level 9 clean
+[ ] just analyse - Mago analyzer clean
 [ ] Round-trip tests for all delimiters
 [ ] CHANGELOG.md updated
 ```

@@ -1,0 +1,116 @@
+# ── Global ─────────────────────────────────────────────────────────────────────
+
+php-version = "8.1"
+editor-url = "phpstorm://open?file=%file%&line=%line%&column=%column%"
+
+# ── Source Discovery ───────────────────────────────────────────────────────────
+
+[source]
+paths = ["src", "tests"]
+includes = ["vendor"]
+excludes = ["tests/Fixtures"] # vendored upstream fixtures and Mate source, kept verbatim
+
+# ── Formatter ──────────────────────────────────────────────────────────────────
+
+[formatter]
+# Tuned to match the Laravel Pint style the codebase was written in.
+
+# ┌─ Layout ────────────────────────────────────────────────────────────────────┐
+print-width = 1000 # Pint has no line-length limit; never wrap on width alone
+tab-width = 4
+use-tabs = false
+end-of-line = "lf"
+
+# ┌─ Strings & Trailing Commas ─────────────────────────────────────────────────┐
+single-quote = true
+trailing-comma = true
+
+# ┌─ Brace Styles ──────────────────────────────────────────────────────────────┐
+classlike-brace-style = "always-next-line"
+method-brace-style = "next-line"
+function-brace-style = "next-line"
+control-brace-style = "same-line"
+closure-brace-style = "same-line"
+following-clause-on-newline = false
+inline-empty-method-braces = false
+inline-empty-constructor-braces = true
+inline-empty-anonymous-class-braces = true
+
+# ┌─ Preserve existing line breaks ─────────────────────────────────────────────┐
+preserve-breaking-member-access-chain = true
+preserve-breaking-argument-list = true
+preserve-breaking-array-like = true
+preserve-breaking-parameter-list = true
+preserve-breaking-attribute-list = true
+preserve-breaking-conditional-expression = true
+preserve-breaking-condition-expression = true
+preserve-breaking-binary-expression = true
+method-chain-breaking-style = "same-line"
+first-method-chain-on-new-line = false
+
+# ┌─ Spacing & Parentheses (Laravel preset) ────────────────────────────────────┐
+space-around-concatenation-binary-operator = false
+space-after-cast-unary-prefix-operators = true
+space-after-logical-not-unary-prefix-operator = true
+space-before-closure-parameter-list-parenthesis = true
+space-before-closure-use-clause-parenthesis = true
+space-before-arrow-function-parameter-list-parenthesis = true
+space-around-assignment-in-declare = false
+space-within-grouping-parenthesis = false
+parentheses-in-new-expression = false
+preserve-redundant-logical-binary-expression-parentheses = true
+omit-redundant-arithmetic-binary-expression-parentheses = true
+
+# ┌─ Imports / Use Statements ──────────────────────────────────────────────────┐
+sort-uses = true
+separate-use-types = true
+expand-use-groups = true
+
+# ┌─ Blank Lines ───────────────────────────────────────────────────────────────┐
+empty-line-after-opening-tag = true
+empty-line-after-namespace = true
+empty-line-after-use = true
+empty-line-after-method = true
+empty-line-before-return = true
+empty-line-after-control-structure = false
+separate-class-like-members = true
+empty-line-after-symbols = true
+
+# ┌─ Alignment & Arrays ────────────────────────────────────────────────────────┐
+array-table-style-alignment = false
+align-assignment-like = false
+
+# ┌─ Type Hints & Misc ─────────────────────────────────────────────────────────┐
+uppercase-literal-keyword = false
+null-type-hint = "question"
+remove-trailing-close-tag = true
+indent-heredoc = false
+
+# ── Analyzer ───────────────────────────────────────────────────────────────────
+
+[analyzer]
+minimum-fail-level = "warning"
+ignore = ["mixed-assignment"]
+
+# ── Linter ─────────────────────────────────────────────────────────────────────
+
+[linter]
+minimum-fail-level = "warning"
+integrations = ["php-unit"]
+
+[linter.rules]
+# Enforce declare(strict_types=1) at the beginning of files
+strict-types = { enabled = true, level = "Error" }
+assertion-style = { style = "this" } # in phpunit tests
+strict-assertions = { enabled = false } # assertSame would change semantics of existing tests
+literal-named-argument = { enabled = false }
+no-empty = { enabled = false }
+no-insecure-comparison = { enabled = false } # false positives on token comparisons in the decoder
+too-many-methods = { enabled = false } # triggers too much in test classes
+excessive-parameter-list = { enabled = false } # option objects
+single-class-per-file = { enabled = false } # tests define fixture enums inline
+readable-literal = { enabled = false }
+# Size/complexity metrics: the parser and encoder are intentionally monolithic state machines
+cyclomatic-complexity = { enabled = false }
+kan-defect = { enabled = false }
+halstead = { enabled = false }

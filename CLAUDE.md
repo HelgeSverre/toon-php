@@ -95,9 +95,10 @@ For field maps, preserve arbitrary string keys, including NUL-prefixed keys; rea
 
 - **PHP Version**: 8.1+ (uses readonly properties, enum support)
 - **Strict Types**: All files must use `declare(strict_types=1);`
-- **PHPStan Level**: 9 (maximum strictness)
-- **Code Style**: Laravel Pint (run `just fix` before commits)
-- **Type Safety**: Heavy use of `assert()` after type checks
+- **Tooling**: [Mago](https://mago.carthage.software) 1.57.0, installed via Composer (`carthage-software/mago`) and configured in `mago.toml`
+- **Code Style**: Mago formatter (tuned to the existing Laravel-style layout) + linter — run `just fix` before commits; `just lint` checks
+- **Static Analysis**: Mago analyzer (`just analyse`) — no baseline; all code must pass. Prefer precise docblock types (`positive-int`, `list<...>`, `@phpstan-assert-if-true`) over `assert()` calls
+- **Type Safety**: Express invariants with docblock types (`positive-int`, `non-negative-int`, `list<...>`, `@phpstan-assert-if-true`) rather than `assert()` calls
 
 ### File Organization
 
@@ -105,7 +106,7 @@ For field maps, preserve arbitrary string keys, including NUL-prefixed keys; rea
 - **Documentation**: Reports and documentation go in `docs/`. Maintain root agent instruction files in place; do not create root-level reports.
 - **Examples**: Example code in documentation and examples/ directory must be valid, executable PHP syntax that matches the actual codebase.
 - **Spec Files**: Pin specifications under `docs/specs/{version}/SPEC.md` and official fixtures under `tests/Fixtures/spec/{version}/`, retaining licenses and revision metadata. `docs/SPEC.md` remains the legacy document.
-- **Vendored Files**: Preserve upstream fixtures and Mate source verbatim; `pint.json` excludes `tests/Fixtures/`.
+- **Vendored Files**: Preserve upstream fixtures and Mate source verbatim; `mago.toml` excludes `tests/Fixtures/`.
 
 ### Development Workflow
 
@@ -271,7 +272,7 @@ Changes must respect the selected version's pinned specification and the existin
 - `tests/VersionedFixturesTest.php` runs official 4.1 and 4.4 expectations and compares legacy cases against the released baseline, including omitted-version calls. Encoding fixtures preserve JSON objects; decoding comparisons use the documented PHP representation.
 - `tests/Fixtures/legacy-3.2.1.json` must remain a release baseline. `tests/Support/capture-legacy.php` verifies pinned source hashes; never regenerate it from the branch under test.
 - Keep version-isolation, option-copy, PHP-specific value/field, canonical-output, round-trip, and Mate compatibility tests. Use PHP-native cases where JSON fixtures cannot express host values.
-- Run the complete suite after codec changes, plus PHPStan and Pint. PHP 8.1–8.5 are covered by CI. Check both opt-in runtime paths with `php -n tests/Support/check-runtime.php` to avoid hidden dependencies on development polyfills.
+- Run the complete suite after codec changes, plus `just lint` and `just analyse`. PHP 8.1–8.5 are covered by CI. Check both opt-in runtime paths with `php -n tests/Support/check-runtime.php` to avoid hidden dependencies on development polyfills.
 - For coverage, use `just coverage` or the driver-specific command in `docs/coverage-review.md`. Add tests for meaningful public behavior, not reflection tests merely to cover private constructors.
 
 ### Adding Another Spec Version

@@ -58,8 +58,14 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Check code style (Pint)
-        run: composer lint
+      - name: Check code style (Mago format)
+        if: ${{ !cancelled() }}
+        run: vendor/bin/mago format --check
 
-      - name: Static analysis (PHPStan)
-        run: composer analyse
+      - name: Lint (Mago)
+        if: ${{ !cancelled() }}
+        run: vendor/bin/mago lint --reporting-format=github --minimum-report-level=warning
+
+      - name: Static analysis (Mago)
+        if: ${{ !cancelled() }}
+        run: vendor/bin/mago analyze --reporting-format=github --minimum-report-level=warning

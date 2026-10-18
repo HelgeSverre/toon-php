@@ -77,22 +77,22 @@ coverage: _ensure-vendor
 
 # === Development Tools ===
 
-[doc('Run PHPStan static analysis')]
+[doc('Run Mago static analysis')]
 [group('dev')]
 analyse: _ensure-vendor
-    @echo "Running PHPStan analysis..."
+    @echo "Running Mago analysis..."
     composer analyse
 
-[doc('Auto-fix code style issues')]
+[doc('Auto-fix code style issues (Mago formatter)')]
 [group('dev')]
 fix: _ensure-vendor
-    @echo "Fixing PHP code style..."
+    @echo "Formatting PHP code..."
     composer format
 
-[doc('Check code style without modifying files')]
+[doc('Check code style and lint rules without modifying files')]
 [group('dev')]
 lint: _ensure-vendor
-    @echo "Checking PHP code style..."
+    @echo "Checking PHP code style and lint rules..."
     composer lint
 
 # Run Infection mutation testing. Needs a PHP with a coverage driver (pcov/xdebug);
@@ -123,7 +123,7 @@ analyze: analyse
 format: fix
 
 [private]
-pint: fix
+mago: fix
 
 # === Workflows ===
 
