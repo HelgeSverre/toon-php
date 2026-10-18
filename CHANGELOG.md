@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Development tooling: replaced Laravel Pint and PHPStan with [Mago](https://mago.carthage.software) 1.57.0 (formatter, linter and analyzer), installed via Composer as `carthage-software/mago` and configured in `mago.toml`. The formatter is tuned to the existing code layout. `just fix`, `just lint`, `just analyse` and CI now run Mago.
+
+### Fixed
+
+- `toon_compare()` docblock declared `savings` as `float`; it is an `int` (character difference).
+
+### Removed
+
+- Unreachable standalone `{fields}` branch in `HeaderParser::parseDirectArrayHeader()` (the preceding `{` branch already handled every case).
+
 ## [3.3.0] - 2026-11-06
 
 ### Added
