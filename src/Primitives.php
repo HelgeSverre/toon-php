@@ -64,7 +64,7 @@ final class Primitives
                 if (stripos($result, 'e') !== false) {
                     if ($abs >= 1) {
                         // Large numbers: use integer format if whole number
-                        if ($value == floor($value)) {
+                        if ($value === floor($value)) {
                             // Use number_format for locale-independent formatting
                             $result = number_format($value, 0, '.', '');
                         } else {
@@ -189,9 +189,9 @@ final class Primitives
         $result = preg_replace_callback(
             '/[\x00-\x08\x0B\x0C\x0E-\x1F]/',
             fn (array $m): string => sprintf('\u%04x', ord($m[0])),
-            $escaped
+            $escaped,
         );
-        assert($result !== null);
+        assert($result !== null, 'preg_replace_callback failed on a valid pattern');
 
         return $result;
     }

@@ -294,7 +294,7 @@ final class DelimitersTest extends TestCase
         $input = [
             'data' => [
                 ['items' => ['a', 'b']],
-                ['items' => ['c,d', 'e']],  // Comma in value should be quoted
+                ['items' => ['c,d', 'e']], // Comma in value should be quoted
             ],
         ];
         $expected = "data[2]:\n  - items[2]: a,b\n  - items[2]: \"c,d\",e";
@@ -306,7 +306,7 @@ final class DelimitersTest extends TestCase
         // Test delimiter inheritance: document delimiter applies to all arrays without explicit delimiter
         $input = [
             'outer' => [
-                ['inner' => ['a,b', 'c']],  // Nested inline array inherits document delimiter (tab)
+                ['inner' => ['a,b', 'c']], // Nested inline array inherits document delimiter (tab)
                 ['inner' => ['d', 'e']],
             ],
         ];

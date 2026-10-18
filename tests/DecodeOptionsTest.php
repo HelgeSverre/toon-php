@@ -15,7 +15,7 @@ final class DecodeOptionsTest extends TestCase
         $options = DecodeOptions::default();
 
         $this->assertEquals(2, $options->indent);
-        $this->assertEquals(true, $options->strict);
+        $this->assertTrue($options->strict);
     }
 
     public function test_lenient_creates_options_with_strict_disabled(): void
@@ -23,7 +23,7 @@ final class DecodeOptionsTest extends TestCase
         $options = DecodeOptions::lenient();
 
         $this->assertEquals(2, $options->indent);
-        $this->assertEquals(false, $options->strict);
+        $this->assertFalse($options->strict);
     }
 
     public function test_constructor_validates_negative_indent(): void
@@ -46,7 +46,7 @@ final class DecodeOptionsTest extends TestCase
         $options = new DecodeOptions(indent: 4);
 
         $this->assertEquals(4, $options->indent);
-        $this->assertEquals(true, $options->strict);
+        $this->assertTrue($options->strict);
     }
 
     public function test_constructor_accepts_strict_false(): void
@@ -54,7 +54,7 @@ final class DecodeOptionsTest extends TestCase
         $options = new DecodeOptions(strict: false);
 
         $this->assertEquals(2, $options->indent);
-        $this->assertEquals(false, $options->strict);
+        $this->assertFalse($options->strict);
     }
 
     public function test_with_indent_creates_new_instance_with_updated_indent(): void
@@ -80,9 +80,9 @@ final class DecodeOptionsTest extends TestCase
         $options = DecodeOptions::default();
         $updated = $options->withStrict(false);
 
-        $this->assertEquals(false, $updated->strict);
+        $this->assertFalse($updated->strict);
         $this->assertEquals($options->indent, $updated->indent);
-        $this->assertEquals(true, $options->strict); // original unchanged
+        $this->assertTrue($options->strict); // original unchanged
     }
 
     public function test_with_strict_can_enable_strict_mode(): void
@@ -90,8 +90,8 @@ final class DecodeOptionsTest extends TestCase
         $options = DecodeOptions::lenient();
         $updated = $options->withStrict(true);
 
-        $this->assertEquals(true, $updated->strict);
-        $this->assertEquals(false, $options->strict); // original unchanged
+        $this->assertTrue($updated->strict);
+        $this->assertFalse($options->strict); // original unchanged
     }
 
     public function test_chaining_multiple_with_methods(): void
@@ -101,7 +101,7 @@ final class DecodeOptionsTest extends TestCase
             ->withStrict(false);
 
         $this->assertEquals(4, $options->indent);
-        $this->assertEquals(false, $options->strict);
+        $this->assertFalse($options->strict);
     }
 
     public function test_lenient_mode_allows_flexible_parsing(): void

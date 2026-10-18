@@ -44,7 +44,8 @@ final class ComplexNestingTest extends TestCase
         ];
 
         // Outer tabular format breaks down to list format due to nested non-primitive
-        $expected = "data[2]:\n"
+        $expected =
+            "data[2]:\n"
             ."  - id: 1\n"
             ."    meta:\n"
             ."      count: 5\n"
@@ -73,7 +74,8 @@ final class ComplexNestingTest extends TestCase
             ],
         ];
 
-        $expected = "matrix[4]:\n"
+        $expected =
+            "matrix[4]:\n"
             ."  - [2]: 1,2\n"
             ."  - [3]: 3,4,5\n"
             ."  - [1]: 6\n"
@@ -95,7 +97,8 @@ final class ComplexNestingTest extends TestCase
             ],
         ];
 
-        $expected = "data[5]:\n"
+        $expected =
+            "data[5]:\n"
             ."  - [2]: 1,2\n"
             ."  - [0]:\n"
             ."  - [1]: 3\n"
@@ -158,7 +161,8 @@ final class ComplexNestingTest extends TestCase
         // Test with tab delimiter - should propagate to all nested arrays
         $options = new EncodeOptions(delimiter: "\t");
 
-        $expected = "level1:\n"
+        $expected =
+            "level1:\n"
             ."  items[2]:\n"
             ."    - data[3\t]: a\tb\tc\n"
             ."    - data[2\t]: d\te\n"

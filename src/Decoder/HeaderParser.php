@@ -47,14 +47,12 @@ final class HeaderParser
 
             // Check if beforeColon contains an (unquoted) array header marker
             if (self::findUnquoted($beforeColon, '[{') !== false) {
-                /** @var array{key: ?string, length: ?int, delimiter: string, fields: ?array<string>, inlineValues: ?string, format: string}|null */
                 return self::parseKeyedArrayHeader($beforeColon, $afterColon);
             }
         }
 
         // Direct array header (no key)
         if (str_starts_with($line, '[') || str_starts_with($line, '{')) {
-            /** @var array{key: ?string, length: ?int, delimiter: string, fields: ?array<string>, inlineValues: ?string, format: string}|null */
             return self::parseDirectArrayHeader($line);
         }
 
@@ -164,7 +162,7 @@ final class HeaderParser
                 throw new SyntaxException(
                     'Invalid array header format: [#N] syntax is not supported in TOON v2.0. Use [N] instead.',
                     0,
-                    $line
+                    $line,
                 );
             }
 
@@ -193,7 +191,7 @@ final class HeaderParser
                 throw new SyntaxException(
                     'Invalid array header format: [#N] syntax is not supported in TOON v2.0. Use [N] instead.',
                     0,
-                    $line
+                    $line,
                 );
             }
 
@@ -290,7 +288,7 @@ final class HeaderParser
             // Empty after colon: [N]:
             // If length is 0, it's an empty inline array
             // Otherwise, it's a list array that expects child lines
-            $result['format'] = ($result['length'] === 0) ? 'inline' : 'list';
+            $result['format'] = $result['length'] === 0 ? 'inline' : 'list';
         }
 
         return $result;

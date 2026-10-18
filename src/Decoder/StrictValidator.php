@@ -39,13 +39,13 @@ final class StrictValidator
         int $indent,
         int $indentSize,
         int $lineNumber,
-        string $line
+        string $line,
     ): void {
         if ($indentSize > 0 && $indent % $indentSize !== 0) {
             throw new IndentationException(
                 "Indentation must be multiple of {$indentSize} (got {$indent} spaces)",
                 $lineNumber,
-                $line
+                $line,
             );
         }
     }
@@ -68,7 +68,7 @@ final class StrictValidator
             throw new IndentationException(
                 'Tabs not allowed in indentation (strict mode)',
                 $lineNumber,
-                $line
+                $line,
             );
         }
     }
@@ -97,7 +97,7 @@ final class StrictValidator
         string $arrayType,
         int $lineNumber,
         string $snippet,
-        bool $strict = true
+        bool $strict = true,
     ): void {
         if (! $strict) {
             return; // Only validate in strict mode
@@ -116,7 +116,7 @@ final class StrictValidator
                 $expected,
                 $actual,
                 $lineNumber,
-                $snippet
+                $snippet,
             );
         }
     }
@@ -137,7 +137,7 @@ final class StrictValidator
         int $expectedFieldCount,
         int $actualValueCount,
         int $lineNumber,
-        string $rowContent
+        string $rowContent,
     ): void {
         if ($actualValueCount !== $expectedFieldCount) {
             throw new CountMismatchException(
@@ -145,7 +145,7 @@ final class StrictValidator
                 $expectedFieldCount,
                 $actualValueCount,
                 $lineNumber,
-                substr($rowContent, 0, 50)
+                substr($rowContent, 0, 50),
             );
         }
     }
@@ -168,7 +168,7 @@ final class StrictValidator
         array $lines,
         int $startIndex,
         int $endIndex,
-        DecodeOptions $options
+        DecodeOptions $options,
     ): void {
         if (! $options->strict) {
             return; // Only validate in strict mode
@@ -176,10 +176,10 @@ final class StrictValidator
 
         // Check for blank lines between start and end
         for ($i = $startIndex + 1; $i < $endIndex; $i++) {
-            if (isset($lines[$i]['blank']) && $lines[$i]['blank'] === true) {
+            if (($lines[$i]['blank'] ?? false) === true) {
                 throw new StrictModeException(
                     'Blank lines not allowed inside arrays/tabular rows (strict mode)',
-                    $lines[$i]['line']
+                    $lines[$i]['line'],
                 );
             }
         }
@@ -202,7 +202,7 @@ final class StrictValidator
             throw new SyntaxException(
                 'Missing colon after key',
                 $lineNumber,
-                $content
+                $content,
             );
         }
     }

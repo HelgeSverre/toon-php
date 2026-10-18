@@ -89,8 +89,7 @@ final class PreReleaseCoverageTest extends TestCase
 
     public function test_json_serializable_returning_scalar(): void
     {
-        $obj = new class implements JsonSerializable
-        {
+        $obj = new class implements JsonSerializable {
             public function jsonSerialize(): mixed
             {
                 return 'just a string';
@@ -102,8 +101,7 @@ final class PreReleaseCoverageTest extends TestCase
 
     public function test_json_serializable_returning_list(): void
     {
-        $obj = new class implements JsonSerializable
-        {
+        $obj = new class implements JsonSerializable {
             public function jsonSerialize(): mixed
             {
                 return [1, 2, 3];
@@ -125,8 +123,7 @@ final class PreReleaseCoverageTest extends TestCase
     public function test_stringable_object_without_public_properties_encodes_empty(): void
     {
         // Characterization: Normalize has no Stringable branch; public props only.
-        $obj = new class implements Stringable
-        {
+        $obj = new class implements Stringable {
             public function __toString(): string
             {
                 return 'ignored';
@@ -137,8 +134,7 @@ final class PreReleaseCoverageTest extends TestCase
 
     public function test_object_with_only_private_properties_encodes_empty(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             private int $hidden = 1;
         };
         $this->assertSame('', Toon::encode($obj));

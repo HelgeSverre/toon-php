@@ -73,10 +73,13 @@ final class ObjectsTest extends TestCase
     {
         $input = "\"order:id\": 7\n\"service::method\": handler";
 
-        $this->assertSame([
-            'order:id' => 7,
-            'service::method' => 'handler',
-        ], Toon::decode($input));
+        $this->assertSame(
+            [
+                'order:id' => 7,
+                'service::method' => 'handler',
+            ],
+            Toon::decode($input),
+        );
     }
 
     public function test_encode_object_keys_with_spaces(): void

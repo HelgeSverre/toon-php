@@ -8,7 +8,7 @@ final class Encoders
 {
     public function __construct(
         private readonly EncodeOptions $options,
-        private readonly LineWriter $writer
+        private readonly LineWriter $writer,
     ) {}
 
     /**
@@ -18,7 +18,7 @@ final class Encoders
      * compact representation (inline arrays, tabular format, or list format).
      *
      * @param  mixed  $value  The value to encode
-     * @param  int  $depth  Current indentation depth (default: 0)
+     * @param  non-negative-int  $depth  Current indentation depth (default: 0)
      */
     public function encodeValue(mixed $value, int $depth = 0): void
     {
@@ -55,6 +55,7 @@ final class Encoders
 
     /**
      * @param  array<string, mixed>  $object
+     * @param  non-negative-int  $depth
      */
     private function encodeObject(array $object, int $depth): void
     {
@@ -63,6 +64,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     private function encodeKeyValuePair(string $key, mixed $value, int $depth, bool $isListItem = false): void
     {
         // Encode the key using identifier pattern matching
@@ -145,7 +149,6 @@ final class Encoders
 
             // Empty object
             if (empty($object)) {
-
                 $this->writer->push($depth, $prefix.$encodedKey.Constants::COLON);
 
                 return;
@@ -164,6 +167,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>  $array
+     * @param  non-negative-int  $depth
      */
     private function encodeArray(array $array, int $depth): void
     {
@@ -226,7 +230,7 @@ final class Encoders
 
         $encoded = array_map(
             fn ($item) => Primitives::encodePrimitive($item, $this->options->delimiter),
-            $array
+            $array,
         );
 
         $joined = implode($this->options->delimiter, $encoded);
@@ -255,8 +259,8 @@ final class Encoders
 
         // Encode field names as keys
         $quotedFields = array_map(
-            fn ($field) => Primitives::encodeKey($field),
-            $fields
+            Primitives::encodeKey(...),
+            $fields,
         );
         $fieldsList = implode($this->options->delimiter, $quotedFields);
 
@@ -324,8 +328,9 @@ final class Encoders
     }
 
     /**
-     * @param  array<mixed>  $array
+     * @param  list<array<string, mixed>>  $array
      * @param  array<string>  $fields
+     * @param  non-negative-int  $depth
      */
     private function writeTabularRows(array $array, array $fields, int $depth): void
     {
@@ -340,6 +345,7 @@ final class Encoders
 
     /**
      * @param  array<string, mixed>  $object
+     * @param  non-negative-int  $depth
      */
     private function encodeObjectAsListItem(array $object, int $depth): void
     {
@@ -363,6 +369,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     private function encodeMixedArrayItem(mixed $item, int $depth): void
     {
         // Primitives

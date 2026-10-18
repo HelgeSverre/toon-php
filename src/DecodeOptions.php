@@ -56,7 +56,7 @@ final class DecodeOptions
     {
         return new self(
             indent: 2,
-            strict: false
+            strict: false,
         );
     }
 

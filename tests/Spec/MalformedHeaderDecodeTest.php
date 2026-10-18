@@ -56,7 +56,7 @@ final class MalformedHeaderDecodeTest extends TestCase
 
         $this->assertSame(
             ['u' => [['first name' => 'Ada', 'last' => 'Lovelace']]],
-            Toon::decode($toon)
+            Toon::decode($toon),
         );
     }
 
@@ -70,7 +70,7 @@ final class MalformedHeaderDecodeTest extends TestCase
     {
         $this->assertSame(
             ['u' => [['id' => 1, '' => 2, 'name' => 3]]],
-            Toon::decode("u[1]{id,,name}:\n  1,2,3")
+            Toon::decode("u[1]{id,,name}:\n  1,2,3"),
         );
     }
 }

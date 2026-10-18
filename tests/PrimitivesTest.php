@@ -178,6 +178,7 @@ final class PrimitivesTest extends TestCase
         $this->assertFalse(Primitives::isSafeUnquoted('0xFF', ','));
         $this->assertFalse(Primitives::isSafeUnquoted('0x1a2b', ','));
         $this->assertFalse(Primitives::isSafeUnquoted('0xDEADBEEF', ','));
+
         // Note: uppercase 0X is not matched by the pattern, so it doesn't require quoting
         // Only lowercase 0x hex patterns are detected
     }

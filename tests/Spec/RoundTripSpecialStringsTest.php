@@ -138,7 +138,7 @@ final class RoundTripSpecialStringsTest extends TestCase
         $this->assertSame(
             $value,
             $decoded,
-            "Round-trip mismatch.\nEncoded:\n".$encoded."\n"
+            "Round-trip mismatch.\nEncoded:\n".$encoded."\n",
         );
     }
 }

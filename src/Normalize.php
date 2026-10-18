@@ -63,7 +63,7 @@ final class Normalize
         if (is_array($value)) {
             // Check if it's a list (sequential integer keys starting at 0)
             if (array_is_list($value)) {
-                return array_map(fn ($item) => self::normalizeValue($item), $value);
+                return array_map(self::normalizeValue(...), $value);
             }
 
             // It's an associative array, treat as object
@@ -128,7 +128,7 @@ final class Normalize
      * @param  mixed  $value  The value to check
      * @return bool True if the value is an array list
      *
-     * @phpstan-assert-if-true array $value
+     * @phpstan-assert-if-true list<mixed> $value
      */
     public static function isJsonArray(mixed $value): bool
     {
@@ -141,7 +141,7 @@ final class Normalize
      * @param  mixed  $value  The value to check
      * @return bool True if the value is an associative array
      *
-     * @phpstan-assert-if-true array $value
+     * @phpstan-assert-if-true array<string, mixed> $value
      */
     public static function isJsonObject(mixed $value): bool
     {
@@ -150,6 +150,8 @@ final class Normalize
 
     /**
      * @param  array<mixed>  $value
+     *
+     * @phpstan-assert-if-true list<string|int|float|bool|null> $value
      */
     public static function isArrayOfPrimitives(array $value): bool
     {
@@ -168,6 +170,8 @@ final class Normalize
 
     /**
      * @param  array<mixed>  $value
+     *
+     * @phpstan-assert-if-true list<list<string|int|float|bool|null>> $value
      */
     public static function isArrayOfArrays(array $value): bool
     {
@@ -191,6 +195,8 @@ final class Normalize
 
     /**
      * @param  array<mixed>  $value
+     *
+     * @phpstan-assert-if-true list<array<string, mixed>> $value
      */
     public static function isArrayOfObjects(array $value): bool
     {

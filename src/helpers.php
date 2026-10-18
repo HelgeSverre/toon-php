@@ -73,7 +73,7 @@ if (! function_exists('toon_compare')) {
      *
      * @param  mixed  $value  The value to compare
      * @param  EncodeOptions|null  $options  Optional TOON encoding options
-     * @return array{toon: int, json: int, savings: float, savings_percent: string} Comparison statistics
+     * @return array{toon: int, json: int, savings: int, savings_percent: string} Comparison statistics
      */
     function toon_compare(mixed $value, ?EncodeOptions $options = null): array
     {

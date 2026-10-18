@@ -12,7 +12,7 @@ use HelgeSverre\Toon\Exceptions\SyntaxException;
 final class Parser
 {
     public function __construct(
-        private readonly DecodeOptions $options
+        private readonly DecodeOptions $options,
     ) {}
 
     /**
@@ -236,13 +236,18 @@ final class Parser
         // header — e.g. [03], [-1], [bar], [2]extra: — which MUST error (§6, §14.2).
         // Non-strict mode falls through, treating the whole thing as a literal key.
         $trimmedKeyPart = trim($keyPart);
-        if ($this->options->strict
+        if (
+            $this->options->strict
             && ! str_starts_with($trimmedKeyPart, '"')
-            && (str_contains($trimmedKeyPart, '[') || str_contains($trimmedKeyPart, ']'))) {
+            && (
+                str_contains($trimmedKeyPart, '[')
+                || str_contains($trimmedKeyPart, ']')
+            )
+        ) {
             throw new SyntaxException(
                 'Malformed array header (invalid bracket length or content before colon)',
                 $line['line'],
-                $content
+                $content,
             );
         }
 

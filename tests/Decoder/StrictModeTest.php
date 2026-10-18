@@ -62,10 +62,12 @@ final class StrictModeTest extends TestCase
 
         // Too few: should work in lenient mode
         $result = Toon::decode('[5]: a,b,c', $options);
+        $this->assertIsArray($result);
         $this->assertCount(3, $result);
 
         // Too many: should work in lenient mode
         $result = Toon::decode('[2]: a,b,c,d', $options);
+        $this->assertIsArray($result);
         $this->assertCount(4, $result);
     }
 
@@ -90,9 +92,11 @@ final class StrictModeTest extends TestCase
         $options = DecodeOptions::lenient();
 
         $result = Toon::decode("[4]:\n  - a\n  - b", $options);
+        $this->assertIsArray($result);
         $this->assertCount(2, $result);
 
         $result = Toon::decode("[2]:\n  - a\n  - b\n  - c", $options);
+        $this->assertIsArray($result);
         $this->assertCount(3, $result);
     }
 
@@ -134,6 +138,7 @@ final class StrictModeTest extends TestCase
 
         // Too few rows
         $result = Toon::decode("[3]{id,name}:\n  1,Alice\n  2,Bob", $options);
+        $this->assertIsArray($result);
         $this->assertCount(2, $result);
     }
 
@@ -266,6 +271,7 @@ final class StrictModeTest extends TestCase
 
         // This should be OK - blank line is OUTSIDE the array
         $result = Toon::decode($toon);
+        $this->assertIsArray($result);
         $this->assertArrayHasKey('users', $result);
         $this->assertArrayHasKey('count', $result);
     }
@@ -275,6 +281,7 @@ final class StrictModeTest extends TestCase
         $options = DecodeOptions::lenient();
 
         $result = Toon::decode("[2]{id,name}:\n  1,Alice\n\n  2,Bob", $options);
+        $this->assertIsArray($result);
         $this->assertCount(2, $result);
     }
 
@@ -300,11 +307,14 @@ final class StrictModeTest extends TestCase
         $toon = "id: 1\n\nname: Alice\n\nemail: alice@test.com";
 
         $result = Toon::decode($toon);
-        $this->assertEquals([
-            'id' => 1,
-            'name' => 'Alice',
-            'email' => 'alice@test.com',
-        ], $result);
+        $this->assertEquals(
+            [
+                'id' => 1,
+                'name' => 'Alice',
+                'email' => 'alice@test.com',
+            ],
+            $result,
+        );
     }
 
     public function test_strict_mode_accepts_blank_line_at_start_of_document(): void

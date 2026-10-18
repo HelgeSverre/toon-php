@@ -59,7 +59,7 @@ final class HelpersTest extends TestCase
         $this->assertArrayHasKey('savings_percent', $stats);
         $this->assertIsInt($stats['toon']);
         $this->assertIsInt($stats['json']);
-        $this->assertTrue(is_int($stats['savings']) || is_float($stats['savings']));
+        $this->assertIsInt($stats['savings']);
         $this->assertIsString($stats['savings_percent']);
         $this->assertStringContainsString('%', $stats['savings_percent']);
     }
@@ -82,9 +82,9 @@ final class HelpersTest extends TestCase
     {
         $this->assertEquals(42, toon_decode('42'));
         $this->assertEquals('hello', toon_decode('hello'));
-        $this->assertEquals(true, toon_decode('true'));
-        $this->assertEquals(false, toon_decode('false'));
-        $this->assertEquals(null, toon_decode('null'));
+        $this->assertTrue(toon_decode('true'));
+        $this->assertFalse(toon_decode('false'));
+        $this->assertNull(toon_decode('null'));
     }
 
     public function test_toon_decode_decodes_arrays(): void
@@ -96,10 +96,10 @@ final class HelpersTest extends TestCase
     public function test_toon_decode_decodes_objects(): void
     {
         $toon = <<<'TOON'
-id: 123
-name: Ada
-active: true
-TOON;
+        id: 123
+        name: Ada
+        active: true
+        TOON;
 
         $result = toon_decode($toon);
         $this->assertEquals(['id' => 123, 'name' => 'Ada', 'active' => true], $result);
@@ -108,13 +108,13 @@ TOON;
     public function test_toon_decode_decodes_nested_structures(): void
     {
         $toon = <<<'TOON'
-user:
-  id: 123
-  email: ada@example.com
-  metadata:
-    active: true
-    score: 9.5
-TOON;
+        user:
+          id: 123
+          email: ada@example.com
+          metadata:
+            active: true
+            score: 9.5
+        TOON;
 
         $result = toon_decode($toon);
         $expected = [
@@ -133,10 +133,10 @@ TOON;
     public function test_toon_decode_accepts_options(): void
     {
         $toon = <<<'TOON'
-user:
-    id: 123
-    name: Ada
-TOON;
+        user:
+            id: 123
+            name: Ada
+        TOON;
 
         // Decode with custom indent option
         $options = new DecodeOptions(indent: 4);
@@ -147,10 +147,10 @@ TOON;
     public function test_toon_decode_lenient_allows_forgiving_parsing(): void
     {
         $toon = <<<'TOON'
-user:
-  id: 123
-  name: Ada
-TOON;
+        user:
+          id: 123
+          name: Ada
+        TOON;
 
         $result = toon_decode_lenient($toon);
         $this->assertEquals(['user' => ['id' => 123, 'name' => 'Ada']], $result);
