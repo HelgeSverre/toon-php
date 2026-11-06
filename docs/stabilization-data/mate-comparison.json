@@ -1,0 +1,75 @@
+{
+  "mate_revision": "dada7fc756852c6219131412a37028509470820b",
+  "baseline": {
+    "versions": [
+      "v3.3.0"
+    ],
+    "source": {
+      "type": "git",
+      "url": "https://github.com/HelgeSverre/toon-php.git",
+      "reference": "6c9163b174fb77f31e64bd9840d428b6691964fc"
+    }
+  },
+  "candidate": {
+    "versions": [
+      "dev-main"
+    ],
+    "source": {
+      "type": "git",
+      "url": "https://github.com/HelgeSverre/toon-php.git",
+      "reference": "455a44499c863eb79b597b44278b11e2493bc4fd"
+    }
+  },
+  "selected_suite": {
+    "baseline": "174 tests / 620 assertions",
+    "candidate": "174 tests / 620 assertions"
+  },
+  "full_suite": {
+    "baseline": "390 tests / 1127 assertions / 4 errors / 1 failure",
+    "candidate": "390 tests / 1127 assertions / 4 errors / 1 failure"
+  },
+  "output_comparisons": {
+    "probe.bin": {
+      "identical": true,
+      "sha256": "53f561c34f225b9ea68250cc6b0eb59034578264a10bce6e9543b9523693a977"
+    },
+    "capabilities.txt": {
+      "identical": true,
+      "sha256": "135118ba021ba351eb9200e187e5882f21ed4c3d66143954101d306dead0d044"
+    },
+    "tools.txt": {
+      "identical": true,
+      "sha256": "7b7c38f92f23e3dd3cb6e0e16efce651b305b3ba080d7946ac79a6f7daa1fc9c"
+    },
+    "inspect.txt": {
+      "identical": true,
+      "sha256": "421c9986ee51574b7e26b3a5ed6f44701a81df76025b4c312a18b4cd19560d7a"
+    },
+    "call.txt": {
+      "identical": true,
+      "sha256": "ba253ba85fd296600ebc53c17dff12479966b55e524ade17a724133296d6bb12"
+    }
+  },
+  "project_tools": {
+    "table": {
+      "identical": true,
+      "sha256": "5ac06ca978178dbae3a708700889b824ce2424d3b2cf7064ed25789a36d5f960"
+    },
+    "nested": {
+      "identical": true,
+      "sha256": "7c7e3529d0dd3f134e35eb37f6488b530833ecfe5c0c59d825ef4f11cea2dc52"
+    },
+    "types": {
+      "identical": true,
+      "sha256": "04f546f3a6798a2e05c49d5bb2b64aecc5ebe4adab6b605b7a075d9a2cba2603"
+    },
+    "empty": {
+      "identical": true,
+      "sha256": "13f1327fc8a467ce01f32e9be731684b7eb2e84275467593ee60f2ca0c0c940b"
+    },
+    "tools": {
+      "identical": true,
+      "sha256": "f21a721ac88e3b939e11365581f220e89e4ee89739583c043c66aa31ab5155ad"
+    }
+  }
+}

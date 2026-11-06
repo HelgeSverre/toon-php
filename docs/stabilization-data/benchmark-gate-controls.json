@@ -1,0 +1,18 @@
+{
+  "same": {
+    "exit": 0,
+    "expected": 0
+  },
+  "slower": {
+    "exit": 1,
+    "expected": 1
+  },
+  "missing": {
+    "exit": 2,
+    "expected": 2
+  },
+  "incomplete_workload_set": {
+    "exit": 2,
+    "expected": 2
+  }
+}

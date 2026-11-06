@@ -150,13 +150,41 @@ Tests performance at scale:
 
 ## CI Integration
 
-Benchmarks run automatically on every pull request via GitHub Actions:
+Pull requests run nine representative workloads on PHP 8.3: small/medium objects,
+tables and nested arrays for both encoding and decoding, plus a round trip.
+The base revision's benchmark definitions and PHPBench installation run against
+both codec autoloaders on the same runner. Each workload uses 500 revolutions,
+50 warmup revolutions and seven iterations; the gate compares median time per
+revolution. Samples are not repeatedly discarded until a target variance is met.
 
-- Runs on PHP 8.1, 8.2, 8.3, 8.4
-- Compares PR performance against main branch
-- Comments results on the PR
-- Stores benchmark results as artifacts
-- Fails if >15% performance regression detected
+A slowdown **greater than 15%** fails the comparison. Missing workloads, errors,
+malformed XML, invalid timing values or fewer than three samples also fail;
+missing results never count as a passing benchmark. A noisy run should be
+investigated and rerun, not suppressed by changing the threshold.
+The PR gate also requires exactly nine workloads, so a partially matching filter
+cannot silently reduce coverage on both sides.
+
+The Markdown report is written to the Actions job summary, and the raw XML and
+report are uploaded as the `benchmark-comparison` artifact even on regression.
+Same-repository PRs get one updated bot comment. Fork and Dependabot PRs retain
+the summary/artifact without a write token. The separate commenting job has PR
+write permission; jobs executing benchmark code have only content-read access.
+
+Run the full PHP 8.1–8.5 matrix manually through **Actions → Performance
+Benchmarks → Run workflow**. It also runs on version tags. Full runs retain
+PHPBench's per-subject iteration/revolution settings and upload XML measurements.
+No tag or release is needed to request a full run.
+
+To compare existing result files locally:
+
+```sh
+php tests/Support/compare-benchmarks.php base.xml candidate.xml comparison.md
+```
+
+Exit status is 0 for a passing comparison, 1 for a regression, and 2 for invalid
+or incomplete input. An optional fourth argument requires an exact workload
+count. The parser uses DOM, already required by PHPUnit in the
+development environment; the library's runtime requirements are unchanged.
 
 ## Adding New Benchmarks
 

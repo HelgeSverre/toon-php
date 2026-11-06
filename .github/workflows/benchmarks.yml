@@ -2,154 +2,142 @@ name: Performance Benchmarks
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   workflow_dispatch:
 
-jobs:
-  benchmark:
-    name: "Benchmark PHP ${{ matrix.php }}"
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+concurrency:
+  group: benchmarks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compare:
+    name: Representative performance comparison
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      report: ${{ steps.report.outputs.available }}
+    steps:
+      - name: Checkout baseline and benchmark harness
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: baseline
+          persist-credentials: false
+      - name: Checkout candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom
+          coverage: none
+      - name: Install baseline dependencies
+        working-directory: baseline
+        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts --no-plugins
+      - name: Install candidate dependencies
+        working-directory: candidate
+        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts --no-plugins
+      - name: Measure the same representative workloads against both codecs
+        working-directory: baseline
+        run: |
+          mkdir -p ../benchmark-results
+          filter='(EncodeBench|DecodeBench)::bench(Encode|Decode)(Small|Medium|TabularFormat|NestedArrays)$|ThroughputBench::benchRoundTripThroughput$'
+          # Use the base revision's harness and PHPBench for both runs. Only the codec autoloader changes.
+          vendor/bin/phpbench run --filter="$filter" --revs=500 --iterations=7 --warmup=50 --progress=none --dump-file=../benchmark-results/base.xml
+          vendor/bin/phpbench run --filter="$filter" --revs=500 --iterations=7 --warmup=50 --progress=none --bootstrap="$GITHUB_WORKSPACE/candidate/vendor/autoload.php" --dump-file=../benchmark-results/candidate.xml
+      - name: Fail on slowdowns greater than 15 percent or incomplete results
+        run: php candidate/tests/Support/compare-benchmarks.php benchmark-results/base.xml benchmark-results/candidate.xml benchmark-results/comparison.md 9
+      - name: Publish comparison summary
+        id: report
+        if: always()
+        run: |
+          mkdir -p benchmark-results
+          if [ ! -f benchmark-results/comparison.md ]; then
+            printf '## Performance comparison\n\nBenchmark execution failed before a complete comparison was available. See the job logs.\n' > benchmark-results/comparison.md
+          fi
+          cat benchmark-results/comparison.md >> "$GITHUB_STEP_SUMMARY"
+          echo 'available=true' >> "$GITHUB_OUTPUT"
+      - name: Upload measurements and report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-comparison
+          path: benchmark-results/
+          if-no-files-found: error
+          retention-days: 30
+
+  comment:
+    name: Report performance comparison
+    needs: compare
+    # Fork and Dependabot PRs retain the summary/artifact without requiring a write token.
+    if: >-
+      always() && needs.compare.outputs.report == 'true' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: benchmark-comparison
+          path: benchmark-results
+      - name: Create or update the benchmark comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- toon-benchmark-comparison -->';
+            const report = fs.readFileSync('benchmark-results/comparison.md', 'utf8');
+            const body = `${marker}\nCommit: ${context.payload.pull_request.head.sha}\n\n${report}`.slice(0, 60000);
+            const args = { ...context.repo, issue_number: context.issue.number };
+            const comments = await github.paginate(github.rest.issues.listComments, args);
+            const previous = comments.find(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(marker));
+            if (previous) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: previous.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...args, body });
+            }
+
+  full:
+    name: Full benchmark PHP ${{ matrix.php }}
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         php: ['8.1', '8.2', '8.3', '8.4', '8.5']
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring
           coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      - name: Run performance benchmarks
-        run: ./vendor/bin/phpbench run --report=summary --progress=none
-
-      - name: Store benchmark results
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - run: composer install --prefer-dist --no-progress --no-interaction --no-scripts --no-plugins
+      - name: Run full benchmarks
         run: |
-          mkdir -p benchmarks/performance/.phpbench/storage
-          ./vendor/bin/phpbench run --report=summary --store --tag=baseline_php${{ matrix.php }}
-
-      - name: Upload benchmark results
+          mkdir -p benchmark-results
+          vendor/bin/phpbench run --report=summary --progress=none --dump-file=benchmark-results/php${{ matrix.php }}.xml
+      - uses: actions/upload-artifact@v7
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results-php${{ matrix.php }}
-          path: benchmarks/performance/.phpbench/storage/
+          name: full-benchmarks-php${{ matrix.php }}
+          path: benchmark-results/
+          if-no-files-found: error
           retention-days: 30
-
-  compare:
-    name: Compare with baseline
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: mbstring
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      - name: Checkout main branch
-        run: git checkout main
-
-      - name: Run baseline benchmarks
-        run: |
-          ./vendor/bin/phpbench run --report=summary --store --tag=baseline_main
-        continue-on-error: true
-
-      - name: Checkout PR branch
-        run: git checkout ${{ github.event.pull_request.head.sha }}
-
-      - name: Install dependencies for PR
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      - name: Run PR benchmarks
-        run: |
-          ./vendor/bin/phpbench run --report=summary --store --tag=pr_${{ github.event.pull_request.number }}
-
-      - name: Compare benchmarks
-        id: compare
-        run: |
-          echo "## Performance Benchmark Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Comparing PR #${{ github.event.pull_request.number }} against main branch:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          ./vendor/bin/phpbench report --ref=baseline_main --ref=pr_${{ github.event.pull_request.number }} --report=default || echo "No baseline available for comparison" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-        continue-on-error: true
-
-      - name: Comment PR with results
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const summary = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            });
-        continue-on-error: true
-
-  regression-check:
-    name: Check for performance regressions
-    runs-on: ubuntu-latest
-    needs: benchmark
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: mbstring
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      - name: Run benchmarks and check for regressions
-        id: regression
-        run: |
-          # Run benchmarks
-          ./vendor/bin/phpbench run --report=summary --output=json > benchmark-results.json
-
-          # Parse results and check for significant regressions (>15% slower)
-          # This is a simplified check - in production you'd want more sophisticated analysis
-          echo "regression=false" >> $GITHUB_OUTPUT
-        continue-on-error: true
-
-      - name: Fail if significant regression detected
-        if: steps.regression.outputs.regression == 'true'
-        run: |
-          echo "::error::Significant performance regression detected (>15% slower)"
-          exit 1
