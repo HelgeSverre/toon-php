@@ -17,25 +17,25 @@ final class Version44Test extends TestCase
     {
         $encode = new EncodeOptions(4, '|');
         $decode = new DecodeOptions(4, false);
-        self::assertEquals(new EncodeOptions(1, "\t", SpecVersion::V4_4), $encode->withVersion(SpecVersion::V4_4)->withIndent(1)->withDelimiter("\t"));
-        self::assertEquals(new DecodeOptions(1, true, SpecVersion::V4_4), $decode->withVersion(SpecVersion::V4_4)->withIndent(1)->withStrict(true));
-        self::assertSame(SpecVersion::V3_3, $encode->version);
-        self::assertSame(SpecVersion::V3_3, $decode->version);
+        $this->assertEquals(new EncodeOptions(1, "\t", SpecVersion::V4_4), $encode->withVersion(SpecVersion::V4_4)->withIndent(1)->withDelimiter("\t"));
+        $this->assertEquals(new DecodeOptions(1, true, SpecVersion::V4_4), $decode->withVersion(SpecVersion::V4_4)->withIndent(1)->withStrict(true));
+        $this->assertSame(SpecVersion::V3_3, $encode->version);
+        $this->assertSame(SpecVersion::V3_3, $decode->version);
 
         for ($i = 0; $i < 3; $i++) {
             foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
                 $encoding = new EncodeOptions(version: $version);
                 $decoding = new DecodeOptions(version: $version);
-                self::assertSame('"#hello"', toon('#hello', $encoding));
-                self::assertSame([], Toon::decode('#hello', $decoding));
-                self::assertTrue(toon_validate("#comment\nx: 1", $decoding));
-                self::assertSame('#hello', toon('#hello'));
-                self::assertSame('#hello', Toon::decode('#hello'));
-                self::assertSame('', Toon::encode([]));
+                $this->assertSame('"#hello"', toon('#hello', $encoding));
+                $this->assertSame([], Toon::decode('#hello', $decoding));
+                $this->assertTrue(toon_validate("#comment\nx: 1", $decoding));
+                $this->assertSame('#hello', toon('#hello'));
+                $this->assertSame('#hello', Toon::decode('#hello'));
+                $this->assertSame('', Toon::encode([]));
             }
             $document = "[1]{a,b}:\n  1";
-            self::assertSame([['a' => 1]], Toon::decode($document, new DecodeOptions(strict: false, version: SpecVersion::V4_1)));
-            self::assertFalse(Toon::validate($document, new DecodeOptions(strict: false, version: SpecVersion::V4_4)));
+            $this->assertSame([['a' => 1]], Toon::decode($document, new DecodeOptions(strict: false, version: SpecVersion::V4_1)));
+            $this->assertFalse(Toon::validate($document, new DecodeOptions(strict: false, version: SpecVersion::V4_4)));
         }
     }
 
@@ -63,7 +63,7 @@ final class Version44Test extends TestCase
     public function test_non_strict_mode_does_not_relax_other_rules(string $document): void
     {
         foreach ([true, false] as $strict) {
-            self::assertFalse(Toon::validate($document, new DecodeOptions(strict: $strict, version: SpecVersion::V4_4)));
+            $this->assertFalse(Toon::validate($document, new DecodeOptions(strict: $strict, version: SpecVersion::V4_4)));
         }
     }
 
@@ -80,8 +80,8 @@ final class Version44Test extends TestCase
     #[DataProvider('recoveries')]
     public function test_exact_non_strict_recoveries(string $document, array $expected): void
     {
-        self::assertFalse(Toon::validate($document, new DecodeOptions(version: SpecVersion::V4_4)));
-        self::assertSame($expected, Toon::decode($document, new DecodeOptions(strict: false, version: SpecVersion::V4_4)));
+        $this->assertFalse(Toon::validate($document, new DecodeOptions(version: SpecVersion::V4_4)));
+        $this->assertSame($expected, Toon::decode($document, new DecodeOptions(strict: false, version: SpecVersion::V4_4)));
     }
 
     public static function canonicalNumbers(): iterable
@@ -109,9 +109,11 @@ final class Version44Test extends TestCase
             foreach (['3', '17', '-1'] as $precision) {
                 ini_set('serialize_precision', $precision);
                 $wire = Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_4));
-                self::assertSame($precision, ini_get('serialize_precision'));
-                self::assertSame($expected, $wire);
-                self::assertSame($value === 0.0 ? 0.0 : $value, (float) Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4)));
+                $this->assertSame($precision, ini_get('serialize_precision'));
+                $this->assertSame($expected, $wire);
+                $decoded = Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4));
+                $this->assertIsNumeric($decoded);
+                $this->assertSame($value === 0.0 ? 0.0 : $value, (float) $decoded);
             }
         } finally {
             ini_set('serialize_precision', $original);
@@ -122,12 +124,12 @@ final class Version44Test extends TestCase
     {
         foreach ([true, false] as $strict) {
             $options = new DecodeOptions(strict: $strict, version: SpecVersion::V4_4);
-            self::assertSame('1e999', Toon::decode('1e999', $options));
-            self::assertSame('-1e999', Toon::decode('-1e999', $options));
-            self::assertSame(0.0, Toon::decode('1e-999', $options));
-            self::assertSame(PHP_INT_MAX, Toon::decode((string) PHP_INT_MAX, $options));
-            self::assertSame(PHP_INT_MIN, Toon::decode((string) PHP_INT_MIN, $options));
-            self::assertSame(1.0, Toon::decode('1.0', $options));
+            $this->assertSame('1e999', Toon::decode('1e999', $options));
+            $this->assertSame('-1e999', Toon::decode('-1e999', $options));
+            $this->assertSame(0.0, Toon::decode('1e-999', $options));
+            $this->assertSame(PHP_INT_MAX, Toon::decode((string) PHP_INT_MAX, $options));
+            $this->assertSame(PHP_INT_MIN, Toon::decode((string) PHP_INT_MIN, $options));
+            $this->assertSame(1.0, Toon::decode('1.0', $options));
         }
     }
 
@@ -135,44 +137,44 @@ final class Version44Test extends TestCase
     {
         foreach ([true, false] as $strict) {
             $options = new DecodeOptions(strict: $strict, version: SpecVersion::V4_4);
-            self::assertSame(['k' => ['u' => ['id' => 42]]], Toon::decode("k[1:]{id}:\n  u:42", $options));
+            $this->assertSame(['k' => ['u' => ['id' => 42]]], Toon::decode("k[1:]{id}:\n  u:42", $options));
         }
     }
 
     public function test_number_prefix_in_a_string_does_not_require_quotes(): void
     {
         $options = new EncodeOptions(version: SpecVersion::V4_4);
-        self::assertSame('1st', Toon::encode('1st', $options));
-        self::assertSame('1eagle', Toon::encode('1eagle', $options));
+        $this->assertSame('1st', Toon::encode('1st', $options));
+        $this->assertSame('1eagle', Toon::encode('1eagle', $options));
     }
 
     public function test_error_lines_count_comments_and_blank_lines(): void
     {
         try {
             Toon::decode("#comment\n\nk[03]: 1", new DecodeOptions(version: SpecVersion::V4_4));
-            self::fail('Malformed header was accepted');
+            $this->fail('Malformed header was accepted');
         } catch (\HelgeSverre\Toon\Exceptions\DecodeException $error) {
-            self::assertSame(3, $error->getToonLine());
-            self::assertSame('k[03]: 1', $error->getSnippet());
+            $this->assertSame(3, $error->getToonLine());
+            $this->assertSame('k[03]: 1', $error->getSnippet());
         }
     }
 
     public function test_empty_and_numeric_key_objects_remain_objects_during_encoding(): void
     {
         $options = new EncodeOptions(version: SpecVersion::V4_4);
-        self::assertSame('', Toon::encode(new \stdClass, $options));
-        self::assertSame('empty:', Toon::encode(['empty' => new \stdClass], $options));
-        self::assertSame('"0": value', Toon::encode((object) ['0' => 'value'], $options));
-        self::assertSame("[2:]{\"0\"}:\n  a: x\n  b: y", Toon::encode((object) ['a' => (object) ['0' => 'x'], 'b' => (object) ['0' => 'y']], $options));
-        self::assertSame("[2]:\n  -\n  -", Toon::encode([new \stdClass, new \stdClass], $options));
+        $this->assertSame('', Toon::encode(new \stdClass, $options));
+        $this->assertSame('empty:', Toon::encode(['empty' => new \stdClass], $options));
+        $this->assertSame('"0": value', Toon::encode((object) ['0' => 'value'], $options));
+        $this->assertSame("[2:]{\"0\"}:\n  a: x\n  b: y", Toon::encode((object) ['a' => (object) ['0' => 'x'], 'b' => (object) ['0' => 'y']], $options));
+        $this->assertSame("[2]:\n  -\n  -", Toon::encode([new \stdClass, new \stdClass], $options));
     }
 
     public function test_newline_in_a_key_is_quoted_and_retained(): void
     {
         $input = ["a\n" => 1];
         $wire = Toon::encode($input, new EncodeOptions(version: SpecVersion::V4_4));
-        self::assertSame('"a\\n": 1', $wire);
-        self::assertSame($input, Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4)));
+        $this->assertSame('"a\\n": 1', $wire);
+        $this->assertSame($input, Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4)));
     }
 
     public static function invalidHostStrings(): iterable
@@ -193,8 +195,7 @@ final class Version44Test extends TestCase
 
     public function test_self_returning_hook_falls_back_to_properties_and_resources_remain_open(): void
     {
-        $value = new class
-        {
+        $value = new class {
             public string $name = 'Ada';
 
             public function toJSON(): self
@@ -203,13 +204,13 @@ final class Version44Test extends TestCase
             }
         };
         $options = new EncodeOptions(version: SpecVersion::V4_4);
-        self::assertSame('name: Ada', Toon::encode($value, $options));
+        $this->assertSame('name: Ada', Toon::encode($value, $options));
         $stream = fopen('php://memory', 'r+');
         try {
             fwrite($stream, 'retained');
             rewind($stream);
-            self::assertSame('stream: null', Toon::encode(['stream' => $stream], $options));
-            self::assertSame('retained', stream_get_contents($stream));
+            $this->assertSame('stream: null', Toon::encode(['stream' => $stream], $options));
+            $this->assertSame('retained', stream_get_contents($stream));
         } finally {
             fclose($stream);
         }

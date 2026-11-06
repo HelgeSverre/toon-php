@@ -52,14 +52,14 @@ final class Version44RoundTripTest extends TestCase
     public function test_finite_binary64_values_round_trip_exactly(float $value): void
     {
         $wire = Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_4));
-        self::assertSame($value === 0.0 ? 0.0 : $value, (float) Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4)), $wire);
+        $decoded = Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4));
+        $this->assertIsNumeric($decoded, $wire);
+        $this->assertSame($value === 0.0 ? 0.0 : $value, (float) $decoded, $wire);
     }
 
     private static function next(int &$state): int
     {
-        $state = ($state * 1664525 + 1013904223) & 0xFFFFFFFF;
-
-        return $state;
+        return (($state * 1664525) + 1013904223) & 0xFFFFFFFF;
     }
 
     private static function value(int &$state, int $depth): mixed

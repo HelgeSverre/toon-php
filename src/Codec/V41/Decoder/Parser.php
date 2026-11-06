@@ -15,7 +15,7 @@ use HelgeSverre\Toon\Exceptions\SyntaxException;
 final class Parser
 {
     public function __construct(
-        private readonly DecodeOptions $options
+        private readonly DecodeOptions $options,
     ) {}
 
     /**
@@ -64,8 +64,10 @@ final class Parser
 
         // §5: a single non-blank line that is neither an array header nor a
         // key-value line is a root primitive.
-        if ($this->nextContentIndex($lines, $firstIndex + 1) === null
-            && $this->findUnquotedColon($content) === null) {
+        if (
+            $this->nextContentIndex($lines, $firstIndex + 1) === null
+            && $this->findUnquotedColon($content) === null
+        ) {
             return $this->parsePrimitive($first);
         }
 
@@ -106,7 +108,7 @@ final class Parser
                 if ($this->options->strict) {
                     throw new StrictModeException(
                         'Over-indented line: no enclosing scope opens at this depth',
-                        $line['line']
+                        $line['line'],
                     );
                 }
 
@@ -180,12 +182,12 @@ final class Parser
                     throw new SyntaxException(
                         'Keyless header outside its valid position',
                         $line['line'],
-                        $content
+                        $content,
                     );
                 }
             } else {
                 $key = $header['key'];
-                assert($key !== null);
+                assert($key !== null, 'keyed header must carry a key');
 
                 return [
                     'key' => $key,
@@ -274,7 +276,7 @@ final class Parser
                 throw new SyntaxException(
                     'Keyless fields-bearing header outside the document root',
                     $firstLine['line'],
-                    $content
+                    $content,
                 );
             }
 
@@ -306,7 +308,7 @@ final class Parser
 
         $values = $this->decodeCells(
             DelimiterParser::split($header['inlineValues'], $header['delimiter'], $lineNumber),
-            $lineNumber
+            $lineNumber,
         );
 
         if ($length !== null) {
@@ -512,7 +514,7 @@ final class Parser
                 if ($this->options->strict) {
                     throw new StrictModeException(
                         'Line at tabular row depth is not a row and belongs to no scope',
-                        $line['line']
+                        $line['line'],
                     );
                 }
 
@@ -524,7 +526,7 @@ final class Parser
 
             $cells = $this->decodeCells(
                 DelimiterParser::split($rowContent, $header['delimiter'], $line['line']),
-                $line['line']
+                $line['line'],
             );
 
             if ($this->options->strict) {
@@ -692,12 +694,12 @@ final class Parser
     {
         $seen = [];
         foreach ($fields as $field) {
-            if (isset($seen[$field['name']])) {
+            if (array_key_exists($field['name'], $seen)) {
                 if ($this->options->strict) {
                     throw new SyntaxException(
                         "Duplicate field name in header field list: {$field['name']}",
                         $lineNumber,
-                        $snippet
+                        $snippet,
                     );
                 }
             }
@@ -732,7 +734,7 @@ final class Parser
         if ($childDepth > $headerDepth + 1) {
             throw new StrictModeException(
                 'Indentation depth jump: nested scope starts more than one level deeper',
-                $lines[$childIndex]['line']
+                $lines[$childIndex]['line'],
             );
         }
     }
@@ -755,7 +757,7 @@ final class Parser
         if ($trailingIndex !== null) {
             throw new StrictModeException(
                 'Trailing content after a completed root form',
-                $lines[$trailingIndex]['line']
+                $lines[$trailingIndex]['line'],
             );
         }
     }

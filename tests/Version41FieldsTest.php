@@ -46,8 +46,8 @@ final class Version41FieldsTest extends TestCase
     {
         foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
             $wire = Toon::encode($input, new EncodeOptions(version: $version));
-            self::assertSame($expected, $wire, $version->value);
-            self::assertSame($decoded, Toon::decode($wire, new DecodeOptions(version: $version)), $version->value);
+            $this->assertSame($expected, $wire, $version->value);
+            $this->assertSame($decoded, Toon::decode($wire, new DecodeOptions(version: $version)), $version->value);
         }
     }
 }

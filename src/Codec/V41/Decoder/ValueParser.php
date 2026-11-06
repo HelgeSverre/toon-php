@@ -63,7 +63,7 @@ final class ValueParser
             throw new SyntaxException(
                 'Unterminated quoted string',
                 $lineNumber,
-                $token
+                $token,
             );
         }
 
@@ -71,7 +71,7 @@ final class ValueParser
             throw new SyntaxException(
                 'Unexpected content after closing quote',
                 $lineNumber,
-                $token
+                $token,
             );
         }
 
@@ -150,7 +150,7 @@ final class ValueParser
                     default => throw new SyntaxException(
                         "Invalid escape sequence: \\{$next}",
                         $lineNumber,
-                        $original
+                        $original,
                     ),
                 };
 
@@ -186,7 +186,7 @@ final class ValueParser
             throw new SyntaxException(
                 'Invalid escape sequence: \\u requires four hex digits',
                 $lineNumber,
-                $original
+                $original,
             );
         }
 
@@ -197,7 +197,7 @@ final class ValueParser
             throw new SyntaxException(
                 "Invalid escape sequence: lone surrogate \\u{$hex}",
                 $lineNumber,
-                $original
+                $original,
             );
         }
 
@@ -265,7 +265,8 @@ final class ValueParser
      */
     private static function parseNumeric(string $token): int|float|null
     {
-        if (preg_match(self::NUMBER_GRAMMAR, $token) !== 1) {
+        // The grammar is a subset of is_numeric(); the second check narrows the type.
+        if (preg_match(self::NUMBER_GRAMMAR, $token) !== 1 || ! is_numeric($token)) {
             return null;
         }
 

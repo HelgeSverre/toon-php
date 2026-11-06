@@ -7,12 +7,13 @@ editor-url = "phpstorm://open?file=%file%&line=%line%&column=%column%"
 
 [source]
 paths = ["src", "tests"]
-includes = ["vendor"]
-excludes = ["tests/Fixtures"] # vendored upstream fixtures and Mate source, kept verbatim
+includes = ["vendor", "tests/Fixtures/mate"] # vendored Mate source: scanned for symbols, never analyzed
+excludes = []
 
 # ── Formatter ──────────────────────────────────────────────────────────────────
 
 [formatter]
+excludes = ["tests/Fixtures"] # vendored upstream fixtures and Mate source, kept verbatim
 # Tuned to match the Laravel Pint style the codebase was written in.
 
 # ┌─ Layout ────────────────────────────────────────────────────────────────────┐
@@ -90,11 +91,24 @@ indent-heredoc = false
 
 [analyzer]
 minimum-fail-level = "warning"
-ignore = ["mixed-assignment"]
+ignore = [
+    "mixed-assignment",
+    # These read spec fixtures from JSON, so values are untyped by nature
+    { code = "mixed-argument", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "mixed-operand", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "mixed-property-access", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "mixed-array-access", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "invalid-iterator", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "possibly-false-argument", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "possibly-false-iterator", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "possibly-null-argument", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+    { code = "possibly-undefined-string-array-index", in = ["tests/VersionedFixturesTest.php", "tests/Support/capture-legacy.php"] },
+]
 
 # ── Linter ─────────────────────────────────────────────────────────────────────
 
 [linter]
+excludes = ["tests/Fixtures"]
 minimum-fail-level = "warning"
 integrations = ["php-unit"]
 
@@ -110,6 +124,7 @@ too-many-methods = { enabled = false } # triggers too much in test classes
 excessive-parameter-list = { enabled = false } # option objects
 single-class-per-file = { enabled = false } # tests define fixture enums inline
 readable-literal = { enabled = false }
+no-ini-set = { enabled = false } # the 4.4 float encoder pins serialize_precision for the call and restores it
 # Size/complexity metrics: the parser and encoder are intentionally monolithic state machines
 cyclomatic-complexity = { enabled = false }
 kan-defect = { enabled = false }

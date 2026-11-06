@@ -13,7 +13,7 @@ final class Encoders
 {
     public function __construct(
         private readonly EncodeOptions $options,
-        private readonly LineWriter $writer
+        private readonly LineWriter $writer,
     ) {}
 
     /**
@@ -24,7 +24,7 @@ final class Encoders
      * tabular objects, and list form where no tabular form applies.
      *
      * @param  mixed  $value  The value to encode
-     * @param  int  $depth  Current indentation depth (default: 0)
+     * @param  non-negative-int  $depth  Current indentation depth (default: 0)
      */
     public function encodeValue(mixed $value, int $depth = 0): void
     {
@@ -70,7 +70,8 @@ final class Encoders
     }
 
     /**
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
+     * @param  non-negative-int  $depth
      */
     private function encodeObject(array $object, int $depth): void
     {
@@ -79,6 +80,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     private function encodeKeyValuePair(string $key, mixed $value, int $depth, bool $isListItem = false): void
     {
         // Encode the key using identifier pattern matching
@@ -177,6 +181,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>  $array
+     * @param  non-negative-int  $depth
      */
     private function encodeArray(array $array, int $depth): void
     {
@@ -193,7 +198,7 @@ final class Encoders
         if (Normalize::isArrayOfArrays($array)) {
             $this->writer->push($depth, $this->formatListHeader(count($array), null));
             foreach ($array as $item) {
-                $this->writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$this->formatInlineArray($item)); // @phpstan-ignore argument.type
+                $this->writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$this->formatInlineArray($item));
             }
 
             return;
@@ -226,7 +231,7 @@ final class Encoders
 
         $encoded = array_map(
             fn ($item) => Primitives::encodePrimitive($item, $this->options->delimiter),
-            $array
+            $array,
         );
 
         $joined = implode($this->options->delimiter, $encoded);
@@ -250,9 +255,14 @@ final class Encoders
     {
         $header = $key !== null ? Primitives::encodeKey($key) : '';
 
-        return $header
-            .Constants::OPEN_BRACKET.$length.$this->getDelimiterKey($this->options->delimiter).Constants::CLOSE_BRACKET
-            .Constants::COLON;
+        return (
+            $header
+                .Constants::OPEN_BRACKET
+                .$length
+                .$this->getDelimiterKey($this->options->delimiter)
+                .Constants::CLOSE_BRACKET
+                .Constants::COLON
+        );
     }
 
     /**
@@ -268,10 +278,17 @@ final class Encoders
     {
         $header = $key !== null ? Primitives::encodeKey($key) : '';
 
-        return $header
-            .Constants::OPEN_BRACKET.$length.$this->getDelimiterKey($this->options->delimiter).Constants::CLOSE_BRACKET
-            .Constants::OPEN_BRACE.Fields::render($fields, $this->options->delimiter).Constants::CLOSE_BRACE
-            .Constants::COLON;
+        return (
+            $header
+                .Constants::OPEN_BRACKET
+                .$length
+                .$this->getDelimiterKey($this->options->delimiter)
+                .Constants::CLOSE_BRACKET
+                .Constants::OPEN_BRACE
+                .Fields::render($fields, $this->options->delimiter)
+                .Constants::CLOSE_BRACE
+                .Constants::COLON
+        );
     }
 
     /**
@@ -286,17 +303,25 @@ final class Encoders
     {
         $header = $key !== null ? Primitives::encodeKey($key) : '';
 
-        return $header
-            .Constants::OPEN_BRACKET.$entryCount.Constants::COLON.$this->getDelimiterKey($this->options->delimiter).Constants::CLOSE_BRACKET
-            .Constants::OPEN_BRACE.Fields::render($fields, $this->options->delimiter).Constants::CLOSE_BRACE
-            .Constants::COLON;
+        return (
+            $header
+                .Constants::OPEN_BRACKET
+                .$entryCount
+                .Constants::COLON
+                .$this->getDelimiterKey($this->options->delimiter)
+                .Constants::CLOSE_BRACKET
+                .Constants::OPEN_BRACE
+                .Fields::render($fields, $this->options->delimiter)
+                .Constants::CLOSE_BRACE
+                .Constants::COLON
+        );
     }
 
     /**
      * Keyed tabular detection (§9.5): at least two entries, every entry value a
      * non-empty object, all entry values sharing one uniform shape.
      *
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
      * @return array<int, array{name: string, children: array<int, mixed>|null}>|null
      */
     private static function detectKeyedTabular(array $object): ?array
@@ -311,6 +336,7 @@ final class Encoders
     /**
      * @param  array<mixed>  $array
      * @param  array<int, array{name: string, children: array<int, mixed>|null}>  $fields
+     * @param  non-negative-int  $depth
      */
     private function writeTabularRows(array $array, array $fields, int $depth): void
     {
@@ -323,8 +349,9 @@ final class Encoders
     /**
      * Write one `entrykey: c1<delim>c2…` line per entry, in encounter order (§9.5).
      *
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
      * @param  array<int, array{name: string, children: array<int, mixed>|null}>  $fields
+     * @param  non-negative-int  $depth
      */
     private function writeEntryRows(array $object, array $fields, int $depth): void
     {
@@ -332,13 +359,14 @@ final class Encoders
             $cells = Fields::cells($fields, $entryValue, $this->options->delimiter);
             $this->writer->push(
                 $depth,
-                Primitives::encodeKey((string) $entryKey).Constants::COLON.Constants::SPACE.implode($this->options->delimiter, $cells)
+                Primitives::encodeKey((string) $entryKey).Constants::COLON.Constants::SPACE.implode($this->options->delimiter, $cells),
             );
         }
     }
 
     /**
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
+     * @param  non-negative-int  $depth
      */
     private function encodeObjectAsListItem(array $object, int $depth): void
     {
@@ -361,6 +389,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     private function encodeMixedArrayItem(mixed $item, int $depth): void
     {
         // Primitives

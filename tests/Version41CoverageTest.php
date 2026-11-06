@@ -33,8 +33,10 @@ final class Version41CoverageTest extends TestCase
     public function test_numbers_use_canonical_form_without_losing_precision(float $value, string $expected): void
     {
         $wire = Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_1));
-        self::assertSame($expected, $wire);
-        self::assertSame($value, (float) Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_1)));
+        $this->assertSame($expected, $wire);
+        $decoded = Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_1));
+        $this->assertIsNumeric($decoded);
+        $this->assertSame($value, (float) $decoded);
     }
 
     public static function invalidStrings(): iterable
@@ -53,14 +55,14 @@ final class Version41CoverageTest extends TestCase
 
     public function test_strict_decoder_rejects_invalid_utf8(): void
     {
-        self::assertFalse(Toon::validate("key: \xFF", new DecodeOptions(version: SpecVersion::V4_1)));
+        $this->assertFalse(Toon::validate("key: \xFF", new DecodeOptions(version: SpecVersion::V4_1)));
     }
 
     public function test_lenient_short_rows_preserve_available_nested_fields(): void
     {
         $options = new DecodeOptions(strict: false, version: SpecVersion::V4_1);
-        self::assertSame([['id' => 1, 'address' => ['city' => 'Oslo']]], Toon::decode("[1]{id,address{city,zip}}:\n  1,Oslo", $options));
-        self::assertSame(['user' => ['id' => 1, 'address' => []]], Toon::decode("[1:]{id,address{city,zip}}:\n  user: 1", $options));
+        $this->assertSame([['id' => 1, 'address' => ['city' => 'Oslo']]], Toon::decode("[1]{id,address{city,zip}}:\n  1,Oslo", $options));
+        $this->assertSame(['user' => ['id' => 1, 'address' => []]], Toon::decode("[1:]{id,address{city,zip}}:\n  user: 1", $options));
     }
 
     public static function lenientDocuments(): iterable
@@ -77,14 +79,13 @@ final class Version41CoverageTest extends TestCase
     public function test_leniency_is_explicit_and_preserves_recognized_records(string $document, array $expected): void
     {
         $strict = new DecodeOptions(version: SpecVersion::V4_1);
-        self::assertFalse(Toon::validate($document, $strict));
-        self::assertSame($expected, Toon::decode($document, $strict->withStrict(false)));
+        $this->assertFalse(Toon::validate($document, $strict));
+        $this->assertSame($expected, Toon::decode($document, $strict->withStrict(false)));
     }
 
     public function test_self_returning_json_hook_falls_back_to_public_properties(): void
     {
-        $value = new class
-        {
+        $value = new class {
             public string $name = 'Ada';
 
             public function toJSON(): self
@@ -92,7 +93,7 @@ final class Version41CoverageTest extends TestCase
                 return $this;
             }
         };
-        self::assertSame('name: Ada', Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_1)));
+        $this->assertSame('name: Ada', Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_1)));
     }
 
     public function test_unsupported_resource_is_normalized_without_consuming_it(): void
@@ -101,8 +102,8 @@ final class Version41CoverageTest extends TestCase
         try {
             fwrite($resource, 'data');
             rewind($resource);
-            self::assertSame('stream: null', Toon::encode(['stream' => $resource], new EncodeOptions(version: SpecVersion::V4_1)));
-            self::assertSame('data', stream_get_contents($resource));
+            $this->assertSame('stream: null', Toon::encode(['stream' => $resource], new EncodeOptions(version: SpecVersion::V4_1)));
+            $this->assertSame('data', stream_get_contents($resource));
         } finally {
             fclose($resource);
         }

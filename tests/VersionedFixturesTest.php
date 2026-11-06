@@ -48,9 +48,11 @@ final class VersionedFixturesTest extends TestCase
         $decode = new DecodeOptions(indent: $options->indent ?? $options->indentSize ?? 2, strict: $options->strict ?? true, version: $version);
         $run = static function (?SpecVersion $selected) use ($operation, $case, $encode, $decode): array {
             try {
-                return ['value' => $operation === 'encode'
-                    ? Toon::encode($case->input, $selected === null ? new EncodeOptions($encode->indent, $encode->delimiter) : $encode)
-                    : Toon::decode($case->input, $selected === null ? new DecodeOptions($decode->indent, $decode->strict) : $decode)];
+                return [
+                    'value' => $operation === 'encode'
+                        ? Toon::encode($case->input, $selected === null ? new EncodeOptions($encode->indent, $encode->delimiter) : $encode)
+                        : Toon::decode($case->input, $selected === null ? new DecodeOptions($decode->indent, $decode->strict) : $decode),
+                ];
             } catch (Throwable $error) {
                 return ['error' => $error::class, 'message' => $error->getMessage()];
             }
@@ -59,8 +61,8 @@ final class VersionedFixturesTest extends TestCase
         if ($version === SpecVersion::V3_3) {
             // Preserve the released behavior, including unsupported optional folding/expansion.
             $baseline = json_decode(file_get_contents(__DIR__.'/Fixtures/legacy-3.2.1.json'), true, 512, JSON_THROW_ON_ERROR);
-            self::assertSame($baseline['cases'][$id], $actual);
-            self::assertSame($actual, $run(null), 'Omitting the version must preserve released behavior');
+            $this->assertSame($baseline['cases'][$id], $actual);
+            $this->assertSame($actual, $run(null), 'Omitting the version must preserve released behavior');
 
             $deviations = json_decode(file_get_contents(__DIR__.'/Fixtures/legacy-deviations.json'), true, 512, JSON_THROW_ON_ERROR);
             if (in_array($id, $deviations, true)) {
@@ -68,12 +70,12 @@ final class VersionedFixturesTest extends TestCase
             }
         }
         if ($case->shouldError ?? false) {
-            self::assertArrayHasKey('error', $actual);
-            self::assertTrue(is_a($actual['error'], DecodeException::class, true) || $actual['error'] === \InvalidArgumentException::class, $actual['error']);
+            $this->assertArrayHasKey('error', $actual);
+            $this->assertTrue(is_a($actual['error'], DecodeException::class, true) || $actual['error'] === \InvalidArgumentException::class, $actual['error']);
 
             return;
         }
-        self::assertArrayHasKey('value', $actual, json_encode($actual));
+        $this->assertArrayHasKey('value', $actual, json_encode($actual));
         self::assertJsonValue($case->expected, $actual['value']);
         if ($version !== SpecVersion::V3_3 && $operation === 'encode') {
             self::assertJsonValue($case->input, Toon::decode($actual['value'], $decode), false);

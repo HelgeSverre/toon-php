@@ -127,7 +127,7 @@ final class HeaderParser
 
         // Optional field list.
         $fields = null;
-        if ($pos < $len && $line[$pos] === Constants::OPEN_BRACE) {
+        if (substr($line, $pos, 1) === Constants::OPEN_BRACE) {
             $braceEnd = self::findMatchingBrace($line, $pos);
             if ($braceEnd === false) {
                 $defect = 'Malformed field list: unmatched brace';
@@ -191,7 +191,7 @@ final class HeaderParser
             'delimiter' => $delimiter,
             'fields' => null,
             'inlineValues' => $remaining !== '' ? $remaining : null,
-            'format' => ($remaining !== '' || $length === 0) ? 'inline' : 'list',
+            'format' => $remaining !== '' || $length === 0 ? 'inline' : 'list',
         ];
     }
 
