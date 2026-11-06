@@ -106,7 +106,7 @@ For field maps, preserve arbitrary string keys, including NUL-prefixed keys; rea
 - **Documentation**: Reports and documentation go in `docs/`. Maintain root agent instruction files in place; do not create root-level reports.
 - **Examples**: Example code in documentation and examples/ directory must be valid, executable PHP syntax that matches the actual codebase.
 - **Spec Files**: Pin specifications under `docs/specs/{version}/SPEC.md` and official fixtures under `tests/Fixtures/spec/{version}/`, retaining licenses and revision metadata. `docs/SPEC.md` remains the legacy document.
-- **Vendored Files**: Preserve upstream fixtures and Mate source verbatim; `mago.toml` excludes `tests/Fixtures/`.
+- **Vendored Files**: Preserve upstream fixtures and Mate source verbatim. `mago.toml` excludes `tests/Fixtures/` from formatting and linting while retaining Mate symbols for analysis.
 
 ### Development Workflow
 
