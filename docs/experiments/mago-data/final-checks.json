@@ -1,0 +1,15 @@
+{
+  "format": {
+    "exit": 0
+  },
+  "lint": {
+    "exit": 0
+  },
+  "analyze": {
+    "exit": 0
+  },
+  "phpunit84": {
+    "exit": 0,
+    "result": "OK (4830 tests, 87084 assertions)"
+  }
+}

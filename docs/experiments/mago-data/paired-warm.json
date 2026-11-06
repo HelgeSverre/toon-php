@@ -1,0 +1,176 @@
+{
+  "samples": [
+    {
+      "baseline": {
+        "seconds": 1.148202999989735,
+        "exits": [
+          0,
+          0
+        ]
+      },
+      "mago": {
+        "seconds": 0.3178569999872707,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mago": {
+        "seconds": 0.30306500001461245,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "baseline": {
+        "seconds": 0.5681150000018533,
+        "exits": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "baseline": {
+        "seconds": 1.1191530000069179,
+        "exits": [
+          0,
+          0
+        ]
+      },
+      "mago": {
+        "seconds": 0.6953879999928176,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mago": {
+        "seconds": 0.32731900000362657,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "baseline": {
+        "seconds": 0.5473679999995511,
+        "exits": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "baseline": {
+        "seconds": 0.5442990000010468,
+        "exits": [
+          0,
+          0
+        ]
+      },
+      "mago": {
+        "seconds": 0.30330299999332055,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mago": {
+        "seconds": 0.3079049999942072,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "baseline": {
+        "seconds": 1.1437739999964833,
+        "exits": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "baseline": {
+        "seconds": 0.7277049999975134,
+        "exits": [
+          0,
+          0
+        ]
+      },
+      "mago": {
+        "seconds": 0.39029999999911524,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mago": {
+        "seconds": 0.30339899999671616,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "baseline": {
+        "seconds": 0.6189959999755956,
+        "exits": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "baseline": {
+        "seconds": 0.5816609999747016,
+        "exits": [
+          0,
+          0
+        ]
+      },
+      "mago": {
+        "seconds": 0.4657080000033602,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "mago": {
+        "seconds": 0.4573390000150539,
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "baseline": {
+        "seconds": 0.8201609999814536,
+        "exits": [
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "configuration": "# ── Global ─────────────────────────────────────────────────────────────────────\n\nphp-version = \"8.1\"\neditor-url = \"phpstorm://open?file=%file%&line=%line%&column=%column%\"\n\n# ── Source Discovery ───────────────────────────────────────────────────────────\n\n[source]\npaths = [\"src\", \"tests\"]\nincludes = [\"vendor\", \"tests/Fixtures/mate\"] # vendored Mate source: scanned for symbols, never analyzed\nexcludes = []\n\n# ── Formatter ──────────────────────────────────────────────────────────────────\n\n[formatter]\nexcludes = [\"tests/Fixtures\"] # vendored upstream fixtures and Mate source, kept verbatim\n# Tuned to match the Laravel Pint style the codebase was written in.\n\n# ┌─ Layout ────────────────────────────────────────────────────────────────────┐\nprint-width = 1000 # Pint has no line-length limit; never wrap on width alone\ntab-width = 4\nuse-tabs = false\nend-of-line = \"lf\"\n\n# ┌─ Strings & Trailing Commas ─────────────────────────────────────────────────┐\nsingle-quote = true\ntrailing-comma = true\n\n# ┌─ Brace Styles ──────────────────────────────────────────────────────────────┐\nclasslike-brace-style = \"always-next-line\"\nmethod-brace-style = \"next-line\"\nfunction-brace-style = \"next-line\"\ncontrol-brace-style = \"same-line\"\nclosure-brace-style = \"same-line\"\nfollowing-clause-on-newline = false\ninline-empty-method-braces = false\ninline-empty-constructor-braces = true\ninline-empty-anonymous-class-braces = true\n\n# ┌─ Preserve existing line breaks ─────────────────────────────────────────────┐\npreserve-breaking-member-access-chain = true\npreserve-breaking-argument-list = true\npreserve-breaking-array-like = true\npreserve-breaking-parameter-list = true\npreserve-breaking-attribute-list = true\npreserve-breaking-conditional-expression = true\npreserve-breaking-condition-expression = true\npreserve-breaking-binary-expression = true\nmethod-chain-breaking-style = \"same-line\"\nfirst-method-chain-on-new-line = false\n\n# ┌─ Spacing & Parentheses (Laravel preset) ────────────────────────────────────┐\nspace-around-concatenation-binary-operator = false\nspace-after-cast-unary-prefix-operators = true\nspace-after-logical-not-unary-prefix-operator = true\nspace-before-closure-parameter-list-parenthesis = true\nspace-before-closure-use-clause-parenthesis = true\nspace-before-arrow-function-parameter-list-parenthesis = true\nspace-around-assignment-in-declare = false\nspace-within-grouping-parenthesis = false\nparentheses-in-new-expression = false\npreserve-redundant-logical-binary-expression-parentheses = true\nomit-redundant-arithmetic-binary-expression-parentheses = true\n\n# ┌─ Imports / Use Statements ──────────────────────────────────────────────────┐\nsort-uses = true\nseparate-use-types = true\nexpand-use-groups = true\n\n# ┌─ Blank Lines ───────────────────────────────────────────────────────────────┐\nempty-line-after-opening-tag = true\nempty-line-after-namespace = true\nempty-line-after-use = true\nempty-line-after-method = true\nempty-line-before-return = true\nempty-line-after-control-structure = false\nseparate-class-like-members = true\nempty-line-after-symbols = true\n\n# ┌─ Alignment & Arrays ────────────────────────────────────────────────────────┐\narray-table-style-alignment = false\nalign-assignment-like = false\n\n# ┌─ Type Hints & Misc ─────────────────────────────────────────────────────────┐\nuppercase-literal-keyword = false\nnull-type-hint = \"question\"\nremove-trailing-close-tag = true\nindent-heredoc = false\n\n# ── Analyzer ───────────────────────────────────────────────────────────────────\n\n[analyzer]\ncheck-missing-type-hints = true\nminimum-fail-level = \"warning\"\nignore = [\n    \"mixed-assignment\",\n    # These read spec fixtures from JSON, so values are untyped by nature\n    { code = \"mixed-argument\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"mixed-operand\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"mixed-property-access\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"mixed-array-access\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"invalid-iterator\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-false-argument\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-false-iterator\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-null-argument\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-undefined-string-array-index\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n]\n\n# ── Linter ─────────────────────────────────────────────────────────────────────\n\n[linter]\nexcludes = [\"tests/Fixtures\"]\nminimum-fail-level = \"warning\"\nintegrations = [\"php-unit\"]\n\n[linter.rules]\n# Enforce declare(strict_types=1) at the beginning of files\nstrict-types = { enabled = true, level = \"Error\" }\nassertion-style = { style = \"this\" } # in phpunit tests\nstrict-assertions = { enabled = false } # assertSame would change semantics of existing tests\nliteral-named-argument = { enabled = false }\nno-empty = { enabled = false }\nno-insecure-comparison = { enabled = false } # false positives on token comparisons in the decoder\ntoo-many-methods = { enabled = false } # triggers too much in test classes\nexcessive-parameter-list = { enabled = false } # option objects\nsingle-class-per-file = { enabled = false } # tests define fixture enums inline\nreadable-literal = { enabled = false }\nno-ini-set = { enabled = false } # the 4.4 float encoder pins serialize_precision for the call and restores it\n# Size/complexity metrics: the parser and encoder are intentionally monolithic state machines\ncyclomatic-complexity = { enabled = false }\nkan-defect = { enabled = false }\nhalstead = { enabled = false }\n",
+  "php": "PHP 8.4.27 (cli) (built: Oct 21 2026 14:43:42) (NTS clang 15.0.0)"
+}

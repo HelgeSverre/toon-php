@@ -16,6 +16,7 @@ use Throwable;
 
 final class VersionedFixturesTest extends TestCase
 {
+    /** @return iterable<string, array{SpecVersion, mixed, mixed, mixed}> */
     public static function fixtures(): iterable
     {
         foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {

@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Version41PhpValuesTest extends TestCase
 {
+    /** @return iterable<string, array{mixed, string}> */
     public static function values(): iterable
     {
         yield 'date' => [new \DateTimeImmutable('2026-01-01T00:00:00+00:00'), '"2026-01-01T00:00:00+00:00"'];
@@ -36,6 +37,7 @@ final class Version41PhpValuesTest extends TestCase
         ];
         yield 'array hook' => [
             new class {
+                /** @return array{name: string} */
                 public function toArray(): array
                 {
                     return ['name' => 'Ada'];

@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Version41FieldsTest extends TestCase
 {
+    /** @return iterable<string, array{array<array-key, mixed>, string, array<array-key, mixed>}> */
     public static function fieldCases(): iterable
     {
         $nulRows = [["\0x" => 1], ["\0x" => 2]];
@@ -41,6 +42,10 @@ final class Version41FieldsTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<array-key, mixed> $input
+     * @param array<array-key, mixed> $decoded
+     */
     #[DataProvider('fieldCases')]
     public function test_preserves_field_values_and_uses_required_table_form(array $input, string $expected, array $decoded): void
     {

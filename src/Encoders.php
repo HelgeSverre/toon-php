@@ -54,7 +54,7 @@ final class Encoders
     }
 
     /**
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
      * @param  non-negative-int  $depth
      */
     private function encodeObject(array $object, int $depth): void
@@ -250,7 +250,7 @@ final class Encoders
      *
      * Field names are encoded as keys following the same quoting rules (§7.3).
      *
-     * @param  array<string>  $fields
+     * @param  array<array-key>  $fields
      * @param  string|null  $key  Optional key for the array
      */
     private function formatArrayHeader(int $length, array $fields, ?string $key = null): string
@@ -259,7 +259,10 @@ final class Encoders
 
         // Encode field names as keys
         $quotedFields = array_map(
-            Primitives::encodeKey(...),
+            // Preserve the released TypeError for integer field keys and strict callback semantics.
+            // @mago-expect analysis:less-specific-argument
+            // @mago-expect lint:prefer-first-class-callable
+            fn ($field) => Primitives::encodeKey($field),
             $fields,
         );
         $fieldsList = implode($this->options->delimiter, $quotedFields);
@@ -275,7 +278,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>|null  $array
-     * @return array<string>|null
+     * @return list<array-key>|null
      */
     private function detectTabularHeader(?array $array): ?array
     {
@@ -294,7 +297,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>  $array
-     * @param  array<string>  $expectedFields
+     * @param  array<array-key>  $expectedFields
      */
     private function isTabularArray(array $array, array $expectedFields): bool
     {
@@ -328,8 +331,8 @@ final class Encoders
     }
 
     /**
-     * @param  list<array<string, mixed>>  $array
-     * @param  array<string>  $fields
+     * @param  list<array<array-key, mixed>>  $array
+     * @param  array<array-key>  $fields
      * @param  non-negative-int  $depth
      */
     private function writeTabularRows(array $array, array $fields, int $depth): void
@@ -344,7 +347,7 @@ final class Encoders
     }
 
     /**
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
      * @param  non-negative-int  $depth
      */
     private function encodeObjectAsListItem(array $object, int $depth): void
@@ -359,12 +362,15 @@ final class Encoders
 
         // First key-value pair always on the marker line
         $firstKey = $keys[0];
+        // Legacy integer-key failures are frozen along with successful encodings.
+        // @mago-expect analysis:less-specific-argument
         $this->encodeKeyValuePair($firstKey, $object[$firstKey], $depth, true);
 
         // Remaining properties indented
         for ($i = 1; $i < count($keys); $i++) {
             $key = $keys[$i];
             $value = $object[$key];
+            // @mago-expect analysis:less-specific-argument
             $this->encodeKeyValuePair($key, $value, $depth + 1);
         }
     }

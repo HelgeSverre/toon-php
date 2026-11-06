@@ -39,6 +39,7 @@ final class Version44Test extends TestCase
         }
     }
 
+    /** @return iterable<string, array{string}> */
     public static function rejectedInBothModes(): iterable
     {
         yield 'malformed length' => ['items[03]: a,b,c'];
@@ -67,6 +68,7 @@ final class Version44Test extends TestCase
         }
     }
 
+    /** @return iterable<string, array{string, array<array-key, mixed>}> */
     public static function recoveries(): iterable
     {
         yield 'counts never truncate' => ["items[1]:\n  - a\n  - b", ['items' => ['a', 'b']]];
@@ -77,6 +79,7 @@ final class Version44Test extends TestCase
         yield 'duplicate nested fields' => ["[1]{a{x},a{y}}:\n  1,2", [['a' => ['y' => 2]]]];
     }
 
+    /** @param array<array-key, mixed> $expected */
     #[DataProvider('recoveries')]
     public function test_exact_non_strict_recoveries(string $document, array $expected): void
     {
@@ -84,6 +87,7 @@ final class Version44Test extends TestCase
         $this->assertSame($expected, Toon::decode($document, new DecodeOptions(strict: false, version: SpecVersion::V4_4)));
     }
 
+    /** @return iterable<string, array{float, string}> */
     public static function canonicalNumbers(): iterable
     {
         yield 'negative zero' => [-0.0, '0'];
@@ -177,6 +181,7 @@ final class Version44Test extends TestCase
         $this->assertSame($input, Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4)));
     }
 
+    /** @return iterable<string, array{mixed}> */
     public static function invalidHostStrings(): iterable
     {
         yield 'invalid value' => ["\xFF"];

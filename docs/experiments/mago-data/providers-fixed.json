@@ -1,0 +1,10 @@
+{
+    "documents": {
+        "cases": 1800,
+        "unique_values": 150
+    },
+    "floats": {
+        "cases": 300,
+        "unique_values": 300
+    }
+}

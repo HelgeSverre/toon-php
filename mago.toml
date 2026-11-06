@@ -90,6 +90,7 @@ indent-heredoc = false
 # ── Analyzer ───────────────────────────────────────────────────────────────────
 
 [analyzer]
+check-missing-type-hints = true
 minimum-fail-level = "warning"
 ignore = [
     "mixed-assignment",

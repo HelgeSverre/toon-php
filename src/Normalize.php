@@ -141,7 +141,7 @@ final class Normalize
      * @param  mixed  $value  The value to check
      * @return bool True if the value is an associative array
      *
-     * @phpstan-assert-if-true array<string, mixed> $value
+     * @phpstan-assert-if-true array<array-key, mixed> $value
      */
     public static function isJsonObject(mixed $value): bool
     {
@@ -196,7 +196,7 @@ final class Normalize
     /**
      * @param  array<mixed>  $value
      *
-     * @phpstan-assert-if-true list<array<string, mixed>> $value
+     * @phpstan-assert-if-true list<array<array-key, mixed>> $value
      */
     public static function isArrayOfObjects(array $value): bool
     {

@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Version41CoverageTest extends TestCase
 {
+    /** @return iterable<string, array{float, string}> */
     public static function numbers(): iterable
     {
         yield 'positive float zero' => [0.0, '0'];
@@ -39,6 +40,7 @@ final class Version41CoverageTest extends TestCase
         $this->assertSame($value, (float) $decoded);
     }
 
+    /** @return iterable<string, array{mixed}> */
     public static function invalidStrings(): iterable
     {
         yield 'invalid value' => ["\xFF"];
@@ -65,6 +67,7 @@ final class Version41CoverageTest extends TestCase
         $this->assertSame(['user' => ['id' => 1, 'address' => []]], Toon::decode("[1:]{id,address{city,zip}}:\n  user: 1", $options));
     }
 
+    /** @return iterable<string, array{string, array<array-key, mixed>}> */
     public static function lenientDocuments(): iterable
     {
         yield 'over-indented object field' => ["a: 1\n    note: ignored\nb: 2", ['a' => 1, 'b' => 2]];
@@ -75,6 +78,7 @@ final class Version41CoverageTest extends TestCase
         yield 'non-item ends list items' => ["[1]:\n  - kept\n  note: ignored", ['kept']];
     }
 
+    /** @param array<array-key, mixed> $expected */
     #[DataProvider('lenientDocuments')]
     public function test_leniency_is_explicit_and_preserves_recognized_records(string $document, array $expected): void
     {

@@ -1,0 +1,388 @@
+{
+  "base_commit": "6c9163b174fb77f31e64bd9840d428b6691964fc",
+  "mago": "mago 1.57.0",
+  "php": "PHP 8.4.27 (cli) (built: Oct 21 2026 14:43:42) (NTS clang 15.0.0)",
+  "runs": 10,
+  "timing": {},
+  "probe_configuration": "# ── Global ─────────────────────────────────────────────────────────────────────\n\nphp-version = \"8.1\"\neditor-url = \"phpstorm://open?file=%file%&line=%line%&column=%column%\"\n\n# ── Source Discovery ───────────────────────────────────────────────────────────\n\n[source]\npaths = [\"tests/Support/ToolingProbes/Probe.php\"]\nincludes = [\"src\", \"vendor\", \"tests/Fixtures/mate\"]\nexcludes = []\n\n# ── Formatter ──────────────────────────────────────────────────────────────────\n\n[formatter]\nexcludes = [\"tests/Fixtures\"] # vendored upstream fixtures and Mate source, kept verbatim\n# Tuned to match the Laravel Pint style the codebase was written in.\n\n# ┌─ Layout ────────────────────────────────────────────────────────────────────┐\nprint-width = 1000 # Pint has no line-length limit; never wrap on width alone\ntab-width = 4\nuse-tabs = false\nend-of-line = \"lf\"\n\n# ┌─ Strings & Trailing Commas ─────────────────────────────────────────────────┐\nsingle-quote = true\ntrailing-comma = true\n\n# ┌─ Brace Styles ──────────────────────────────────────────────────────────────┐\nclasslike-brace-style = \"always-next-line\"\nmethod-brace-style = \"next-line\"\nfunction-brace-style = \"next-line\"\ncontrol-brace-style = \"same-line\"\nclosure-brace-style = \"same-line\"\nfollowing-clause-on-newline = false\ninline-empty-method-braces = false\ninline-empty-constructor-braces = true\ninline-empty-anonymous-class-braces = true\n\n# ┌─ Preserve existing line breaks ─────────────────────────────────────────────┐\npreserve-breaking-member-access-chain = true\npreserve-breaking-argument-list = true\npreserve-breaking-array-like = true\npreserve-breaking-parameter-list = true\npreserve-breaking-attribute-list = true\npreserve-breaking-conditional-expression = true\npreserve-breaking-condition-expression = true\npreserve-breaking-binary-expression = true\nmethod-chain-breaking-style = \"same-line\"\nfirst-method-chain-on-new-line = false\n\n# ┌─ Spacing & Parentheses (Laravel preset) ────────────────────────────────────┐\nspace-around-concatenation-binary-operator = false\nspace-after-cast-unary-prefix-operators = true\nspace-after-logical-not-unary-prefix-operator = true\nspace-before-closure-parameter-list-parenthesis = true\nspace-before-closure-use-clause-parenthesis = true\nspace-before-arrow-function-parameter-list-parenthesis = true\nspace-around-assignment-in-declare = false\nspace-within-grouping-parenthesis = false\nparentheses-in-new-expression = false\npreserve-redundant-logical-binary-expression-parentheses = true\nomit-redundant-arithmetic-binary-expression-parentheses = true\n\n# ┌─ Imports / Use Statements ──────────────────────────────────────────────────┐\nsort-uses = true\nseparate-use-types = true\nexpand-use-groups = true\n\n# ┌─ Blank Lines ───────────────────────────────────────────────────────────────┐\nempty-line-after-opening-tag = true\nempty-line-after-namespace = true\nempty-line-after-use = true\nempty-line-after-method = true\nempty-line-before-return = true\nempty-line-after-control-structure = false\nseparate-class-like-members = true\nempty-line-after-symbols = true\n\n# ┌─ Alignment & Arrays ────────────────────────────────────────────────────────┐\narray-table-style-alignment = false\nalign-assignment-like = false\n\n# ┌─ Type Hints & Misc ─────────────────────────────────────────────────────────┐\nuppercase-literal-keyword = false\nnull-type-hint = \"question\"\nremove-trailing-close-tag = true\nindent-heredoc = false\n\n# ── Analyzer ───────────────────────────────────────────────────────────────────\n\n[analyzer]\ncheck-missing-type-hints = true\nminimum-fail-level = \"warning\"\nignore = [\n    \"mixed-assignment\",\n    # These read spec fixtures from JSON, so values are untyped by nature\n    { code = \"mixed-argument\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"mixed-operand\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"mixed-property-access\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"mixed-array-access\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"invalid-iterator\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-false-argument\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-false-iterator\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-null-argument\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n    { code = \"possibly-undefined-string-array-index\", in = [\"tests/VersionedFixturesTest.php\", \"tests/Support/capture-legacy.php\"] },\n]\n\n# ── Linter ─────────────────────────────────────────────────────────────────────\n\n[linter]\nexcludes = [\"tests/Fixtures\"]\nminimum-fail-level = \"warning\"\nintegrations = [\"php-unit\"]\n\n[linter.rules]\n# Enforce declare(strict_types=1) at the beginning of files\nstrict-types = { enabled = true, level = \"Error\" }\nassertion-style = { style = \"this\" } # in phpunit tests\nstrict-assertions = { enabled = false } # assertSame would change semantics of existing tests\nliteral-named-argument = { enabled = false }\nno-empty = { enabled = false }\nno-insecure-comparison = { enabled = false } # false positives on token comparisons in the decoder\ntoo-many-methods = { enabled = false } # triggers too much in test classes\nexcessive-parameter-list = { enabled = false } # option objects\nsingle-class-per-file = { enabled = false } # tests define fixture enums inline\nreadable-literal = { enabled = false }\nno-ini-set = { enabled = false } # the 4.4 float encoder pins serialize_precision for the call and restores it\n# Size/complexity metrics: the parser and encoder are intentionally monolithic state machines\ncyclomatic-complexity = { enabled = false }\nkan-defect = { enabled = false }\nhalstead = { enabled = false }\n",
+  "probes": {
+    "wrong_return": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "return.type",
+            "message": "Function ToolingExperiment\\value() should return int but returns string."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "invalid-return-statement",
+            "message": "Invalid return type for function `ToolingExperiment\\value`: expected `int`, but found `string('oops')`."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "undefined_method": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "method.notFound",
+            "message": "Call to an undefined method HelgeSverre\\Toon\\EncodeOptions::withStrict()."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "non-existent-method",
+            "message": "Method `withStrict` does not exist on type `HelgeSverre\\Toon\\EncodeOptions`."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "nullable_property": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "property.nonObject",
+            "message": "Cannot access property $name on ToolingExperiment\\Item|null."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "possibly-null-property-access",
+            "message": "Attempting to access a property on a possibly `null` value."
+          },
+          {
+            "code": "possibly-null-argument",
+            "message": "Argument #1 of function `strlen` is possibly `null`, but parameter type `string` does not accept it."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "missing_shape_key": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "offsetAccess.notFound",
+            "message": "Offset 'missing' does not exist on array{id: int}."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "undefined-string-array-index",
+            "message": "Undefined array key 'missing' accessed on `array{'id': int}`."
+          },
+          {
+            "code": "invalid-return-statement",
+            "message": "Invalid return type for function `ToolingExperiment\\value`: expected `int`, but found `null`."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "not_a_list": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "return.type",
+            "message": "Function ToolingExperiment\\value() should return array<int, int> but returns array<string, int>."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "invalid-return-statement",
+            "message": "Invalid return type for function `ToolingExperiment\\value`: expected `list<int>`, but found `array{'id': int(1)}`."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "unsafe_mixed_return": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "return.type",
+            "message": "Function ToolingExperiment\\value() should return int but returns mixed."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "mixed-return-statement",
+            "message": "Could not infer a precise return type for function `ToolingExperiment\\value`. Saw type `mixed`."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "non_exhaustive_version": {
+      "kind": "bug",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "match.unhandled",
+            "message": "Match expression does not handle remaining value: HelgeSverre\\Toon\\SpecVersion::V4_4"
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "match-not-exhaustive",
+            "message": "Non-exhaustive `match` expression: subject of type `enum(HelgeSverre\\Toon\\SpecVersion)` is not fully handled."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    },
+    "missing_array_value_type": {
+      "kind": "type-contract",
+      "phpstan": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "missingType.iterableValue",
+            "message": "Function ToolingExperiment\\value() has parameter $v with no value type specified in iterable type array."
+          },
+          {
+            "code": "missingType.iterableValue",
+            "message": "Function ToolingExperiment\\value() return type has no value type specified in iterable type array."
+          }
+        ],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "imprecise-type",
+            "message": "Type `array` in parameter `$v` is imprecise, equivalent to `array<array-key, mixed>`."
+          },
+          {
+            "code": "imprecise-type",
+            "message": "Type `array` in return type of `value` is imprecise, equivalent to `array<array-key, mixed>`."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      },
+      "mago_missing_hint_check": {
+        "exit": 1,
+        "output": {
+          "issues": [
+            {
+              "level": "Warning",
+              "code": "imprecise-type",
+              "message": "Type `array` in parameter `$v` is imprecise, equivalent to `array<array-key, mixed>`.",
+              "notes": [
+                "Bare `array` does not specify key or value types, making it difficult for the analyzer to verify correctness."
+              ],
+              "help": "Specify a more precise type in a docblock annotation (e.g., `array<string, int>`, `list<Foo>`), or use `array<array-key, mixed>` to be explicit.",
+              "annotations": [
+                {
+                  "message": "imprecise `array` type hint",
+                  "kind": "Primary",
+                  "span": {
+                    "file_id": {
+                      "name": "tests/Support/ToolingProbes/Probe.php",
+                      "path": "/Users/helge/code/toon-php-mago-fixed/tests/Support/ToolingProbes/Probe.php",
+                      "size": 107,
+                      "file_type": "Host"
+                    },
+                    "start": {
+                      "offset": 75,
+                      "line": 3
+                    },
+                    "end": {
+                      "offset": 80,
+                      "line": 3
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "level": "Warning",
+              "code": "imprecise-type",
+              "message": "Type `array` in return type of `value` is imprecise, equivalent to `array<array-key, mixed>`.",
+              "notes": [
+                "Bare `array` does not specify key or value types, making it difficult for the analyzer to verify correctness."
+              ],
+              "help": "Specify a more precise type in a docblock annotation (e.g., `array<string, int>`, `list<Foo>`), or use `array<array-key, mixed>` to be explicit.",
+              "annotations": [
+                {
+                  "message": "imprecise `array` type hint",
+                  "kind": "Primary",
+                  "span": {
+                    "file_id": {
+                      "name": "tests/Support/ToolingProbes/Probe.php",
+                      "path": "/Users/helge/code/toon-php-mago-fixed/tests/Support/ToolingProbes/Probe.php",
+                      "size": 107,
+                      "file_type": "Host"
+                    },
+                    "start": {
+                      "offset": 86,
+                      "line": 3
+                    },
+                    "end": {
+                      "offset": 91,
+                      "line": 3
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "php82_readonly_class": {
+      "kind": "compatibility",
+      "phpstan": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 1,
+        "diagnostics": [
+          {
+            "code": "semantics",
+            "message": "Readonly classes are only available in PHP 8.2 and above."
+          }
+        ],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      },
+      "phpstan_php81": {
+        "exit": 1,
+        "output": {
+          "totals": {
+            "errors": 0,
+            "file_errors": 1
+          },
+          "files": {
+            "/Users/helge/code/toon-php-mago-fixed/tests/Support/ToolingProbes/Probe.php": {
+              "errors": 1,
+              "messages": [
+                {
+                  "message": "Readonly classes are supported only on PHP 8.2 and later.",
+                  "line": 4,
+                  "ignorable": false,
+                  "identifier": "classConstant.nativeTypeNotSupported"
+                }
+              ]
+            }
+          },
+          "errors": []
+        }
+      }
+    },
+    "valid_refinement": {
+      "kind": "valid",
+      "runtime": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "phpstan": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n INFO No issues found.\n"
+      }
+    },
+    "valid_list_projection": {
+      "kind": "valid",
+      "runtime": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "phpstan": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n INFO No issues found.\n"
+      }
+    },
+    "valid_generic": {
+      "kind": "valid",
+      "runtime": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "phpstan": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n INFO No issues found.\n"
+      }
+    },
+    "valid_regex_guard": {
+      "kind": "valid",
+      "runtime": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "phpstan": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": ""
+      },
+      "mago": {
+        "exit": 0,
+        "diagnostics": [],
+        "stderr": " INFO Overriding workspace directory with /Users/helge/code/toon-php-mago-fixed.\n"
+      }
+    }
+  }
+}

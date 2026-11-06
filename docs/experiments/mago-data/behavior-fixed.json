@@ -1,0 +1,40 @@
+{
+    "numeric_table": {
+        "error": "TypeError",
+        "message": "HelgeSverre\\Toon\\Primitives::encodeKey(): Argument #1 ($key) must be of type string, int given, called in \/Users\/helge\/code\/toon-php-mago-fixed\/src\/Encoders.php on line 265"
+    },
+    "numeric_mixed_list": {
+        "error": "TypeError",
+        "message": "HelgeSverre\\Toon\\Encoders::encodeKeyValuePair(): Argument #1 ($key) must be of type string, int given, called in \/Users\/helge\/code\/toon-php-mago-fixed\/src\/Encoders.php on line 367"
+    },
+    "object_guard_accepts_integer_key": true,
+    "objects_guard_accepts_integer_key": true,
+    "savings_type": "int",
+    "header_[1]": null,
+    "header_x[1]": null,
+    "header_[1]:": {
+        "key": null,
+        "hasKey": false,
+        "length": 1,
+        "keyed": false,
+        "delimiter": ",",
+        "fields": null,
+        "inlineValues": null,
+        "format": "list"
+    },
+    "header_[1]{x}:": {
+        "key": null,
+        "hasKey": false,
+        "length": 1,
+        "keyed": false,
+        "delimiter": ",",
+        "fields": [
+            {
+                "name": "x",
+                "children": null
+            }
+        ],
+        "inlineValues": null,
+        "format": "tabular"
+    }
+}
