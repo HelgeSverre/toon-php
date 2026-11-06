@@ -25,6 +25,16 @@ First installed Mate's dependencies with released `helgesverre/toon` v3.2.1 at `
 
 The five full-suite problems are in `SkillReferenceIntegrityTest`: the split Mate repository lacks the `src/Bridge/Symfony/Profiler/Service/Formatter` and `src/Bridge/Symfony/skills` directories, and its guidance references two missing Symfony bridge tools. They occur with the released dependency too. No Mate test or source was changed to suppress them. This is evidence of unchanged downstream behavior, not a claim that Mate's entire standalone suite is green.
 
+The released-behavior snapshot was independently regenerated into a temporary file from the pinned v3.2.1 Git archive using `tests/Support/capture-legacy.php`. Its source-hash verification passed and the result was byte-identical to `tests/Fixtures/legacy-3.2.1.json`; the checked-in snapshot was not rewritten.
+
+### Packaged installation in a fresh Symfony project
+
+A separate disposable Composer project installed `symfony/framework-bundle:^7.4`, the same Mate revision as a mirrored vendor package, and TOON from the candidate's `git archive` ZIP. Mate's Composer plugin and `vendor/bin/mate init --no-interaction` completed successfully. The project's TOON constraint remained `^3.2.1`.
+
+A project-defined `#[MateTool]` returned an untrusted envelope containing an application `_security_notice`, a colon/backslash-containing key, multiline comment-like text, numeric/boolean strings, an empty array and a keyed users object. Running `vendor/bin/mate tools:call release-probe --format=toon` produced the expected decoded array with exact PHP types and key order, and kept the application notice nested inside the trusted envelope.
+
+Swapping only TOON to released 3.2.1 and running the same tool and `probe-mate.php` again produced byte-identical outputs. This exercises an installed distribution archive and the real consumer CLI in addition to the source-checkout tests. The temporary application used no model-provider credentials or API calls.
+
 ### Reproduce the comparison
 
 Clone the pinned Mate revision into a disposable directory and install dependencies using `composer install --no-interaction --prefer-dist --no-scripts --no-plugins`. Confirm `composer show helgesverre/toon` selects 3.2.1 for the baseline. Preserve its lock file while swapping only TOON.
