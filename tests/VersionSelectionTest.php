@@ -66,7 +66,9 @@ final class VersionSelectionTest extends TestCase
 
     public function test_unicode_escape_boundaries_without_host_character_conversion(): void
     {
-        $options = new DecodeOptions(version: SpecVersion::V4_1);
-        self::assertSame("\x00\x7F\xC2\x80\xDF\xBF\xE0\xA0\x80\xED\x9F\xBF\xEE\x80\x80\xEF\xBF\xBF", Toon::decode('"\\u0000\\u007f\\u0080\\u07ff\\u0800\\ud7ff\\ue000\\uffff"', $options));
+        foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
+            $options = new DecodeOptions(version: $version);
+            self::assertSame("\x00\x7F\xC2\x80\xDF\xBF\xE0\xA0\x80\xED\x9F\xBF\xEE\x80\x80\xEF\xBF\xBF", Toon::decode('"\\u0000\\u007f\\u0080\\u07ff\\u0800\\ud7ff\\ue000\\uffff"', $options));
+        }
     }
 }

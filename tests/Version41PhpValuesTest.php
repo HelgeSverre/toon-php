@@ -57,7 +57,9 @@ final class Version41PhpValuesTest extends TestCase
     #[DataProvider('values')]
     public function test_php_values_are_normalized_before_41_encoding(mixed $value, string $expected): void
     {
-        self::assertSame($expected, Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_1)));
+        foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
+            self::assertSame($expected, Toon::encode($value, new EncodeOptions(version: $version)), $version->value);
+        }
     }
 }
 

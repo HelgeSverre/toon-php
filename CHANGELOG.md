@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-11-06
+
+### Added
+
+- Explicit wire-format selection through `SpecVersion`, `EncodeOptions`, `DecodeOptions`, and `withVersion()`. Omitted versions retain release 3.2.1 behavior; there is no detection, fallback, or global version setting.
+- Isolated, opt-in TOON 4.1 and 4.4 codecs, including comments, keyed tables and nested field groups. TOON 4.4 applies exactly its five non-strict recoveries and rejects malformed headers, invalid UTF-8, trailing content and row-width mismatches in both modes.
+- Pinned upstream specifications and conformance fixtures, released-behavior snapshots, Symfony Mate compatibility checks, PHP object-identity regressions, and generated round trips across delimiters, indentation and binary64 values.
+
+### Fixed
+
+- The opt-in codecs retain empty and numeric-key objects when encoding. The 4.4 encoder quotes keys ending in a newline and formats floats independently of the application's `serialize_precision` setting, restoring it after conversion.
+
+### Compatibility
+
+- The default 3.3 profile intentionally retains its documented deviations. No runtime dependency or optional extension is required. Thanks to @voku for [PR #6](https://github.com/HelgeSverre/toon-php/pull/6), which informed the 4.1 codec, and @zip-fa for [PR #9](https://github.com/HelgeSverre/toon-php/pull/9), which informed 4.4 and includes [#8](https://github.com/HelgeSverre/toon-php/pull/8)'s nesting and empty-value changes. The independent Mago migration in #7 is not included.
+
 ## [3.2.1] - 2026-07-08
 
 ### Fixed
@@ -309,6 +325,7 @@ $toon = Toon::encode($data, $options);
 - Comprehensive PHPUnit test coverage
 - Follows PHP-FIG coding standards (via Laravel Pint)
 
+[3.3.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.3.0
 [3.2.1]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.2.1
 [3.2.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.2.0
 [3.1.0]: https://github.com/HelgeSverre/toon-php/releases/tag/v3.1.0

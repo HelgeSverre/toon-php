@@ -9,4 +9,5 @@ enum SpecVersion: string
 {
     case V3_3 = '3.3';
     case V4_1 = '4.1';
+    case V4_4 = '4.4';
 }

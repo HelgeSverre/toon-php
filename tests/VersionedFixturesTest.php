@@ -18,8 +18,10 @@ final class VersionedFixturesTest extends TestCase
 {
     public static function fixtures(): iterable
     {
-        foreach (json_decode(file_get_contents(__DIR__.'/Fixtures/v41-regressions.json'), false, 512, JSON_THROW_ON_ERROR) as $case) {
-            yield '4.1/regression/'.$case->id => [SpecVersion::V4_1, $case->op, $case->id, $case];
+        foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
+            foreach (json_decode(file_get_contents(__DIR__.'/Fixtures/v41-regressions.json'), false, 512, JSON_THROW_ON_ERROR) as $case) {
+                yield $version->value.'/regression/'.$case->id => [$version, $case->op, $case->id, $case];
+            }
         }
         foreach (SpecVersion::cases() as $version) {
             foreach (['encode', 'decode'] as $operation) {
@@ -73,12 +75,13 @@ final class VersionedFixturesTest extends TestCase
         }
         self::assertArrayHasKey('value', $actual, json_encode($actual));
         self::assertJsonValue($case->expected, $actual['value']);
-        if ($version === SpecVersion::V4_1 && $operation === 'encode') {
-            self::assertJsonValue($case->input, Toon::decode($actual['value'], $decode));
+        if ($version !== SpecVersion::V3_3 && $operation === 'encode') {
+            self::assertJsonValue($case->input, Toon::decode($actual['value'], $decode), false);
+            self::assertJsonValue($case->input, Toon::decode($actual['value'], $decode->withStrict(false)), false);
         }
     }
 
-    private static function assertJsonValue(mixed $expected, mixed $actual): void
+    private static function assertJsonValue(mixed $expected, mixed $actual, bool $checkOrder = true): void
     {
         // Decoding deliberately retains this PHP library's associative-array API.
         if ($expected instanceof stdClass) {
@@ -87,12 +90,19 @@ final class VersionedFixturesTest extends TestCase
         if (is_array($expected)) {
             self::assertIsArray($actual);
             self::assertCount(count($expected), $actual);
+            if ($checkOrder) {
+                self::assertSame(array_keys($expected), array_keys($actual));
+            }
             foreach ($expected as $key => $value) {
                 self::assertArrayHasKey($key, $actual);
-                self::assertJsonValue($value, $actual[$key]);
+                self::assertJsonValue($value, $actual[$key], $checkOrder);
             }
         } elseif ((is_float($expected) || is_int($expected)) && (is_float($actual) || is_int($actual))) {
-            self::assertEquals($expected, $actual);
+            if (is_int($expected) && is_int($actual)) {
+                self::assertSame($expected, $actual);
+            } else {
+                self::assertSame((float) $expected, (float) $actual);
+            }
         } else {
             self::assertSame($expected, $actual);
         }

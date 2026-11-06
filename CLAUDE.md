@@ -42,7 +42,7 @@ just benchmark
 
 ## Architecture
 
-The package supports multiple TOON wire-format versions in one release. The Composer package version does not select the syntax. Existing calls use the **3.3 compatibility profile**, preserving release 3.2.1 behavior; **4.1 is explicitly opt-in**. Symfony AI Mate is a downstream consumer of the default API.
+The package supports multiple TOON wire-format versions in one release. The Composer package version does not select the syntax. Existing calls use the **3.3 compatibility profile**, preserving release 3.2.1 behavior; **4.1 and 4.4 are explicitly opt-in**. Symfony AI Mate is a downstream consumer of the default API.
 
 ### Public API and Version Selection
 
@@ -68,7 +68,7 @@ $lenient41 = $decode41->withStrict(false);
 - Select the version per call. Never auto-detect syntax, retry with another grammar, or use mutable global configuration.
 - `strict` is independent of `version`: leniency adjusts validation within the selected grammar.
 - Preserve existing named and positional constructor arguments. Copies made with `withIndent()`, `withDelimiter()`, or `withStrict()` retain the selected version.
-- Existing presets and convenience helpers default to 3.3. Helpers accepting options can select 4.1; `toon_readable()` itself remains a legacy helper.
+- Existing presets and convenience helpers default to 3.3. Helpers accepting options can select 4.1 or 4.4; `toon_readable()` itself remains a legacy helper.
 
 ### Core Components
 
@@ -76,7 +76,8 @@ $lenient41 = $decode41->withStrict(false);
 2. **Codec interface** (`src/Codec/Codec.php`) defines the encoding/decoding boundary.
 3. **3.3 codec** (`src/Codec/V33.php`) wraps the original root-level normalizer/encoder/primitives and `src/Decoder/`. Preserve their class names and behavior for direct consumers; these legacy helpers do not dispatch by version.
 4. **4.1 codec** (`src/Codec/V41.php`) owns its implementation under `src/Codec/V41/`, including `Fields.php` for nested and keyed tables. These classes are internal.
-5. **Shared infrastructure** includes options, constants, exceptions, and `src/LineWriter.php`. Share only behavior that is identical across versions.
+5. **4.4 codec** (`src/Codec/V44.php`) owns its implementation under `src/Codec/V44/`, adapted from PR #9; its non-strict recoveries are isolated from older versions.
+6. **Shared infrastructure** includes options, constants, exceptions, and `src/LineWriter.php`. Share only behavior that is identical across versions.
 
 Keep grammar-specific fixes inside the corresponding codec. Avoid scattering version checks across the original parser and encoder.
 
@@ -84,7 +85,7 @@ Keep grammar-specific fixes inside the corresponding codec. Avoid scattering ver
 
 The selected grammar determines format selection. The 4.1 encoder uses mandatory tabular/nested-field or keyed-tabular forms where eligible, inline primitive arrays, and list forms where required. It also handles comment-aware quoting and the 4.1 empty-array forms. Consult the selected spec instead of treating these as interchangeable formatting preferences.
 
-Both decoders retain the PHP associative-array API. Empty objects and arrays both decode to `[]`; sequential numeric-key objects can become PHP lists. Do not silently change return types to make JSON shape comparisons pass. The 4.1 encoder uses `stdClass` internally to distinguish objects from lists, including empty objects.
+All decoders retain the PHP associative-array API. Empty objects and arrays both decode to `[]`; sequential numeric-key objects can become PHP lists. Do not silently change return types to make JSON shape comparisons pass. The opt-in encoders use `stdClass` internally to distinguish objects from lists, including empty objects.
 
 For field maps, preserve arbitrary string keys, including NUL-prefixed keys; read normalized object entries through `get_object_vars()` instead of dynamic property access. Compare key sets using string semantics, preserving first-row field order. Float formatting must preserve round-trip precision without fixed-place re-rounding.
 
@@ -260,16 +261,17 @@ just ci
 
 Changes must respect the selected version's pinned specification and the existing public compatibility contract.
 
-- **3.3**: preserve released behavior. The known differences from upstream fixtures are documented in `docs/legacy-fixture-deviations.md`; this profile is not a claim of perfect conformance. Do not silently correct these differences during 4.1 work.
+- **3.3**: preserve released behavior. The known differences from upstream fixtures are documented in `docs/legacy-fixture-deviations.md`; this profile is not a claim of perfect conformance. Do not silently correct these differences during opt-in codec work.
 - **4.1**: use `docs/specs/4.1/SPEC.md` and its complete pinned fixture suite. Keep 4.1-specific fixes isolated.
+- **4.4**: use `docs/specs/4.4/SPEC.md` and its complete pinned fixture suite. Preserve the exactly five non-strict recoveries and the documented numeric policy.
 - **No floating spec updates**: the existing `just sync-spec` recipe fetches upstream main into legacy docs. Do not use it for routine multi-version work. Update versioned specs and fixtures deliberately from an exact revision.
 
 ### Fixture and Compatibility Checks
 
-- `tests/VersionedFixturesTest.php` runs official 4.1 expectations and compares legacy cases against the released baseline, including omitted-version calls. Encoding fixtures preserve JSON objects; decoding comparisons use the documented PHP representation.
+- `tests/VersionedFixturesTest.php` runs official 4.1 and 4.4 expectations and compares legacy cases against the released baseline, including omitted-version calls. Encoding fixtures preserve JSON objects; decoding comparisons use the documented PHP representation.
 - `tests/Fixtures/legacy-3.2.1.json` must remain a release baseline. `tests/Support/capture-legacy.php` verifies pinned source hashes; never regenerate it from the branch under test.
 - Keep version-isolation, option-copy, PHP-specific value/field, canonical-output, round-trip, and Mate compatibility tests. Use PHP-native cases where JSON fixtures cannot express host values.
-- Run the complete suite after codec changes, plus PHPStan and Pint. PHP 8.1–8.5 are covered by CI. Check new 4.1 runtime paths with `php -n tests/Support/check-runtime.php` to avoid hidden dependencies on development polyfills.
+- Run the complete suite after codec changes, plus PHPStan and Pint. PHP 8.1–8.5 are covered by CI. Check both opt-in runtime paths with `php -n tests/Support/check-runtime.php` to avoid hidden dependencies on development polyfills.
 - For coverage, use `just coverage` or the driver-specific command in `docs/coverage-review.md`. Add tests for meaningful public behavior, not reflection tests merely to cover private constructors.
 
 ### Adding Another Spec Version

@@ -9,7 +9,7 @@ Quick reference for AI coding agents working on TOON PHP. See `docs/multi-versio
 - **Run single test file**: `vendor/bin/phpunit tests/PrimitivesTest.php`
 - **Run single test method**: `vendor/bin/phpunit --filter test_encode_safe_strings`
 - **Test with coverage**: `just coverage` (requires a coverage driver; see `docs/coverage-review.md`)
-- **Check 4.1 without optional extensions**: `php -n tests/Support/check-runtime.php`
+- **Check opt-in codecs without optional extensions**: `php -n tests/Support/check-runtime.php`
 - **Format code**: `just fix` (Laravel Pint)
 - **Static analysis**: `just analyse` (PHPStan level 9)
 - **Dev cycle**: `just dev` (format + test)
@@ -19,19 +19,20 @@ Quick reference for AI coding agents working on TOON PHP. See `docs/multi-versio
 
 - The Composer package version is independent of the TOON wire-format version.
 - Existing calls default to `SpecVersion::V3_3`, preserving release 3.2.1 behavior. Consumers include Symfony AI Mate; do not silently change their output or decoded PHP types.
-- TOON 4.1 is opt-in through `new EncodeOptions(version: SpecVersion::V4_1)` and `new DecodeOptions(version: SpecVersion::V4_1)`, or `withVersion()`.
+- TOON 4.1 and 4.4 are opt-in through `new EncodeOptions(version: SpecVersion::V4_1)` and `new DecodeOptions(version: SpecVersion::V4_1)`, or `withVersion()`; use `SpecVersion::V4_4` for 4.4.
 - `strict` controls validation within the selected version. Never infer versions from input, fall back between grammars, or introduce a global version setting.
 - Preserve existing constructor argument names, positions, defaults, and option-copy behavior. Presets and helpers without explicit versioned options retain 3.3 behavior.
-- Both decoders return associative arrays for objects. Empty object/list and sequential numeric-key distinctions can be lost on decoding; this is a documented compatibility constraint. The 4.1 encoder preserves object identity internally with `stdClass`.
+- All decoders return associative arrays for objects. Empty object/list and sequential numeric-key distinctions can be lost on decoding; this is a documented compatibility constraint. The opt-in encoders preserve object identity internally with `stdClass`.
 
 ## Architecture and Specs
 
 - **Main entry**: `src/Toon.php` — static `encode()`, `decode()`, and `validate()`; version dispatch happens once per encode/decode call.
-- **Codec boundary**: internal `src/Codec/Codec.php`, implemented by `Codec\V33` and `Codec\V41`.
+- **Codec boundary**: internal `src/Codec/Codec.php`, implemented by `Codec\V33`, `Codec\V41`, and `Codec\V44`.
 - **3.3**: `Codec\V33` wraps the original `src/Normalize.php`, `src/Encoders.php`, `src/Primitives.php`, and `src/Decoder/`. Keep those class names and their legacy semantics compatible; direct helper-class calls do not dispatch by version.
 - **4.1**: grammar-specific code lives under `src/Codec/V41/`, including normalization, encoding, field handling, and decoding. Keep version-specific changes here rather than adding version conditionals throughout legacy code.
+- **4.4**: grammar-specific code lives under `src/Codec/V44/`, adapted from PR #9. Preserve the older codecs; do not apply 4.4 non-strict rules to 4.1. Keep object identity through normalization and require no optional extensions.
 - **Shared infrastructure**: options, exceptions, constants, and `LineWriter`; share behavior only when it is identical between versions.
-- **Specifications**: use `docs/specs/3.3/SPEC.md` or `docs/specs/4.1/SPEC.md` for the selected version. `docs/SPEC.md` remains the legacy document.
+- **Specifications**: use `docs/specs/{3.3,4.1,4.4}/SPEC.md` for the selected version. `docs/SPEC.md` remains the legacy document.
 - **Legacy deviations**: `docs/legacy-fixture-deviations.md` records known 3.3 differences. Do not silently fix them during a 4.1 change or claim complete 3.3 conformance.
 - **Spec updates**: pin exact upstream revisions. The current `just sync-spec` fetches upstream main into legacy docs; do not use it for routine multi-version work.
 - **New versions**: add an enum case, a codec and dispatch arm, pinned spec/fixtures with provenance, version-isolation tests, and documentation. Adding support must not change the default. Syntax versions coexist in the package; long-lived branches are for package release maintenance.

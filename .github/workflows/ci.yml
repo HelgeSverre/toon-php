@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Check 4.1 without optional extensions
+      - name: Check opt-in codecs without optional extensions
         run: php -n tests/Support/check-runtime.php
 
       - name: Run tests

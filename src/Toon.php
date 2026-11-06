@@ -72,6 +72,7 @@ final class Toon
         return match ($version) {
             SpecVersion::V3_3 => new Codec\V33,
             SpecVersion::V4_1 => new Codec\V41,
+            SpecVersion::V4_4 => new Codec\V44,
         };
     }
 

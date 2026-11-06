@@ -329,7 +329,27 @@ See the [`tutorials/`](tutorials) directory for all tutorials and learning paths
 
 ## Version Compatibility
 
-This library tracks the [TOON Specification](https://github.com/toon-format/spec). Major versions align with spec versions.
+The Composer package version is independent of the TOON wire-format version. Existing calls retain the release 3.2.1 compatibility profile (3.3); select newer syntax explicitly per operation:
+
+```php
+use HelgeSverre\Toon\DecodeOptions;
+use HelgeSverre\Toon\EncodeOptions;
+use HelgeSverre\Toon\SpecVersion;
+use HelgeSverre\Toon\Toon;
+
+$wire = Toon::encode($data, new EncodeOptions(version: SpecVersion::V4_4));
+$data = Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4));
+```
+
+| Selection | Behavior |
+|-----------|----------|
+| Omitted or `SpecVersion::V3_3` | Released 3.3 compatibility, including its documented deviations |
+| `SpecVersion::V4_1` | Opt-in 4.1 grammar and existing lenient behavior |
+| `SpecVersion::V4_4` | Opt-in 4.4 grammar, canonical output and five specified non-strict recoveries |
+
+Versions coexist in one package. They are never inferred from input; agree on the version with the sender or recipient. `strict: false` changes validation within that grammar, not the version. Objects decode to PHP associative arrays in every version. See [multiple spec versions](docs/multi-version.md) for compatibility limits, pinned specifications and extension instructions.
+
+Earlier package releases:
 
 | Library | Spec | Key Changes |
 |---------|------|-------------|
