@@ -15,6 +15,10 @@ slowdown greater than 15% exits 1. Invalid or missing measurements exit 2;
 missing variants, benchmark errors, invalid timing values and insufficient
 samples cannot silently pass. An unchanged comparison exits 0. CLI controls
 verified all three outcomes, including a deliberately 20% slower result.
+An end-to-end control also added a 1 ms encode delay in a disposable codec copy.
+Running the base benchmark harness with that candidate bootstrap changed the
+median from 37.020 µs to 1,302.720 µs; the real comparison exited 1 as required.
+The production codec source was unchanged.
 
 The report is saved in the job summary and uploaded with its raw measurements.
 A separate reporting job has PR write permission and updates one bot comment;
@@ -27,6 +31,12 @@ The full PHP 8.1–8.5 matrix is available through `workflow_dispatch` and exist
 version-tag triggers. Requesting a manual run does not create a release. See
 [benchmark documentation](../benchmarks/performance/README.md#ci-integration)
 for reproduction, sampling settings and exit codes.
+
+The first new PR workflow completed in about 72 seconds, compared with roughly
+23 minutes for the previous workflow. Its nine measured changes ranged from
+-1.32% to +1.46%. The bot successfully posted the report, and the raw results
+artifact was uploaded. Timing provenance is in
+[pr-benchmark-run.json](stabilization-data/pr-benchmark-run.json).
 
 ## Fresh Symfony Mate consumer
 
