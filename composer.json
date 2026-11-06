@@ -30,10 +30,9 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^10.0",
-    "phpstan/phpstan": "^1.10",
-    "laravel/pint": "1.20.0",
     "phpbench/phpbench": "^1.4",
-    "infection/infection": "*"
+    "infection/infection": "*",
+    "carthage-software/mago": "1.57.0"
   },
   "autoload": {
     "psr-4": {
@@ -54,10 +53,12 @@
     "test": "vendor/bin/phpunit --no-coverage",
     "coverage": "vendor/bin/phpunit --coverage-html coverage",
     "coverage:herd": "herd coverage vendor/bin/phpunit --coverage-html coverage",
-    "format": "vendor/bin/pint src tests",
-    "lint": "vendor/bin/pint src tests --test",
-    "analyse": "phpstan analyse",
-    "pint": "@format",
+    "format": "mago format",
+    "lint": [
+      "mago format --check",
+      "mago lint"
+    ],
+    "analyse": "mago analyze",
     "analyze": "@analyse"
   },
   "config": {

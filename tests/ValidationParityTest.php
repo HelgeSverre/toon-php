@@ -33,7 +33,7 @@ final class ValidationParityTest extends TestCase
 
         $this->assertSame(
             $this->decodeSucceeds($toon, $options),
-            Toon::validate($toon, $options)
+            Toon::validate($toon, $options),
         );
     }
 

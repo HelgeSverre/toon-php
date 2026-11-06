@@ -36,23 +36,8 @@ final class DecoderIndentationTest extends TestCase
         $toon = "data:\n  user:\n    id: 1\n    name: Alice";
         $result = Toon::decode($toon);
 
-        $this->assertEquals([
-            'data' => [
-                'user' => [
-                    'id' => 1,
-                    'name' => 'Alice',
-                ],
-            ],
-        ], $result);
-    }
-
-    public function test_decode_depth_3_six_spaces(): void
-    {
-        $toon = "root:\n  data:\n    user:\n      id: 1\n      name: Alice";
-        $result = Toon::decode($toon);
-
-        $this->assertEquals([
-            'root' => [
+        $this->assertEquals(
+            [
                 'data' => [
                     'user' => [
                         'id' => 1,
@@ -60,7 +45,28 @@ final class DecoderIndentationTest extends TestCase
                     ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
+    }
+
+    public function test_decode_depth_3_six_spaces(): void
+    {
+        $toon = "root:\n  data:\n    user:\n      id: 1\n      name: Alice";
+        $result = Toon::decode($toon);
+
+        $this->assertEquals(
+            [
+                'root' => [
+                    'data' => [
+                        'user' => [
+                            'id' => 1,
+                            'name' => 'Alice',
+                        ],
+                    ],
+                ],
+            ],
+            $result,
+        );
     }
 
     public function test_decode_mixed_depths_all_valid(): void
@@ -68,14 +74,17 @@ final class DecoderIndentationTest extends TestCase
         $toon = "a: 1\nb:\n  c: 2\n  d:\n    e: 3\nf: 4";
         $result = Toon::decode($toon);
 
-        $this->assertEquals([
-            'a' => 1,
-            'b' => [
-                'c' => 2,
-                'd' => ['e' => 3],
+        $this->assertEquals(
+            [
+                'a' => 1,
+                'b' => [
+                    'c' => 2,
+                    'd' => ['e' => 3],
+                ],
+                'f' => 4,
             ],
-            'f' => 4,
-        ], $result);
+            $result,
+        );
     }
 
     public function test_decode_custom_indent_four_spaces(): void
@@ -221,19 +230,22 @@ final class DecoderIndentationTest extends TestCase
 
         $result = Toon::decode($toon);
 
-        $this->assertEquals([
-            'l1' => [
-                'l2' => [
-                    'l3' => [
-                        'l4' => [
-                            'l5' => [
-                                'value' => 'deep',
+        $this->assertEquals(
+            [
+                'l1' => [
+                    'l2' => [
+                        'l3' => [
+                            'l4' => [
+                                'l5' => [
+                                    'value' => 'deep',
+                                ],
                             ],
                         ],
                     ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
     public function test_indentation_error_shows_correct_line_number(): void

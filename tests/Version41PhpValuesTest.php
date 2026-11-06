@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Version41PhpValuesTest extends TestCase
 {
+    /** @return iterable<string, array{mixed, string}> */
     public static function values(): iterable
     {
         yield 'date' => [new \DateTimeImmutable('2026-01-01T00:00:00+00:00'), '"2026-01-01T00:00:00+00:00"'];
@@ -20,45 +21,51 @@ final class Version41PhpValuesTest extends TestCase
         yield 'nan' => [NAN, 'null'];
         yield 'infinity' => [INF, 'null'];
         yield 'negative zero' => [-0.0, '0'];
-        yield 'public properties only' => [new class
-        {
+        yield 'public properties only' => [new class {
             public string $visible = 'yes';
 
             private string $hidden = 'private';
         }, 'visible: yes'];
-        yield 'json serialization retains empty objects' => [new class implements \JsonSerializable
-        {
-            public function jsonSerialize(): mixed
-            {
-                return (object) ['empty' => new \stdClass];
-            }
-        }, 'empty:'];
-        yield 'array hook' => [new class
-        {
-            public function toArray(): array
-            {
-                return ['name' => 'Ada'];
-            }
-        }, 'name: Ada'];
-        yield 'json hook precedes json serialization' => [new class implements \JsonSerializable
-        {
-            public function toJSON(): mixed
-            {
-                return (object) ['chosen' => true];
-            }
+        yield 'json serialization retains empty objects' => [
+            new class implements \JsonSerializable {
+                public function jsonSerialize(): mixed
+                {
+                    return (object) ['empty' => new \stdClass];
+                }
+            },
+            'empty:',
+        ];
+        yield 'array hook' => [
+            new class {
+                /** @return array{name: string} */
+                public function toArray(): array
+                {
+                    return ['name' => 'Ada'];
+                }
+            },
+            'name: Ada',
+        ];
+        yield 'json hook precedes json serialization' => [
+            new class implements \JsonSerializable {
+                public function toJSON(): mixed
+                {
+                    return (object) ['chosen' => true];
+                }
 
-            public function jsonSerialize(): mixed
-            {
-                return 'unused';
-            }
-        }, 'chosen: true'];
+                public function jsonSerialize(): mixed
+                {
+                    return 'unused';
+                }
+            },
+            'chosen: true',
+        ];
     }
 
     #[DataProvider('values')]
     public function test_php_values_are_normalized_before_41_encoding(mixed $value, string $expected): void
     {
         foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
-            self::assertSame($expected, Toon::encode($value, new EncodeOptions(version: $version)), $version->value);
+            $this->assertSame($expected, Toon::encode($value, new EncodeOptions(version: $version)), $version->value);
         }
     }
 }

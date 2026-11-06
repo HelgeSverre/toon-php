@@ -13,6 +13,9 @@ final class LineWriter
         private readonly string $indentationString,
     ) {}
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     public function push(int $depth, string $content): void
     {
         $indent = str_repeat($this->indentationString, $depth);

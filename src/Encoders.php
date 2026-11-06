@@ -8,7 +8,7 @@ final class Encoders
 {
     public function __construct(
         private readonly EncodeOptions $options,
-        private readonly LineWriter $writer
+        private readonly LineWriter $writer,
     ) {}
 
     /**
@@ -18,7 +18,7 @@ final class Encoders
      * compact representation (inline arrays, tabular format, or list format).
      *
      * @param  mixed  $value  The value to encode
-     * @param  int  $depth  Current indentation depth (default: 0)
+     * @param  non-negative-int  $depth  Current indentation depth (default: 0)
      */
     public function encodeValue(mixed $value, int $depth = 0): void
     {
@@ -43,7 +43,7 @@ final class Encoders
         }
 
         // Handle objects
-        if (Normalize::isJsonObject($value)) { // @phpstan-ignore staticMethod.impossibleType
+        if (Normalize::isJsonObject($value)) {
             $this->encodeObject($value, $depth);
 
             return;
@@ -54,7 +54,8 @@ final class Encoders
     }
 
     /**
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
+     * @param  non-negative-int  $depth
      */
     private function encodeObject(array $object, int $depth): void
     {
@@ -63,6 +64,9 @@ final class Encoders
         }
     }
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     private function encodeKeyValuePair(string $key, mixed $value, int $depth, bool $isListItem = false): void
     {
         // Encode the key using identifier pattern matching
@@ -140,12 +144,11 @@ final class Encoders
         }
 
         // Handle nested objects
-        if (Normalize::isJsonObject($value)) { // @phpstan-ignore staticMethod.impossibleType
+        if (Normalize::isJsonObject($value)) {
             $object = $value;
 
             // Empty object
-            if (empty($object)) { // @phpstan-ignore empty.variable
-
+            if (empty($object)) {
                 $this->writer->push($depth, $prefix.$encodedKey.Constants::COLON);
 
                 return;
@@ -164,6 +167,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>  $array
+     * @param  non-negative-int  $depth
      */
     private function encodeArray(array $array, int $depth): void
     {
@@ -182,7 +186,7 @@ final class Encoders
             $delimiterKey = $this->getDelimiterKey($this->options->delimiter);
             $this->writer->push($depth, Constants::OPEN_BRACKET.count($array).$delimiterKey.Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
-                $inlineArray = $this->formatInlineArray($item); // @phpstan-ignore argument.type
+                $inlineArray = $this->formatInlineArray($item);
                 $this->writer->push($depth + 1, Constants::LIST_ITEM_PREFIX.$inlineArray);
             }
 
@@ -202,7 +206,7 @@ final class Encoders
             // Fall back to list format
             $this->writer->push($depth, Constants::OPEN_BRACKET.count($array).Constants::CLOSE_BRACKET.Constants::COLON);
             foreach ($array as $item) {
-                $this->encodeObjectAsListItem($item, $depth + 1); // @phpstan-ignore argument.type
+                $this->encodeObjectAsListItem($item, $depth + 1);
             }
 
             return;
@@ -226,7 +230,7 @@ final class Encoders
 
         $encoded = array_map(
             fn ($item) => Primitives::encodePrimitive($item, $this->options->delimiter),
-            $array
+            $array,
         );
 
         $joined = implode($this->options->delimiter, $encoded);
@@ -246,7 +250,7 @@ final class Encoders
      *
      * Field names are encoded as keys following the same quoting rules (§7.3).
      *
-     * @param  array<string>  $fields
+     * @param  array<array-key>  $fields
      * @param  string|null  $key  Optional key for the array
      */
     private function formatArrayHeader(int $length, array $fields, ?string $key = null): string
@@ -255,8 +259,11 @@ final class Encoders
 
         // Encode field names as keys
         $quotedFields = array_map(
+            // Preserve the released TypeError for integer field keys and strict callback semantics.
+            // @mago-expect analysis:less-specific-argument
+            // @mago-expect lint:prefer-first-class-callable
             fn ($field) => Primitives::encodeKey($field),
-            $fields
+            $fields,
         );
         $fieldsList = implode($this->options->delimiter, $quotedFields);
 
@@ -271,7 +278,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>|null  $array
-     * @return array<string>|null
+     * @return list<array-key>|null
      */
     private function detectTabularHeader(?array $array): ?array
     {
@@ -290,7 +297,7 @@ final class Encoders
 
     /**
      * @param  array<mixed>  $array
-     * @param  array<string>  $expectedFields
+     * @param  array<array-key>  $expectedFields
      */
     private function isTabularArray(array $array, array $expectedFields): bool
     {
@@ -324,22 +331,24 @@ final class Encoders
     }
 
     /**
-     * @param  array<mixed>  $array
-     * @param  array<string>  $fields
+     * @param  list<array<array-key, mixed>>  $array
+     * @param  array<array-key>  $fields
+     * @param  non-negative-int  $depth
      */
     private function writeTabularRows(array $array, array $fields, int $depth): void
     {
         foreach ($array as $object) {
             $values = [];
             foreach ($fields as $field) {
-                $values[] = Primitives::encodePrimitive($object[$field], $this->options->delimiter); // @phpstan-ignore offsetAccess.nonOffsetAccessible
+                $values[] = Primitives::encodePrimitive($object[$field], $this->options->delimiter);
             }
             $this->writer->push($depth, implode($this->options->delimiter, $values));
         }
     }
 
     /**
-     * @param  array<string, mixed>  $object
+     * @param  array<array-key, mixed>  $object
+     * @param  non-negative-int  $depth
      */
     private function encodeObjectAsListItem(array $object, int $depth): void
     {
@@ -353,16 +362,22 @@ final class Encoders
 
         // First key-value pair always on the marker line
         $firstKey = $keys[0];
+        // Legacy integer-key failures are frozen along with successful encodings.
+        // @mago-expect analysis:less-specific-argument
         $this->encodeKeyValuePair($firstKey, $object[$firstKey], $depth, true);
 
         // Remaining properties indented
         for ($i = 1; $i < count($keys); $i++) {
             $key = $keys[$i];
             $value = $object[$key];
+            // @mago-expect analysis:less-specific-argument
             $this->encodeKeyValuePair($key, $value, $depth + 1);
         }
     }
 
+    /**
+     * @param  non-negative-int  $depth
+     */
     private function encodeMixedArrayItem(mixed $item, int $depth): void
     {
         // Primitives
@@ -392,7 +407,7 @@ final class Encoders
         }
 
         // Objects
-        if (Normalize::isJsonObject($item)) { // @phpstan-ignore staticMethod.impossibleType
+        if (Normalize::isJsonObject($item)) {
             $this->encodeObjectAsListItem($item, $depth);
 
             return;

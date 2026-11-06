@@ -10,8 +10,9 @@ Quick reference for AI coding agents working on TOON PHP. See `docs/multi-versio
 - **Run single test method**: `vendor/bin/phpunit --filter test_encode_safe_strings`
 - **Test with coverage**: `just coverage` (requires a coverage driver; see `docs/coverage-review.md`)
 - **Check opt-in codecs without optional extensions**: `php -n tests/Support/check-runtime.php`
-- **Format code**: `just fix` (Laravel Pint)
-- **Static analysis**: `just analyse` (PHPStan level 9)
+- **Format code**: `just fix` (Mago formatter)
+- **Lint**: `just lint` (Mago format check + linter)
+- **Static analysis**: `just analyse` (Mago analyzer, no baseline)
 - **Dev cycle**: `just dev` (format + test)
 - **Pre-PR**: `just pr` (format + analyse + test)
 
@@ -43,6 +44,6 @@ Quick reference for AI coding agents working on TOON PHP. See `docs/multi-versio
 - Preserve `tests/Fixtures/legacy-3.2.1.json`. Its generator verifies the pinned release source; never regenerate snapshots from the implementation under test.
 - Cover canonical encoding, decoded values and order, strict/lenient behavior, option copying, version isolation, and PHP-specific edge cases. Run the full suite, including Mate compatibility tests, after codec changes.
 - Coverage improvements should test meaningful public behavior, not private constructors or unreachable internals solely to raise percentages.
-- **PHP 8.1+**, `declare(strict_types=1);`, namespace `HelgeSverre\Toon`, PHPStan level 9. No new runtime packages or extension requirements.
+- **PHP 8.1+**, `declare(strict_types=1);`, namespace `HelgeSverre\Toon`, Mago analyzer clean with no baseline. Prefer precise docblock types (`positive-int`, `list<...>`, `@phpstan-assert-if-true`) over `assert()`. No new runtime packages or extension requirements.
 - **Tests** go in `tests/` only; **docs/reports** go in `docs/` only. Root agent instruction files are maintained in place.
-- Vendored fixtures and Mate source are preserved verbatim and excluded from Pint through `pint.json`.
+- Vendored fixtures and Mate source are preserved verbatim and excluded from formatting and linting through `mago.toml`. Keep Mate source available to the analyzer for symbol resolution.

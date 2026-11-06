@@ -57,7 +57,7 @@ final class ValueParser
             throw new SyntaxException(
                 'Unterminated quoted string',
                 $lineNumber,
-                $token
+                $token,
             );
         }
 
@@ -111,7 +111,7 @@ final class ValueParser
                     default => throw new SyntaxException(
                         "Invalid escape sequence: \\{$next}",
                         $lineNumber,
-                        $original
+                        $original,
                     ),
                 };
 
@@ -147,7 +147,7 @@ final class ValueParser
             throw new SyntaxException(
                 'Invalid escape sequence: \\u requires four hex digits',
                 $lineNumber,
-                $original
+                $original,
             );
         }
 
@@ -158,7 +158,7 @@ final class ValueParser
             throw new SyntaxException(
                 "Invalid escape sequence: lone surrogate \\u{$hex}",
                 $lineNumber,
-                $original
+                $original,
             );
         }
 

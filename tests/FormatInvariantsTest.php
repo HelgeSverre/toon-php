@@ -63,6 +63,7 @@ final class FormatInvariantsTest extends TestCase
         // Check that indentation is spaces
         $lines = explode("\n", $encoded);
         foreach ($lines as $line) {
+            $matches = [];
             if (preg_match('/^(\s+)/', $line, $matches)) {
                 $indent = $matches[1];
                 // Ensure it's only spaces, not tabs
@@ -322,6 +323,7 @@ final class FormatInvariantsTest extends TestCase
             // For comma delimiter, ensure no pipes or tabs in array contexts
             if ($testCase['delimiter'] === ',') {
                 // Check inline arrays don't mix delimiters
+                $matches = [];
                 if (preg_match('/\[[\d#]+\]: (.+)/', $result, $matches)) {
                     $arrayContent = $matches[1];
                     $this->assertStringNotContainsString('|', $arrayContent, 'Comma-delimited array should not contain pipes');
@@ -332,6 +334,7 @@ final class FormatInvariantsTest extends TestCase
             // For pipe delimiter, ensure no commas in array contexts
             if ($testCase['delimiter'] === '|') {
                 // Check that array data uses pipes consistently
+                $matches = [];
                 if (preg_match('/\[[\d#]+[|]?\]: (.+)/', $result, $matches)) {
                     $arrayContent = $matches[1];
                     // Pipes should be present, commas should not be delimiters
@@ -342,7 +345,7 @@ final class FormatInvariantsTest extends TestCase
                             // Each part should not have comma as delimiter
                             $this->assertTrue(
                                 ! str_contains(trim($part), ',') || count($parts) === 1,
-                                'Pipe-delimited array should not mix comma delimiters'
+                                'Pipe-delimited array should not mix comma delimiters',
                             );
                         }
                     }
@@ -351,6 +354,7 @@ final class FormatInvariantsTest extends TestCase
 
             // For tab delimiter, ensure no commas or pipes in array contexts
             if ($testCase['delimiter'] === "\t") {
+                $matches = [];
                 if (preg_match('/\[[\d#]+\t?\]: (.+)/', $result, $matches)) {
                     $arrayContent = $matches[1];
                     if (str_contains($arrayContent, "\t")) {

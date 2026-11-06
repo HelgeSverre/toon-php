@@ -15,8 +15,7 @@ final class NormalizationTest extends TestCase
 {
     public function test_normalize_json_serializable_priority(): void
     {
-        $obj = new class implements JsonSerializable
-        {
+        $obj = new class implements JsonSerializable {
             private int $privateValue = 42;
 
             public int $publicValue = 99;
@@ -42,8 +41,7 @@ final class NormalizationTest extends TestCase
 
     public function test_normalize_to_array_when_no_json_serializable(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             public int $publicValue = 99;
 
             /**
@@ -62,8 +60,7 @@ final class NormalizationTest extends TestCase
 
     public function test_normalize_public_properties_only(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             public string $publicProp = 'public';
         };
 
@@ -140,8 +137,7 @@ final class NormalizationTest extends TestCase
 
     public function test_normalize_value_handles_to_json_method(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             private int $privateValue = 42;
 
             public int $publicValue = 99;
@@ -159,8 +155,7 @@ final class NormalizationTest extends TestCase
 
     public function test_to_json_takes_priority_over_json_serializable(): void
     {
-        $obj = new class implements JsonSerializable
-        {
+        $obj = new class implements JsonSerializable {
             public function toJSON(): mixed
             {
                 return ['via' => 'toJSON'];
@@ -179,8 +174,7 @@ final class NormalizationTest extends TestCase
 
     public function test_to_json_recursion_protection(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             public int $value = 42;
 
             public function toJSON(): mixed
@@ -197,13 +191,11 @@ final class NormalizationTest extends TestCase
 
     public function test_to_json_result_is_normalized_recursively(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             public function toJSON(): mixed
             {
                 return [
-                    'nested' => new class
-                    {
+                    'nested' => new class {
                         public function toJSON(): mixed
                         {
                             return ['deep' => 'value'];
@@ -327,7 +319,7 @@ final class NormalizationTest extends TestCase
         $this->assertTrue(Normalize::isJsonArray([]));
 
         $this->assertFalse(Normalize::isJsonArray(['key' => 'value']));
-        $this->assertFalse(Normalize::isJsonArray('not an array')); // @phpstan-ignore staticMethod.impossibleType
+        $this->assertFalse(Normalize::isJsonArray('not an array'));
     }
 
     public function test_is_json_object(): void
@@ -337,7 +329,7 @@ final class NormalizationTest extends TestCase
 
         $this->assertFalse(Normalize::isJsonObject([1, 2, 3]));
         $this->assertFalse(Normalize::isJsonObject([])); // Empty array is a list
-        $this->assertFalse(Normalize::isJsonObject(new stdClass)); // @phpstan-ignore staticMethod.impossibleType
+        $this->assertFalse(Normalize::isJsonObject(new stdClass));
     }
 
     public function test_normalize_enum(): void
@@ -369,8 +361,7 @@ final class NormalizationTest extends TestCase
 
     public function test_normalize_object_with_enums(): void
     {
-        $obj = new class
-        {
+        $obj = new class {
             public Status $status = Status::INACTIVE;
 
             public Counting $count = Counting::THREE;

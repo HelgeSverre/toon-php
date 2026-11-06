@@ -9,6 +9,13 @@ use InvalidArgumentException;
 final class DecodeOptions
 {
     /**
+     * Expected number of spaces per indentation level.
+     *
+     * @var positive-int
+     */
+    public readonly int $indent;
+
+    /**
      * Create new decoding options.
      *
      * @param  int  $indent  Expected number of spaces per indentation level (default: 2, minimum: 1)
@@ -17,15 +24,17 @@ final class DecodeOptions
      * @throws InvalidArgumentException If indent is less than 1
      */
     public function __construct(
-        public readonly int $indent = 2,
+        int $indent = 2,
         public readonly bool $strict = true,
         public readonly SpecVersion $version = SpecVersion::V3_3,
     ) {
         // §12: depth is measured in indentSize-space units; indent 0 makes every
         // line depth 0 and cannot recover nesting, so it is not a valid setting.
-        if ($this->indent < 1) {
+        if ($indent < 1) {
             throw new InvalidArgumentException('Indent must be a positive integer (at least 1)');
         }
+
+        $this->indent = $indent;
     }
 
     /**
@@ -56,7 +65,7 @@ final class DecodeOptions
     {
         return new self(
             indent: 2,
-            strict: false
+            strict: false,
         );
     }
 

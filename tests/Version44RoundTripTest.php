@@ -13,6 +13,22 @@ use PHPUnit\Framework\TestCase;
 
 final class Version44RoundTripTest extends TestCase
 {
+    public function test_generated_providers_exercise_diverse_values(): void
+    {
+        $documents = [];
+        foreach (self::documents() as [$value]) {
+            $documents[serialize($value)] = true;
+        }
+        $floats = [];
+        foreach (self::floats() as [$value]) {
+            $floats[serialize($value)] = true;
+        }
+
+        $this->assertGreaterThan(100, count($documents));
+        $this->assertGreaterThan(250, count($floats));
+    }
+
+    /** @return iterable<string, array{mixed, string, int}> */
     public static function documents(): iterable
     {
         // A private deterministic generator keeps failures reproducible without
@@ -37,6 +53,7 @@ final class Version44RoundTripTest extends TestCase
         self::assertModel($value, $decoded, $wire);
     }
 
+    /** @return iterable<string, array{float}> */
     public static function floats(): iterable
     {
         $state = 2026;
@@ -52,14 +69,14 @@ final class Version44RoundTripTest extends TestCase
     public function test_finite_binary64_values_round_trip_exactly(float $value): void
     {
         $wire = Toon::encode($value, new EncodeOptions(version: SpecVersion::V4_4));
-        self::assertSame($value === 0.0 ? 0.0 : $value, (float) Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4)), $wire);
+        $decoded = Toon::decode($wire, new DecodeOptions(version: SpecVersion::V4_4));
+        $this->assertIsNumeric($decoded, $wire);
+        $this->assertSame($value === 0.0 ? 0.0 : $value, (float) $decoded, $wire);
     }
 
     private static function next(int &$state): int
     {
-        $state = ($state * 1664525 + 1013904223) & 0xFFFFFFFF;
-
-        return $state;
+        return $state = (($state * 1664525) + 1013904223) & 0xFFFFFFFF;
     }
 
     private static function value(int &$state, int $depth): mixed

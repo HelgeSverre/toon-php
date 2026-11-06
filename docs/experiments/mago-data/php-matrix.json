@@ -1,0 +1,47 @@
+{
+  "81": {
+    "suite": "OK (4830 tests, 87084 assertions)",
+    "suite_exit": 0,
+    "smoke": [
+      "4.1 runtime checks passed without Composer or optional extensions.",
+      "4.4 runtime checks passed without Composer or optional extensions."
+    ],
+    "smoke_exit": 0
+  },
+  "82": {
+    "suite": "OK (4830 tests, 87084 assertions)",
+    "suite_exit": 0,
+    "smoke": [
+      "4.1 runtime checks passed without Composer or optional extensions.",
+      "4.4 runtime checks passed without Composer or optional extensions."
+    ],
+    "smoke_exit": 0
+  },
+  "83": {
+    "suite": "OK (4830 tests, 87084 assertions)",
+    "suite_exit": 0,
+    "smoke": [
+      "4.1 runtime checks passed without Composer or optional extensions.",
+      "4.4 runtime checks passed without Composer or optional extensions."
+    ],
+    "smoke_exit": 0
+  },
+  "84": {
+    "suite": "OK (4830 tests, 87084 assertions)",
+    "suite_exit": 0,
+    "smoke": [
+      "4.1 runtime checks passed without Composer or optional extensions.",
+      "4.4 runtime checks passed without Composer or optional extensions."
+    ],
+    "smoke_exit": 0
+  },
+  "85": {
+    "suite": "OK (4830 tests, 87084 assertions)",
+    "suite_exit": 0,
+    "smoke": [
+      "4.1 runtime checks passed without Composer or optional extensions.",
+      "4.4 runtime checks passed without Composer or optional extensions."
+    ],
+    "smoke_exit": 0
+  }
+}

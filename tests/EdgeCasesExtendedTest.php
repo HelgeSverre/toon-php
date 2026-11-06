@@ -18,7 +18,7 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $result = Toon::encode($data, new EncodeOptions(
-            delimiter: '|'
+            delimiter: '|',
         ));
 
         $this->assertStringContainsString('[2|]:', $result);
@@ -230,7 +230,7 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $options = new EncodeOptions(
-            delimiter: "\t"
+            delimiter: "\t",
         );
 
         $result = Toon::encode($data, $options);
@@ -246,7 +246,7 @@ final class EdgeCasesExtendedTest extends TestCase
         ];
 
         $options = new EncodeOptions(
-            delimiter: '|'
+            delimiter: '|',
         );
 
         $result = Toon::encode($data, $options);
@@ -398,7 +398,7 @@ final class EdgeCasesExtendedTest extends TestCase
     {
         // Spec requires sufficient precision for round-trip fidelity
         // IEEE 754 double precision provides 15-17 significant digits
-        $value = 1.23456789012345;  // 15 significant digits
+        $value = 1.23456789012345; // 15 significant digits
         $result = Toon::encode($value);
 
         // Should preserve all digits
@@ -498,8 +498,8 @@ final class EdgeCasesExtendedTest extends TestCase
         // below the canonical decimal range (1e-6), so they use exponent notation
         // and round-trip exactly rather than underflowing to 0 (§2).
         $data = [
-            'tiny1' => 1.0e-308,  // Near smallest normal float
-            'tiny2' => 5.0e-324,  // Smallest positive subnormal
+            'tiny1' => 1.0e-308, // Near smallest normal float
+            'tiny2' => 5.0e-324, // Smallest positive subnormal
             'tiny3' => PHP_FLOAT_MIN, // PHP constant for smallest positive normalized float
         ];
 

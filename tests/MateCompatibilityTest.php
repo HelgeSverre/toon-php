@@ -16,19 +16,21 @@ final class MateCompatibilityTest extends TestCase
         $payload = ['_security_notice' => 'application value', 'entries' => [['message' => '#hello', 'level' => 'INFO']]];
         $encoded = ResponseEncoder::encodeUntrusted($payload);
         $decoded = ResponseEncoder::decode($encoded);
-        self::assertIsArray($decoded);
-        self::assertSame(ResponseEncoder::UNTRUSTED_NOTICE, $decoded['_security_notice']);
-        self::assertSame($payload, $decoded['untrusted_data']);
-        self::assertSame($decoded, ResponseEncoder::tryDecode($encoded));
-        self::assertSame([], ResponseEncoder::decode(ResponseEncoder::encodeUntrusted([]))['untrusted_data']);
+        $this->assertIsArray($decoded);
+        $this->assertSame(ResponseEncoder::UNTRUSTED_NOTICE, $decoded['_security_notice']);
+        $this->assertSame($payload, $decoded['untrusted_data']);
+        $this->assertSame($decoded, ResponseEncoder::tryDecode($encoded));
+        $empty = ResponseEncoder::decode(ResponseEncoder::encodeUntrusted([]));
+        $this->assertIsArray($empty);
+        $this->assertSame([], $empty['untrusted_data']);
     }
 
     public function test_mate_keeps_plain_text_and_decodes_structures_as_arrays(): void
     {
         foreach (['42', 'true', 'null', 'plain text'] as $text) {
-            self::assertSame($text, ResponseEncoder::tryDecode($text));
+            $this->assertSame($text, ResponseEncoder::tryDecode($text));
         }
         $data = ['tools' => [['name' => 'inspect', 'description' => 'Inspect a service']], 'count' => 1];
-        self::assertSame($data, ResponseEncoder::decode(ResponseEncoder::encode($data)));
+        $this->assertSame($data, ResponseEncoder::decode(ResponseEncoder::encode($data)));
     }
 }

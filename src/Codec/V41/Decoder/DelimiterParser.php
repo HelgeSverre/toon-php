@@ -77,6 +77,6 @@ final class DelimiterParser
     {
         $line = ltrim($line, ' ');
 
-        return (strpos($line, '[') === 0) || (strpos($line, '{') === 0);
+        return str_starts_with($line, '[') || str_starts_with($line, '{');
     }
 }

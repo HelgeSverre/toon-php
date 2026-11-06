@@ -9,6 +9,13 @@ use InvalidArgumentException;
 final class EncodeOptions
 {
     /**
+     * Number of spaces per indentation level.
+     *
+     * @var positive-int
+     */
+    public readonly int $indent;
+
+    /**
      * Create new encoding options.
      *
      * @param  int  $indent  Number of spaces per indentation level (default: 2, minimum: 1)
@@ -17,15 +24,17 @@ final class EncodeOptions
      * @throws InvalidArgumentException If indent is less than 1 or delimiter is invalid
      */
     public function __construct(
-        public readonly int $indent = 2,
+        int $indent = 2,
         public readonly string $delimiter = Constants::DEFAULT_DELIMITER,
         public readonly SpecVersion $version = SpecVersion::V3_3,
     ) {
         // §12: indentation is a fixed number of spaces per level; depth is only
         // recoverable when indentSize >= 1, so indent 0 cannot represent nesting.
-        if ($this->indent < 1) {
+        if ($indent < 1) {
             throw new InvalidArgumentException('Indent must be a positive integer (at least 1)');
         }
+
+        $this->indent = $indent;
 
         if (! in_array($this->delimiter, [Constants::DELIMITER_COMMA, Constants::DELIMITER_TAB, Constants::DELIMITER_PIPE], true)) {
             throw new InvalidArgumentException('Invalid delimiter');

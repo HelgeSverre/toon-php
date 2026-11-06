@@ -19,14 +19,14 @@ final class ValidationTest extends TestCase
     public function test_validate_returns_true_for_valid_nested_document(): void
     {
         $toon = <<<'TOON'
-items[2]:
-  - id: 1
-    users[2]{id,name}:
-      1,Ada
-      2,Bob
-  - id: 2
-    active: true
-TOON;
+        items[2]:
+          - id: 1
+            users[2]{id,name}:
+              1,Ada
+              2,Bob
+          - id: 2
+            active: true
+        TOON;
 
         $this->assertTrue(Toon::validate($toon));
     }

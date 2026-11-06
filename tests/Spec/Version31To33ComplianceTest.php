@@ -174,6 +174,7 @@ final class Version31To33ComplianceTest extends TestCase
     public function test_out_of_range_numbers_round_trip_as_numbers(float $value): void
     {
         $decoded = Toon::decode(Toon::encode(['n' => $value]));
+        $this->assertIsArray($decoded);
         $this->assertSame($value, $decoded['n']);
     }
 

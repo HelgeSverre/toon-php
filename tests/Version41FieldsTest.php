@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Version41FieldsTest extends TestCase
 {
+    /** @return iterable<string, array{array<array-key, mixed>, string, array<array-key, mixed>}> */
     public static function fieldCases(): iterable
     {
         $nulRows = [["\0x" => 1], ["\0x" => 2]];
@@ -41,13 +42,17 @@ final class Version41FieldsTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<array-key, mixed> $input
+     * @param array<array-key, mixed> $decoded
+     */
     #[DataProvider('fieldCases')]
     public function test_preserves_field_values_and_uses_required_table_form(array $input, string $expected, array $decoded): void
     {
         foreach ([SpecVersion::V4_1, SpecVersion::V4_4] as $version) {
             $wire = Toon::encode($input, new EncodeOptions(version: $version));
-            self::assertSame($expected, $wire, $version->value);
-            self::assertSame($decoded, Toon::decode($wire, new DecodeOptions(version: $version)), $version->value);
+            $this->assertSame($expected, $wire, $version->value);
+            $this->assertSame($decoded, Toon::decode($wire, new DecodeOptions(version: $version)), $version->value);
         }
     }
 }

@@ -33,7 +33,7 @@ Applications should agree on the version out of band, for example in an API cont
 
 `Codec\V41` owns its normalization, encoding, fields, and decoder code under `src/Codec/V41/`. These classes are internal. Codec implementations share options, exceptions, constants, and line writing. Grammar-specific behavior is deliberately separate: fixes to comment handling, scopes, whitespace, and object encoding in 4.1 do not silently change legacy output.
 
-`Codec\V44` owns its grammar under `src/Codec/V44/`. It adapts PR #9 at `7fe28817d320c99115b5122eb69d5152f6ca225a`, with the existing PHP object-identity normalization retained, extension-free Unicode conversion, and precision-independent float encoding. PR #9 includes the nesting and empty-value fixes from #8. Optional 3.3 folding/expansion from #8 is not added to the frozen compatibility profile; the independent #7 tooling migration is not included. Pint and PHPStan remain the verification tools.
+`Codec\V44` owns its grammar under `src/Codec/V44/`. It adapts PR #9 at `7fe28817d320c99115b5122eb69d5152f6ca225a`, with the existing PHP object-identity normalization retained, extension-free Unicode conversion, and precision-independent float encoding. PR #9 includes the nesting and empty-value fixes from #8. Optional 3.3 folding/expansion from #8 is not added to the frozen compatibility profile; the independent #7 tooling migration is not included.
 
 ### 4.4 behavior
 
@@ -75,7 +75,7 @@ The current release checks, including a fresh comparison against Symfony Mate wi
 - 1,800 deterministic generated document round trips across three delimiters and three indentation sizes, plus 300 generated finite binary64 values and precision-setting regressions.
 - Compatibility tests using Symfony Mate's actual response encoder, vendored with its MIT license and revision metadata.
 
-Run `php -n tests/Support/check-runtime.php` to check both opt-in paths without Composer polyfills or optional extensions. The package retains PHP 8.1+ and no runtime package dependencies. CI runs the full suite and this smoke check on PHP 8.1–8.5, plus Pint and PHPStan level 9.
+Run `php -n tests/Support/check-runtime.php` to check both opt-in paths without Composer polyfills or optional extensions. The package retains PHP 8.1+ and no runtime package dependencies. CI runs the full suite and this smoke check on PHP 8.1–8.5, plus Mago format, lint and analysis checks.
 
 Fixture provenance is under `tests/Fixtures/spec/{3.3,4.1,4.4}/provenance.json`. The 4.4 corpus and spec pin tag `v4.4.0`, commit `d09c3d33e37389345a74bd96981eb96dd9be6c5e`. The specifications are under `docs/specs/`; `docs/SPEC.md` remains the legacy document. Upstream fixtures and the Mate source are vendored verbatim and excluded from formatting.
 

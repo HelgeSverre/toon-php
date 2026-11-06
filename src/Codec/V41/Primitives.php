@@ -76,7 +76,7 @@ final class Primitives
                     if ($position <= 0) {
                         $result = '0.'.str_repeat('0', -$position).$digits;
                     } elseif ($position >= strlen($digits)) {
-                        $result = $digits.str_repeat('0', $position - strlen($digits));
+                        $result = $digits.str_repeat('0', max(0, $position - strlen($digits)));
                     } else {
                         $result = substr($digits, 0, $position).'.'.substr($digits, $position);
                     }
@@ -188,7 +188,7 @@ final class Primitives
     {
         if ($value !== '' && preg_match('//u', $value) !== 1) {
             throw new InvalidArgumentException(
-                'String is not representable in TOON: input is not well-formed UTF-8 (unpaired surrogate or invalid byte sequence)'
+                'String is not representable in TOON: input is not well-formed UTF-8 (unpaired surrogate or invalid byte sequence)',
             );
         }
     }
@@ -216,9 +216,9 @@ final class Primitives
         $result = preg_replace_callback(
             '/[\x00-\x08\x0B\x0C\x0E-\x1F]/',
             fn (array $m): string => sprintf('\u%04x', ord($m[0])),
-            $escaped
+            $escaped,
         );
-        assert($result !== null);
+        assert($result !== null, 'preg_replace_callback failed on a valid pattern');
 
         return $result;
     }

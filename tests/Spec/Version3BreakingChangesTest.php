@@ -68,16 +68,21 @@ final class Version3BreakingChangesTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('items', $result);
+        $this->assertIsArray($result['items']);
         $this->assertCount(1, $result['items']);
 
         $item = $result['items'][0];
+        $this->assertIsArray($item);
         $this->assertArrayHasKey('users', $item);
         $this->assertArrayHasKey('status', $item);
 
-        $this->assertEquals([
-            ['id' => 1, 'name' => 'Ada'],
-            ['id' => 2, 'name' => 'Bob'],
-        ], $item['users']);
+        $this->assertEquals(
+            [
+                ['id' => 1, 'name' => 'Ada'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            $item['users'],
+        );
         $this->assertEquals('active', $item['status']);
     }
 
