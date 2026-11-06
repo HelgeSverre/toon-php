@@ -13,7 +13,8 @@
 - **Total Tests:** 806
 - **Passing:** 806 (100%)
 - **Failing:** 0
-- **Static Analysis:** Mago analyzer
+- **PHPStan Level:** 9 (maximum strictness)
+- **PHPStan Errors:** 0
 
 ---
 
@@ -258,7 +259,7 @@ Post-refactoring benchmarks show:
 - Minimal performance impact (< 3% worst case, often better)
 - Some metrics improved (throughput +6.65%)
 - All 806 tests pass
-- Mago analyzer clean
+- PHPStan Level 9 clean
 
 ---
 
@@ -275,7 +276,7 @@ The toon-php library successfully implements the MUST requirements for:
 The library is ready for release as v3.2.0 with confidence in its:
 
 - Specification compliance
-- Type safety (Mago analyzer)
+- Type safety (PHPStan Level 9)
 - Test coverage (806 passing tests)
 - Code quality (clean architecture)
 - Performance characteristics (benchmarked)

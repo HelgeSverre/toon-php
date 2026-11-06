@@ -132,9 +132,9 @@ mago: fix
 dev: fix test
     @echo "Development cycle complete!"
 
-[doc('Full quality suite: format + analyse + test')]
+[doc('Full quality suite: format + lint + analyse + test')]
 [group('workflow')]
-quality: fix analyse test
+quality: fix lint analyse test
     @echo "Quality checks complete!"
 
 [doc('Prepare for PR: run full quality suite')]

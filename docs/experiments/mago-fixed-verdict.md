@@ -52,10 +52,12 @@ Keep the exact tool pin initially. The previous review found a guarded-regex fal
 To reproduce the paired timing from this worktree:
 
 ```sh
-TOON_BASELINE=/Users/helge/code/toon-php \
+TOON_BASELINE=/Users/helge/code/toon-php-tooling-baseline \
 TOON_BENCH_PHP='/Users/helge/Library/Application Support/Herd/bin/php84' \
 TOON_BENCH_MODE=paired TOON_BENCH_RUNS=10 \
 ruby tests/Support/compare-tooling.rb
 ```
 
 For the isolated analyzer probes, use the same paths with `TOON_BENCH_SKIP_TIMING=1` instead of `TOON_BENCH_MODE=paired`. The harness removes its temporary PHP probes when done.
+
+The baseline must be a separate checkout pinned to `6c9163b174fb77f31e64bd9840d428b6691964fc`, with its development dependencies installed. The original measurements used Pint 1.20.0 and PHPStan 1.12.32. Keep that checkout and those dependency versions when reproducing the comparison after main adopts Mago; the harness rejects a different source revision or missing baseline tools.

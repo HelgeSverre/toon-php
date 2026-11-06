@@ -6,7 +6,13 @@ require 'fileutils'
 require 'tmpdir'
 
 root = File.expand_path('../..', __dir__)
-baseline = ENV.fetch('TOON_BASELINE', File.join(File.dirname(root), 'toon-php'))
+baseline = ENV.fetch('TOON_BASELINE', File.join(File.dirname(root), 'toon-php-tooling-baseline'))
+baseline_revision = '6c9163b174fb77f31e64bd9840d428b6691964fc'
+revision, revision_error, revision_status = Open3.capture3('git', '-C', baseline, 'rev-parse', 'HEAD')
+abort "TOON_BASELINE must point to a checkout of #{baseline_revision}: #{revision_error}" unless revision_status.success? && revision.strip == baseline_revision
+%w[vendor/laravel/pint/builds/pint vendor/phpstan/phpstan/phpstan.phar].each do |path|
+  abort "Missing baseline tool #{path}; install the baseline development dependencies first" unless File.file?(File.join(baseline, path))
+end
 php = ENV.fetch('TOON_BENCH_PHP', 'php')
 runs = Integer(ENV.fetch('TOON_BENCH_RUNS', '10'))
 data = File.join(root, 'docs/experiments/mago-data')
@@ -46,7 +52,14 @@ begin
         [mago + ['analyze', '--reporting-format=json', '--minimum-report-level=warning'], root],
       ],
     }
-    2.times { workflows.each_value { |commands| commands.each { |cmd, cwd| invoke.call(cmd, cwd) } } }
+    2.times do
+      workflows.each_value do |commands|
+        commands.each do |cmd, cwd|
+          result = invoke.call(cmd, cwd)
+          raise "Workflow warmup failed: #{result}" unless result[:exit] == 0
+        end
+      end
+    end
     samples = []
     runs.times do |i|
       row = {}
@@ -54,6 +67,7 @@ begin
       order.each do |tool|
         start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         statuses = workflows.fetch(tool).map { |cmd, cwd| invoke.call(cmd, cwd)[:exit] }
+        raise "Workflow failed during timing: #{tool}: #{statuses}" unless statuses.all?(&:zero?)
         row[tool] = {seconds: Process.clock_gettime(Process::CLOCK_MONOTONIC) - start, exits: statuses}
       end
       samples << row

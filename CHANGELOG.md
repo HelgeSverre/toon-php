@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Development tooling: replaced Laravel Pint and PHPStan with [Mago](https://mago.carthage.software) 1.57.0 (formatter, linter and analyzer), installed via Composer as `carthage-software/mago` and configured in `mago.toml`. The formatter is tuned to the existing code layout. `just fix`, `just lint`, `just analyse` and CI now run Mago.
+- `just pr` includes lint checks, and Mago checks missing type hints. Regression tests preserve generated-data diversity and released integer-key behavior during the migration.
 
 ### Fixed
 

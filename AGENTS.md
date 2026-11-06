@@ -46,4 +46,4 @@ Quick reference for AI coding agents working on TOON PHP. See `docs/multi-versio
 - Coverage improvements should test meaningful public behavior, not private constructors or unreachable internals solely to raise percentages.
 - **PHP 8.1+**, `declare(strict_types=1);`, namespace `HelgeSverre\Toon`, Mago analyzer clean with no baseline. Prefer precise docblock types (`positive-int`, `list<...>`, `@phpstan-assert-if-true`) over `assert()`. No new runtime packages or extension requirements.
 - **Tests** go in `tests/` only; **docs/reports** go in `docs/` only. Root agent instruction files are maintained in place.
-- Vendored fixtures and Mate source are preserved verbatim and excluded from Mago through `mago.toml`.
+- Vendored fixtures and Mate source are preserved verbatim and excluded from formatting and linting through `mago.toml`. Keep Mate source available to the analyzer for symbol resolution.
