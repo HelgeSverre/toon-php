@@ -1,0 +1,25 @@
+{
+    "same": {
+        "exit": 0,
+        "expected": 0
+    },
+    "slower": {
+        "exit": 1,
+        "expected": 1
+    },
+    "missing": {
+        "exit": 2,
+        "expected": 2
+    },
+    "incomplete_workload_set": {
+        "exit": 2,
+        "expected": 2
+    },
+    "real_codec_slowdown": {
+        "injected_delay_us": 1000,
+        "baseline_median_us": 37.02,
+        "candidate_median_us": 1302.72,
+        "exit": 1,
+        "expected": 1
+    }
+}
