@@ -1,0 +1,2082 @@
+{
+    "release": "3.2.1",
+    "revision": "55ca6ba93846bde75eeb04dac70a99fe0bb435dd",
+    "cases": {
+        "encode\/arrays-nested.json#0": {
+            "value": "pairs[2]:\n  - [2]: a,b\n  - [2]: c,d"
+        },
+        "encode\/arrays-nested.json#1": {
+            "value": "pairs[2]:\n  - [2]: a,b\n  - [3]: \"c,d\",\"e:f\",\"true\""
+        },
+        "encode\/arrays-nested.json#2": {
+            "value": "pairs[2]:\n  - [0]:\n  - [0]:"
+        },
+        "encode\/arrays-nested.json#3": {
+            "value": "pairs[2]:\n  - [1]: 1\n  - [2]: 2,3"
+        },
+        "encode\/arrays-nested.json#4": {
+            "value": "[5]: x,y,\"true\",true,10"
+        },
+        "encode\/arrays-nested.json#5": {
+            "value": "[2]{id}:\n  1\n  2"
+        },
+        "encode\/arrays-nested.json#6": {
+            "value": "[2]:\n  - id: 1\n  - id: 2\n    name: Ada"
+        },
+        "encode\/arrays-nested.json#7": {
+            "value": "[3]:\n  - summary\n  - id: 1\n    name: Ada\n  - [2]:\n    - id: 2\n    - status: draft"
+        },
+        "encode\/arrays-nested.json#8": {
+            "value": "[2]:\n  - [2]: 1,2\n  - [0]:"
+        },
+        "encode\/arrays-nested.json#9": {
+            "value": ""
+        },
+        "encode\/arrays-nested.json#10": {
+            "value": "user:\n  id: 123\n  name: Ada\n  tags[2]: reading,gaming\n  active: true\n  prefs[0]:"
+        },
+        "encode\/arrays-nested.json#11": {
+            "value": "items[3]:\n  - 1\n  - a: 1\n  - text"
+        },
+        "encode\/arrays-nested.json#12": {
+            "value": "items[2]:\n  - a: 1\n  - [2]: 1,2"
+        },
+        "encode\/arrays-objects.json#0": {
+            "value": "items[2]:\n  - id: 1\n    name: First\n  - id: 2\n    name: Second\n    extra: true"
+        },
+        "encode\/arrays-objects.json#1": {
+            "value": "items[1]:\n  - id: 1\n    nested:\n      x: 1"
+        },
+        "encode\/arrays-objects.json#2": {
+            "value": "items[1]:\n  - nums[3]: 1,2,3\n    name: Ada"
+        },
+        "encode\/arrays-objects.json#3": {
+            "value": "items[1]:\n  - name: Ada\n    nums[3]: 1,2,3"
+        },
+        "encode\/arrays-objects.json#4": {
+            "value": "items[1]:\n  - matrix[2]:\n    - [2]: 1,2\n    - [2]: 3,4\n    name: grid"
+        },
+        "encode\/arrays-objects.json#5": {
+            "value": "items[1]:\n  - users[2]{id,name}:\n      1,Ada\n      2,Bob\n    status: active"
+        },
+        "encode\/arrays-objects.json#6": {
+            "value": "items[1]:\n  - users[2]:\n    - id: 1\n      name: Ada\n    - id: 2\n    status: active"
+        },
+        "encode\/arrays-objects.json#7": {
+            "value": "items[1]:\n  - nums[2]: 1,2\n    tags[2]: a,b\n    name: test"
+        },
+        "encode\/arrays-objects.json#8": {
+            "value": "items[1]:\n  - nums[3]: 1,2,3\n    tags[2]: a,b"
+        },
+        "encode\/arrays-objects.json#9": {
+            "value": "items[1]:\n  - name: Ada\n    data[0]:"
+        },
+        "encode\/arrays-objects.json#10": {
+            "value": "items[1]:\n  - users[2]{id}:\n      1\n      2\n    note: x"
+        },
+        "encode\/arrays-objects.json#11": {
+            "value": "items[1]:\n  - users[2]{id,name}:\n      1,Ada\n      2,Bob"
+        },
+        "encode\/arrays-objects.json#12": {
+            "value": "items[1]:\n  - data[0]:\n    name: x"
+        },
+        "encode\/arrays-objects.json#13": {
+            "value": "items[3]:\n  - first\n  - second\n  - [0]:"
+        },
+        "encode\/arrays-objects.json#14": {
+            "value": "items[2]{a,b,c}:\n  1,2,3\n  10,20,30"
+        },
+        "encode\/arrays-objects.json#15": {
+            "value": "items[2]:\n  - id: 1\n    data: string\n  - id: 2\n    data:\n      nested: true"
+        },
+        "encode\/arrays-objects.json#16": {
+            "value": "items[2]:\n  - [0]:\n  - [0]:"
+        },
+        "encode\/arrays-primitive.json#0": {
+            "value": "tags[2]: reading,gaming"
+        },
+        "encode\/arrays-primitive.json#1": {
+            "value": "nums[3]: 1,2,3"
+        },
+        "encode\/arrays-primitive.json#2": {
+            "value": "data[4]: x,y,true,10"
+        },
+        "encode\/arrays-primitive.json#3": {
+            "value": "items[0]:"
+        },
+        "encode\/arrays-primitive.json#4": {
+            "value": "\"\"[3]: 1,2,3"
+        },
+        "encode\/arrays-primitive.json#5": {
+            "value": "\"\"[0]:"
+        },
+        "encode\/arrays-primitive.json#6": {
+            "value": "items[1]: \"\""
+        },
+        "encode\/arrays-primitive.json#7": {
+            "value": "items[3]: a,\"\",b"
+        },
+        "encode\/arrays-primitive.json#8": {
+            "value": "items[2]: \" \",\"  \""
+        },
+        "encode\/arrays-primitive.json#9": {
+            "value": "items[3]: a,\"b,c\",\"d:e\""
+        },
+        "encode\/arrays-primitive.json#10": {
+            "value": "items[4]: x,\"true\",\"42\",\"-3.14\""
+        },
+        "encode\/arrays-primitive.json#11": {
+            "value": "items[3]: \"[5]\",\"- item\",\"{key}\""
+        },
+        "encode\/arrays-tabular.json#0": {
+            "value": "items[2]{sku,qty,price}:\n  A1,2,9.99\n  B2,1,14.5"
+        },
+        "encode\/arrays-tabular.json#1": {
+            "value": "items[2]{id,value}:\n  1,null\n  2,test"
+        },
+        "encode\/arrays-tabular.json#2": {
+            "value": "items[2]{sku,desc,qty}:\n  \"A,1\",cool,2\n  B2,\"wip: test\",1"
+        },
+        "encode\/arrays-tabular.json#3": {
+            "value": "items[2]{id,status}:\n  1,\"true\"\n  2,\"false\""
+        },
+        "encode\/arrays-tabular.json#4": {
+            "value": "items[2]{\"order:id\",\"full name\"}:\n  1,Ada\n  2,Bob"
+        },
+        "encode\/arrays-tabular.json#5": {
+            "value": "\"\"[2]{id,name}:\n  1,Ada\n  2,Bob"
+        },
+        "encode\/delimiters.json#0": {
+            "value": "tags[3\t]: reading\tgaming\tcoding"
+        },
+        "encode\/delimiters.json#1": {
+            "value": "tags[3|]: reading|gaming|coding"
+        },
+        "encode\/delimiters.json#2": {
+            "value": "tags[3]: reading,gaming,coding"
+        },
+        "encode\/delimiters.json#3": {
+            "value": "items[2\t]{sku\tqty\tprice}:\n  A1\t2\t9.99\n  B2\t1\t14.5"
+        },
+        "encode\/delimiters.json#4": {
+            "value": "items[2|]{sku|qty|price}:\n  A1|2|9.99\n  B2|1|14.5"
+        },
+        "encode\/delimiters.json#5": {
+            "value": "pairs[2\t]:\n  - [2\t]: a\tb\n  - [2\t]: c\td"
+        },
+        "encode\/delimiters.json#6": {
+            "value": "pairs[2|]:\n  - [2|]: a|b\n  - [2|]: c|d"
+        },
+        "encode\/delimiters.json#7": {
+            "value": "[3\t]: x\ty\tz"
+        },
+        "encode\/delimiters.json#8": {
+            "value": "[3|]: x|y|z"
+        },
+        "encode\/delimiters.json#9": {
+            "value": "[2\t]{id}:\n  1\n  2"
+        },
+        "encode\/delimiters.json#10": {
+            "value": "[2|]{id}:\n  1\n  2"
+        },
+        "encode\/delimiters.json#11": {
+            "value": "items[3\t]: a\t\"b\\tc\"\td"
+        },
+        "encode\/delimiters.json#12": {
+            "value": "items[3|]: a|\"b|c\"|d"
+        },
+        "encode\/delimiters.json#13": {
+            "value": "items[2\t]: a,b\tc,d"
+        },
+        "encode\/delimiters.json#14": {
+            "value": "items[2|]: a,b|c,d"
+        },
+        "encode\/delimiters.json#15": {
+            "value": "items[2]{id,note}:\n  1,\"a,b\"\n  2,\"c,d\""
+        },
+        "encode\/delimiters.json#16": {
+            "value": "items[2\t]{id\tnote}:\n  1\ta,b\n  2\tc,d"
+        },
+        "encode\/delimiters.json#17": {
+            "value": "note: a,b"
+        },
+        "encode\/delimiters.json#18": {
+            "value": "note: a,b"
+        },
+        "encode\/delimiters.json#19": {
+            "value": "pairs[1|]:\n  - [2|]: a|\"b|c\""
+        },
+        "encode\/delimiters.json#20": {
+            "value": "pairs[1\t]:\n  - [2\t]: a\t\"b\\tc\""
+        },
+        "encode\/delimiters.json#21": {
+            "value": "items[3|]: \"true\"|\"42\"|\"-3.14\""
+        },
+        "encode\/key-folding.json#0": {
+            "value": "a:\n  b:\n    c: 1"
+        },
+        "encode\/key-folding.json#1": {
+            "value": "data:\n  meta:\n    items[2]: x,y"
+        },
+        "encode\/key-folding.json#2": {
+            "value": "a:\n  b:\n    items[2]{id,name}:\n      1,A\n      2,B"
+        },
+        "encode\/key-folding.json#3": {
+            "value": "data:\n  \"full-name\":\n    x: 1"
+        },
+        "encode\/key-folding.json#4": {
+            "value": "data:\n  meta:\n    items[2]: 1,2\ndata.meta.items: literal"
+        },
+        "encode\/key-folding.json#5": {
+            "value": "a:\n  b:\n    c:\n      d: 1"
+        },
+        "encode\/key-folding.json#6": {
+            "value": "a:\n  b:\n    c:\n      d: 1"
+        },
+        "encode\/key-folding.json#7": {
+            "value": "a:\n  b:\n    c: 1"
+        },
+        "encode\/key-folding.json#8": {
+            "value": "a:\n  b:\n    c: 1"
+        },
+        "encode\/key-folding.json#9": {
+            "value": "a:\n  b:\n    c[0]:"
+        },
+        "encode\/key-folding.json#10": {
+            "value": "a:\n  b[2]: 1,2"
+        },
+        "encode\/key-folding.json#11": {
+            "value": "first:\n  second:\n    third: 1\nsimple: 2\nshort:\n  path: 3"
+        },
+        "encode\/objects.json#0": {
+            "value": "id: 123\nname: Ada\nactive: true"
+        },
+        "encode\/objects.json#1": {
+            "value": "id: 123\nvalue: null"
+        },
+        "encode\/objects.json#2": {
+            "value": ""
+        },
+        "encode\/objects.json#3": {
+            "value": "note: \"a:b\""
+        },
+        "encode\/objects.json#4": {
+            "value": "note: \"a,b\""
+        },
+        "encode\/objects.json#5": {
+            "value": "text: \"line1\\nline2\""
+        },
+        "encode\/objects.json#6": {
+            "value": "text: \"say \\\"hello\\\"\""
+        },
+        "encode\/objects.json#7": {
+            "value": "text: \" padded \""
+        },
+        "encode\/objects.json#8": {
+            "value": "text: \"  \""
+        },
+        "encode\/objects.json#9": {
+            "value": "v: \"true\""
+        },
+        "encode\/objects.json#10": {
+            "value": "v: \"42\""
+        },
+        "encode\/objects.json#11": {
+            "value": "v: \"-7.5\""
+        },
+        "encode\/objects.json#12": {
+            "value": "\"order:id\": 7"
+        },
+        "encode\/objects.json#13": {
+            "value": "\"[index]\": 5"
+        },
+        "encode\/objects.json#14": {
+            "value": "\"{key}\": 5"
+        },
+        "encode\/objects.json#15": {
+            "value": "\"a,b\": 1"
+        },
+        "encode\/objects.json#16": {
+            "value": "\"full name\": Ada"
+        },
+        "encode\/objects.json#17": {
+            "value": "\"-lead\": 1"
+        },
+        "encode\/objects.json#18": {
+            "value": "\" a \": 1"
+        },
+        "encode\/objects.json#19": {
+            "value": "\"123\": x"
+        },
+        "encode\/objects.json#20": {
+            "value": "\"\": 1"
+        },
+        "encode\/objects.json#21": {
+            "value": "\"line\\nbreak\": 1"
+        },
+        "encode\/objects.json#22": {
+            "value": "\"tab\\there\": 2"
+        },
+        "encode\/objects.json#23": {
+            "value": "\"he said \\\"hi\\\"\": 1"
+        },
+        "encode\/objects.json#24": {
+            "value": "\"a\\u0004b\": 1"
+        },
+        "encode\/objects.json#25": {
+            "value": "\"x\\u001fy\": 2"
+        },
+        "encode\/objects.json#26": {
+            "value": "a:\n  b:\n    c: deep"
+        },
+        "encode\/objects.json#27": {
+            "value": "user[0]:"
+        },
+        "encode\/primitives.json#0": {
+            "value": "hello"
+        },
+        "encode\/primitives.json#1": {
+            "value": "Ada_99"
+        },
+        "encode\/primitives.json#2": {
+            "value": "\"\""
+        },
+        "encode\/primitives.json#3": {
+            "value": "\"true\""
+        },
+        "encode\/primitives.json#4": {
+            "value": "\"false\""
+        },
+        "encode\/primitives.json#5": {
+            "value": "\"null\""
+        },
+        "encode\/primitives.json#6": {
+            "value": "\"42\""
+        },
+        "encode\/primitives.json#7": {
+            "value": "\"-3.14\""
+        },
+        "encode\/primitives.json#8": {
+            "value": "\"1e-6\""
+        },
+        "encode\/primitives.json#9": {
+            "value": "\"05\""
+        },
+        "encode\/primitives.json#10": {
+            "value": "\"line1\\nline2\""
+        },
+        "encode\/primitives.json#11": {
+            "value": "\"tab\\there\""
+        },
+        "encode\/primitives.json#12": {
+            "value": "\"return\\rcarriage\""
+        },
+        "encode\/primitives.json#13": {
+            "value": "val: \"a\\u0004b\""
+        },
+        "encode\/primitives.json#14": {
+            "value": "\"C:\\\\Users\\\\path\""
+        },
+        "encode\/primitives.json#15": {
+            "value": "\"[3]: x,y\""
+        },
+        "encode\/primitives.json#16": {
+            "value": "\"- item\""
+        },
+        "encode\/primitives.json#17": {
+            "value": "marker: \"-\""
+        },
+        "encode\/primitives.json#18": {
+            "value": "note: \"- item\""
+        },
+        "encode\/primitives.json#19": {
+            "value": "items[1]: \"-\""
+        },
+        "encode\/primitives.json#20": {
+            "value": "tags[3]: a,\"- item\",b"
+        },
+        "encode\/primitives.json#21": {
+            "value": "\"[test]\""
+        },
+        "encode\/primitives.json#22": {
+            "value": "\"{key}\""
+        },
+        "encode\/primitives.json#23": {
+            "value": "café"
+        },
+        "encode\/primitives.json#24": {
+            "value": "你好"
+        },
+        "encode\/primitives.json#25": {
+            "value": "🚀"
+        },
+        "encode\/primitives.json#26": {
+            "value": "hello 👋 world"
+        },
+        "encode\/primitives.json#27": {
+            "value": "42"
+        },
+        "encode\/primitives.json#28": {
+            "value": "3.14"
+        },
+        "encode\/primitives.json#29": {
+            "value": "-7"
+        },
+        "encode\/primitives.json#30": {
+            "value": "0"
+        },
+        "encode\/primitives.json#31": {
+            "value": "0"
+        },
+        "encode\/primitives.json#32": {
+            "value": "1000000"
+        },
+        "encode\/primitives.json#33": {
+            "value": "0.000001"
+        },
+        "encode\/primitives.json#34": {
+            "value": "100000000000000000000"
+        },
+        "encode\/primitives.json#35": {
+            "value": "9007199254740991"
+        },
+        "encode\/primitives.json#36": {
+            "value": "0.3333333333333333"
+        },
+        "encode\/primitives.json#37": {
+            "value": "true"
+        },
+        "encode\/primitives.json#38": {
+            "value": "false"
+        },
+        "encode\/primitives.json#39": {
+            "value": "null"
+        },
+        "encode\/whitespace.json#0": {
+            "value": "id: 123"
+        },
+        "encode\/whitespace.json#1": {
+            "value": "user:\n  id: 123\n  name: Ada\nitems[2]: a,b"
+        },
+        "encode\/whitespace.json#2": {
+            "value": "user:\n    name: Ada\n    role: admin"
+        },
+        "decode\/arrays-nested.json#0": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "name": "First"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Second",
+                        "extra": true
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#1": {
+            "value": {
+                "items": [
+                    "first",
+                    "second",
+                    []
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#2": {
+            "value": {
+                "items": [
+                    {
+                        "properties": {
+                            "state": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "id": 2
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#3": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "nested": {
+                            "x": 1
+                        }
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#4": {
+            "value": {
+                "items": [
+                    {
+                        "users": [
+                            {
+                                "id": 1,
+                                "name": "Ada"
+                            },
+                            {
+                                "id": 2,
+                                "name": "Bob"
+                            }
+                        ],
+                        "status": "active"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#5": {
+            "value": {
+                "items": [
+                    {
+                        "users": [
+                            {
+                                "id": 1,
+                                "name": "Ada"
+                            },
+                            {
+                                "id": 2,
+                                "name": "Bob"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#6": {
+            "value": {
+                "items": [
+                    {
+                        "name": "Ada",
+                        "data": []
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#7": {
+            "value": {
+                "items": [
+                    {
+                        "matrix": [
+                            [
+                                1,
+                                2
+                            ],
+                            [
+                                3,
+                                4
+                            ]
+                        ],
+                        "name": "grid"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#8": {
+            "value": {
+                "pairs": [
+                    [
+                        "a",
+                        "b"
+                    ],
+                    [
+                        "c",
+                        "d"
+                    ]
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#9": {
+            "value": {
+                "pairs": [
+                    [
+                        "a",
+                        "b"
+                    ],
+                    [
+                        "c,d",
+                        "e:f",
+                        "true"
+                    ]
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#10": {
+            "value": {
+                "pairs": [
+                    [],
+                    []
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#11": {
+            "value": {
+                "pairs": [
+                    [
+                        1
+                    ],
+                    [
+                        2,
+                        3
+                    ]
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#12": {
+            "value": [
+                "x",
+                "y",
+                "true",
+                true,
+                10
+            ]
+        },
+        "decode\/arrays-nested.json#13": {
+            "value": [
+                {
+                    "id": 1
+                },
+                {
+                    "id": 2
+                }
+            ]
+        },
+        "decode\/arrays-nested.json#14": {
+            "value": [
+                {
+                    "id": 1
+                },
+                {
+                    "id": 2,
+                    "name": "Ada"
+                }
+            ]
+        },
+        "decode\/arrays-nested.json#15": {
+            "value": [
+                "summary",
+                {
+                    "id": 1,
+                    "name": "Ada"
+                },
+                [
+                    {
+                        "id": 2
+                    },
+                    {
+                        "status": "draft"
+                    }
+                ]
+            ]
+        },
+        "decode\/arrays-nested.json#16": {
+            "value": [
+                [
+                    1,
+                    2
+                ],
+                []
+            ]
+        },
+        "decode\/arrays-nested.json#17": {
+            "value": []
+        },
+        "decode\/arrays-nested.json#18": {
+            "value": {
+                "user": {
+                    "id": 123,
+                    "name": "Ada",
+                    "tags": [
+                        "reading",
+                        "gaming"
+                    ],
+                    "active": true,
+                    "prefs": []
+                }
+            }
+        },
+        "decode\/arrays-nested.json#19": {
+            "value": {
+                "items": [
+                    1,
+                    {
+                        "a": 1
+                    },
+                    "text"
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#20": {
+            "value": {
+                "items": [
+                    {
+                        "a": 1
+                    },
+                    [
+                        1,
+                        2
+                    ]
+                ]
+            }
+        },
+        "decode\/arrays-nested.json#21": {
+            "value": {
+                "x-items": [
+                    {
+                        "id": 1
+                    },
+                    {
+                        "id": 2
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#0": {
+            "value": {
+                "tags": [
+                    "reading",
+                    "gaming",
+                    "coding"
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#1": {
+            "value": {
+                "nums": [
+                    1,
+                    2,
+                    3
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#2": {
+            "value": {
+                "data": [
+                    "x",
+                    "y",
+                    true,
+                    10
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#3": {
+            "value": {
+                "items": []
+            }
+        },
+        "decode\/arrays-primitive.json#4": {
+            "value": {
+                "items": [
+                    ""
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#5": {
+            "value": {
+                "items": [
+                    "a",
+                    "",
+                    "b"
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#6": {
+            "value": {
+                "items": [
+                    " ",
+                    "  "
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#7": {
+            "value": {
+                "items": [
+                    "a",
+                    "b,c",
+                    "d:e"
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#8": {
+            "value": {
+                "items": [
+                    "x",
+                    "true",
+                    "42",
+                    "-3.14"
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#9": {
+            "value": {
+                "items": [
+                    "[5]",
+                    "- item",
+                    "{key}"
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#10": {
+            "value": {
+                "my-key": [
+                    1,
+                    2,
+                    3
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#11": {
+            "value": {
+                "": [
+                    1,
+                    2,
+                    3
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#12": {
+            "value": {
+                "key[test]": [
+                    1,
+                    2,
+                    3
+                ]
+            }
+        },
+        "decode\/arrays-primitive.json#13": {
+            "value": {
+                "x-custom": []
+            }
+        },
+        "decode\/arrays-primitive.json#14": {
+            "value": {
+                "": []
+            }
+        },
+        "decode\/arrays-primitive.json#15": {
+            "value": {
+                "items": []
+            }
+        },
+        "decode\/arrays-primitive.json#16": {
+            "value": {
+                "x-custom": []
+            }
+        },
+        "decode\/arrays-primitive.json#17": {
+            "value": {
+                "": []
+            }
+        },
+        "decode\/arrays-tabular.json#0": {
+            "value": {
+                "items": [
+                    {
+                        "sku": "A1",
+                        "qty": 2,
+                        "price": 9.99
+                    },
+                    {
+                        "sku": "B2",
+                        "qty": 1,
+                        "price": 14.5
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-tabular.json#1": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "value": null
+                    },
+                    {
+                        "id": 2,
+                        "value": "test"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-tabular.json#2": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "note": "a:b"
+                    },
+                    {
+                        "id": 2,
+                        "note": "c:d"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-tabular.json#3": {
+            "value": {
+                "items": [
+                    {
+                        "order:id": 1,
+                        "full name": "Ada"
+                    },
+                    {
+                        "order:id": 2,
+                        "full name": "Bob"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-tabular.json#4": {
+            "value": {
+                "x-items": [
+                    {
+                        "id": 1,
+                        "name": "Ada"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Bob"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-tabular.json#5": {
+            "value": {
+                "": [
+                    {
+                        "id": 1,
+                        "name": "Ada"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Bob"
+                    }
+                ]
+            }
+        },
+        "decode\/arrays-tabular.json#6": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "name": "Alice"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Bob"
+                    }
+                ],
+                "count": 2
+            }
+        },
+        "decode\/blank-lines.json#0": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 3: Blank lines not allowed inside arrays\/tabular rows (strict mode)"
+        },
+        "decode\/blank-lines.json#1": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 3: Blank lines not allowed inside arrays\/tabular rows (strict mode)"
+        },
+        "decode\/blank-lines.json#2": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 3: Blank lines not allowed inside arrays\/tabular rows (strict mode)"
+        },
+        "decode\/blank-lines.json#3": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 3: Blank lines not allowed inside arrays\/tabular rows (strict mode)"
+        },
+        "decode\/blank-lines.json#4": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 3: Missing colon after key\n  > - a"
+        },
+        "decode\/blank-lines.json#5": {
+            "value": {
+                "a": 1,
+                "b": 2
+            }
+        },
+        "decode\/blank-lines.json#6": {
+            "value": {
+                "a": 1,
+                "b": 2
+            }
+        },
+        "decode\/blank-lines.json#7": {
+            "value": {
+                "a": 1
+            }
+        },
+        "decode\/blank-lines.json#8": {
+            "value": {
+                "a": 1
+            }
+        },
+        "decode\/blank-lines.json#9": {
+            "value": {
+                "items": [
+                    "a"
+                ],
+                "b": 2
+            }
+        },
+        "decode\/blank-lines.json#10": {
+            "value": {
+                "a": {
+                    "b": 1,
+                    "c": 2
+                }
+            }
+        },
+        "decode\/blank-lines.json#11": {
+            "value": {
+                "items": [
+                    "a",
+                    "b",
+                    "c"
+                ]
+            }
+        },
+        "decode\/blank-lines.json#12": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "name": "Alice"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Bob"
+                    }
+                ]
+            }
+        },
+        "decode\/blank-lines.json#13": {
+            "value": {
+                "items": [
+                    "a",
+                    "b"
+                ]
+            }
+        },
+        "decode\/delimiters.json#0": {
+            "value": {
+                "tags": [
+                    "reading",
+                    "gaming",
+                    "coding"
+                ]
+            }
+        },
+        "decode\/delimiters.json#1": {
+            "value": {
+                "tags": [
+                    "reading",
+                    "gaming",
+                    "coding"
+                ]
+            }
+        },
+        "decode\/delimiters.json#2": {
+            "value": {
+                "items": [
+                    {
+                        "sku": "A1",
+                        "qty": 2,
+                        "price": 9.99
+                    },
+                    {
+                        "sku": "B2",
+                        "qty": 1,
+                        "price": 14.5
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#3": {
+            "value": {
+                "items": [
+                    {
+                        "sku": "A1",
+                        "qty": 2,
+                        "price": 9.99
+                    },
+                    {
+                        "sku": "B2",
+                        "qty": 1,
+                        "price": 14.5
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#4": {
+            "value": {
+                "pairs": [
+                    [
+                        "a",
+                        "b"
+                    ],
+                    [
+                        "c",
+                        "d"
+                    ]
+                ]
+            }
+        },
+        "decode\/delimiters.json#5": {
+            "value": {
+                "pairs": [
+                    [
+                        "a",
+                        "b"
+                    ],
+                    [
+                        "c",
+                        "d"
+                    ]
+                ]
+            }
+        },
+        "decode\/delimiters.json#6": {
+            "value": {
+                "items": [
+                    {
+                        "tags": [
+                            "a",
+                            "b",
+                            "c"
+                        ]
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#7": {
+            "value": {
+                "items": [
+                    {
+                        "tags": [
+                            "a",
+                            "b",
+                            "c"
+                        ]
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#8": {
+            "value": [
+                "x",
+                "y",
+                "z"
+            ]
+        },
+        "decode\/delimiters.json#9": {
+            "value": [
+                "x",
+                "y",
+                "z"
+            ]
+        },
+        "decode\/delimiters.json#10": {
+            "value": [
+                {
+                    "id": 1
+                },
+                {
+                    "id": 2
+                }
+            ]
+        },
+        "decode\/delimiters.json#11": {
+            "value": [
+                {
+                    "id": 1
+                },
+                {
+                    "id": 2
+                }
+            ]
+        },
+        "decode\/delimiters.json#12": {
+            "value": {
+                "items": [
+                    "a",
+                    "b\tc",
+                    "d"
+                ]
+            }
+        },
+        "decode\/delimiters.json#13": {
+            "value": {
+                "items": [
+                    "a",
+                    "b|c",
+                    "d"
+                ]
+            }
+        },
+        "decode\/delimiters.json#14": {
+            "value": {
+                "items": [
+                    "a,b",
+                    "c,d"
+                ]
+            }
+        },
+        "decode\/delimiters.json#15": {
+            "value": {
+                "items": [
+                    "a,b",
+                    "c,d"
+                ]
+            }
+        },
+        "decode\/delimiters.json#16": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "note": "a,b"
+                    },
+                    {
+                        "id": 2,
+                        "note": "c,d"
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#17": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "note": "a,b"
+                    },
+                    {
+                        "id": 2,
+                        "note": "c,d"
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#18": {
+            "value": {
+                "note": "a,b"
+            }
+        },
+        "decode\/delimiters.json#19": {
+            "value": {
+                "items": [
+                    {
+                        "status": "a,b"
+                    },
+                    {
+                        "status": "c,d"
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#20": {
+            "value": {
+                "items": [
+                    {
+                        "status": "a,b"
+                    },
+                    {
+                        "status": "c,d"
+                    }
+                ]
+            }
+        },
+        "decode\/delimiters.json#21": {
+            "value": {
+                "pairs": [
+                    [
+                        "a",
+                        "b|c"
+                    ]
+                ]
+            }
+        },
+        "decode\/delimiters.json#22": {
+            "value": {
+                "pairs": [
+                    [
+                        "a",
+                        "b\tc"
+                    ]
+                ]
+            }
+        },
+        "decode\/delimiters.json#23": {
+            "value": {
+                "items": [
+                    "true",
+                    "42",
+                    "-3.14"
+                ]
+            }
+        },
+        "decode\/delimiters.json#24": {
+            "value": {
+                "items": [
+                    "true",
+                    "42",
+                    "-3.14"
+                ]
+            }
+        },
+        "decode\/delimiters.json#25": {
+            "value": {
+                "items": [
+                    "[5]",
+                    "{key}",
+                    "- item"
+                ]
+            }
+        },
+        "decode\/delimiters.json#26": {
+            "value": {
+                "items": [
+                    "[5]",
+                    "{key}",
+                    "- item"
+                ]
+            }
+        },
+        "decode\/delimiters.json#27": {
+            "value": {
+                "items": [
+                    {
+                        "a|b": 1
+                    },
+                    {
+                        "a|b": 2
+                    }
+                ]
+            }
+        },
+        "decode\/indentation-errors.json#0": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\IndentationException",
+            "message": "Line 2: Indentation must be multiple of 2 (got 3 spaces)\n  >    b: 1"
+        },
+        "decode\/indentation-errors.json#1": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\IndentationException",
+            "message": "Line 2: Indentation must be multiple of 2 (got 3 spaces)\n  >    - id: 1"
+        },
+        "decode\/indentation-errors.json#2": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\IndentationException",
+            "message": "Line 2: Indentation must be multiple of 4 (got 3 spaces)\n  >    b: 1"
+        },
+        "decode\/indentation-errors.json#3": {
+            "value": {
+                "a": {
+                    "b": 1
+                }
+            }
+        },
+        "decode\/indentation-errors.json#4": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\IndentationException",
+            "message": "Line 2: Tabs not allowed in indentation (strict mode)\n  > \tb: 1"
+        },
+        "decode\/indentation-errors.json#5": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\IndentationException",
+            "message": "Line 2: Tabs not allowed in indentation (strict mode)\n  >  \tb: 1"
+        },
+        "decode\/indentation-errors.json#6": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\IndentationException",
+            "message": "Line 1: Tabs not allowed in indentation (strict mode)\n  > \ta: 1"
+        },
+        "decode\/indentation-errors.json#7": {
+            "value": {
+                "text": "hello\tworld"
+            }
+        },
+        "decode\/indentation-errors.json#8": {
+            "value": {
+                "key\ttab": "value"
+            }
+        },
+        "decode\/indentation-errors.json#9": {
+            "value": {
+                "items": [
+                    "a\tb",
+                    "c\td"
+                ]
+            }
+        },
+        "decode\/indentation-errors.json#10": {
+            "value": {
+                "a": {
+                    "b": 1
+                }
+            }
+        },
+        "decode\/indentation-errors.json#11": {
+            "value": {
+                "a": {
+                    "b": {
+                        "c": 1
+                    }
+                }
+            }
+        },
+        "decode\/numbers.json#0": {
+            "value": {
+                "value": 1.5
+            }
+        },
+        "decode\/numbers.json#1": {
+            "value": {
+                "value": -1000.0
+            }
+        },
+        "decode\/numbers.json#2": {
+            "value": {
+                "value": 250.0
+            }
+        },
+        "decode\/numbers.json#3": {
+            "value": {
+                "value": 0.03
+            }
+        },
+        "decode\/numbers.json#4": {
+            "value": {
+                "value": -0.0
+            }
+        },
+        "decode\/numbers.json#5": {
+            "value": {
+                "value": -0.0
+            }
+        },
+        "decode\/numbers.json#6": {
+            "value": {
+                "nums": [
+                    42,
+                    -1000.0,
+                    1.5,
+                    -0.0,
+                    250.0
+                ]
+            }
+        },
+        "decode\/numbers.json#7": {
+            "value": {
+                "value": "05"
+            }
+        },
+        "decode\/numbers.json#8": {
+            "value": {
+                "value": 1.0e-10
+            }
+        },
+        "decode\/numbers.json#9": {
+            "value": {
+                "value": 5.0
+            }
+        },
+        "decode\/numbers.json#10": {
+            "value": {
+                "value": 0.0
+            }
+        },
+        "decode\/numbers.json#11": {
+            "value": {
+                "value": -0.0
+            }
+        },
+        "decode\/numbers.json#12": {
+            "value": 1000000.0
+        },
+        "decode\/numbers.json#13": {
+            "value": 1000000.0
+        },
+        "decode\/numbers.json#14": {
+            "value": -0.001
+        },
+        "decode\/numbers.json#15": {
+            "value": "05"
+        },
+        "decode\/numbers.json#16": {
+            "value": "007"
+        },
+        "decode\/numbers.json#17": {
+            "value": "0123"
+        },
+        "decode\/numbers.json#18": {
+            "value": {
+                "a": "05"
+            }
+        },
+        "decode\/numbers.json#19": {
+            "value": {
+                "nums": [
+                    "05",
+                    "007",
+                    "0123"
+                ]
+            }
+        },
+        "decode\/numbers.json#20": {
+            "value": "-05"
+        },
+        "decode\/numbers.json#21": {
+            "value": {
+                "nums": [
+                    "-05",
+                    "-007"
+                ]
+            }
+        },
+        "decode\/objects.json#0": {
+            "value": {
+                "id": 123,
+                "name": "Ada",
+                "active": true
+            }
+        },
+        "decode\/objects.json#1": {
+            "value": {
+                "id": 123,
+                "value": null
+            }
+        },
+        "decode\/objects.json#2": {
+            "value": {
+                "user": []
+            }
+        },
+        "decode\/objects.json#3": {
+            "value": {
+                "matches": []
+            }
+        },
+        "decode\/objects.json#4": {
+            "value": {
+                "name": "Bob"
+            }
+        },
+        "decode\/objects.json#5": {
+            "value": {
+                "note": "a:b"
+            }
+        },
+        "decode\/objects.json#6": {
+            "value": {
+                "note": "a,b"
+            }
+        },
+        "decode\/objects.json#7": {
+            "value": {
+                "text": "line1\nline2"
+            }
+        },
+        "decode\/objects.json#8": {
+            "value": {
+                "text": "say \"hello\""
+            }
+        },
+        "decode\/objects.json#9": {
+            "value": {
+                "text": " padded "
+            }
+        },
+        "decode\/objects.json#10": {
+            "value": {
+                "text": "  "
+            }
+        },
+        "decode\/objects.json#11": {
+            "value": {
+                "v": "true"
+            }
+        },
+        "decode\/objects.json#12": {
+            "value": {
+                "v": "42"
+            }
+        },
+        "decode\/objects.json#13": {
+            "value": {
+                "v": "-7.5"
+            }
+        },
+        "decode\/objects.json#14": {
+            "value": {
+                "order:id": 7
+            }
+        },
+        "decode\/objects.json#15": {
+            "value": {
+                "a\u0004b": 1
+            }
+        },
+        "decode\/objects.json#16": {
+            "value": {
+                "xéy": 2
+            }
+        },
+        "decode\/objects.json#17": {
+            "value": {
+                "[index]": 5
+            }
+        },
+        "decode\/objects.json#18": {
+            "value": {
+                "foo[1][bar]": 10
+            }
+        },
+        "decode\/objects.json#19": {
+            "value": {
+                "foo[bar][1]": 20
+            }
+        },
+        "decode\/objects.json#20": {
+            "value": {
+                "foo[2]extra": "a,b"
+            }
+        },
+        "decode\/objects.json#21": {
+            "value": {
+                "{key}": 5
+            }
+        },
+        "decode\/objects.json#22": {
+            "value": {
+                "a,b": 1
+            }
+        },
+        "decode\/objects.json#23": {
+            "value": {
+                "full name": "Ada"
+            }
+        },
+        "decode\/objects.json#24": {
+            "value": {
+                "-lead": 1
+            }
+        },
+        "decode\/objects.json#25": {
+            "value": {
+                " a ": 1
+            }
+        },
+        "decode\/objects.json#26": {
+            "value": {
+                "123": "x"
+            }
+        },
+        "decode\/objects.json#27": {
+            "value": {
+                "": 1
+            }
+        },
+        "decode\/objects.json#28": {
+            "value": {
+                "user.name": "Ada"
+            }
+        },
+        "decode\/objects.json#29": {
+            "value": {
+                "_private": 1
+            }
+        },
+        "decode\/objects.json#30": {
+            "value": {
+                "user_name": 1
+            }
+        },
+        "decode\/objects.json#31": {
+            "value": {
+                "line\nbreak": 1
+            }
+        },
+        "decode\/objects.json#32": {
+            "value": {
+                "tab\there": 2
+            }
+        },
+        "decode\/objects.json#33": {
+            "value": {
+                "he said \"hi\"": 1
+            }
+        },
+        "decode\/objects.json#34": {
+            "value": {
+                "a": {
+                    "b": {
+                        "c": "deep"
+                    }
+                }
+            }
+        },
+        "decode\/objects.json#35": {
+            "value": {
+                "outer": {
+                    "name": "Bob"
+                }
+            }
+        },
+        "decode\/objects.json#36": {
+            "value": {
+                "items": [
+                    {
+                        "id": 2
+                    }
+                ]
+            }
+        },
+        "decode\/path-expansion.json#0": {
+            "value": {
+                "a.b.c": 1
+            }
+        },
+        "decode\/path-expansion.json#1": {
+            "value": {
+                "data.meta.items": [
+                    "a",
+                    "b"
+                ]
+            }
+        },
+        "decode\/path-expansion.json#2": {
+            "value": {
+                "a.b.items": [
+                    {
+                        "id": 1,
+                        "name": "A"
+                    },
+                    {
+                        "id": 2,
+                        "name": "B"
+                    }
+                ]
+            }
+        },
+        "decode\/path-expansion.json#3": {
+            "value": {
+                "user.name": "Ada"
+            }
+        },
+        "decode\/path-expansion.json#4": {
+            "value": {
+                "a.b.c": 1,
+                "a.b.d": 2,
+                "a.e": 3
+            }
+        },
+        "decode\/path-expansion.json#5": {
+            "value": {
+                "a.b": 1,
+                "a": 2
+            }
+        },
+        "decode\/path-expansion.json#6": {
+            "value": {
+                "a.b": 1,
+                "a": [
+                    2,
+                    3
+                ]
+            }
+        },
+        "decode\/path-expansion.json#7": {
+            "value": {
+                "a.b": 1,
+                "a": 2
+            }
+        },
+        "decode\/path-expansion.json#8": {
+            "value": {
+                "a": 1,
+                "a.b": 2
+            }
+        },
+        "decode\/path-expansion.json#9": {
+            "value": {
+                "a.b": 1,
+                "c.d": 2
+            }
+        },
+        "decode\/path-expansion.json#10": {
+            "value": {
+                "full-name.x": 1
+            }
+        },
+        "decode\/path-expansion.json#11": {
+            "value": {
+                "a.b.c": []
+            }
+        },
+        "decode\/primitives.json#0": {
+            "value": "hello"
+        },
+        "decode\/primitives.json#1": {
+            "value": "Ada_99"
+        },
+        "decode\/primitives.json#2": {
+            "value": ""
+        },
+        "decode\/primitives.json#3": {
+            "value": "line1\nline2"
+        },
+        "decode\/primitives.json#4": {
+            "value": "tab\there"
+        },
+        "decode\/primitives.json#5": {
+            "value": "return\rcarriage"
+        },
+        "decode\/primitives.json#6": {
+            "value": "C:\\Users\\path"
+        },
+        "decode\/primitives.json#7": {
+            "value": "say \"hello\""
+        },
+        "decode\/primitives.json#8": {
+            "value": {
+                "val": "a\u0004b"
+            }
+        },
+        "decode\/primitives.json#9": {
+            "value": {
+                "val": "a«b"
+            }
+        },
+        "decode\/primitives.json#10": {
+            "value": "café"
+        },
+        "decode\/primitives.json#11": {
+            "value": "你好"
+        },
+        "decode\/primitives.json#12": {
+            "value": "🚀"
+        },
+        "decode\/primitives.json#13": {
+            "value": "hello 👋 world"
+        },
+        "decode\/primitives.json#14": {
+            "value": 42
+        },
+        "decode\/primitives.json#15": {
+            "value": 3.14
+        },
+        "decode\/primitives.json#16": {
+            "value": -7
+        },
+        "decode\/primitives.json#17": {
+            "value": true
+        },
+        "decode\/primitives.json#18": {
+            "value": false
+        },
+        "decode\/primitives.json#19": {
+            "value": null
+        },
+        "decode\/primitives.json#20": {
+            "value": "true"
+        },
+        "decode\/primitives.json#21": {
+            "value": "false"
+        },
+        "decode\/primitives.json#22": {
+            "value": "null"
+        },
+        "decode\/primitives.json#23": {
+            "value": "42"
+        },
+        "decode\/primitives.json#24": {
+            "value": "-3.14"
+        },
+        "decode\/primitives.json#25": {
+            "value": "1e-6"
+        },
+        "decode\/primitives.json#26": {
+            "value": "05"
+        },
+        "decode\/primitives.json#27": {
+            "value": "🚀 launch"
+        },
+        "decode\/root-form.json#0": {
+            "value": []
+        },
+        "decode\/root-form.json#1": {
+            "value": "hello"
+        },
+        "decode\/root-form.json#2": {
+            "value": 42
+        },
+        "decode\/root-form.json#3": {
+            "value": true
+        },
+        "decode\/root-form.json#4": {
+            "value": []
+        },
+        "decode\/validation-errors.json#0": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 1: Inline array length mismatch: expected 2, got 3\n  > a,b,c"
+        },
+        "decode\/validation-errors.json#1": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 1: List array length mismatch: expected 1, got 2\n  > items[1]:"
+        },
+        "decode\/validation-errors.json#2": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 3: Tabular row width mismatch: expected 2 values, got 1\n  > 2"
+        },
+        "decode\/validation-errors.json#3": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 1: Tabular array length mismatch: expected 1 rows, got 2\n  > [1]{id}:"
+        },
+        "decode\/validation-errors.json#4": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Invalid escape sequence: \\x\n  > \"a\\x\""
+        },
+        "decode\/validation-errors.json#5": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Invalid escape sequence: \\u requires four hex digits\n  > \"a\\u00b\""
+        },
+        "decode\/validation-errors.json#6": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Invalid escape sequence: lone surrogate \\uD800\n  > \"a\\uD800b\""
+        },
+        "decode\/validation-errors.json#7": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Unterminated quoted string\n  > \"unterminated"
+        },
+        "decode\/validation-errors.json#8": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\DecodeException",
+            "message": "Line 2: Invalid array format"
+        },
+        "decode\/validation-errors.json#9": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Missing colon after key\n  > hello"
+        },
+        "decode\/validation-errors.json#10": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 2: Tabular row width mismatch: expected 2 values, got 1\n  > 1,2"
+        },
+        "decode\/validation-errors.json#11": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > items[2\t]{a,b}:"
+        },
+        "decode\/validation-errors.json#12": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > foo[1][bar]: 10"
+        },
+        "decode\/validation-errors.json#13": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > foo[2]extra: a,b"
+        },
+        "decode\/validation-errors.json#14": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > foo[bar]: 10"
+        },
+        "decode\/validation-errors.json#15": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 2: Duplicate object key: name"
+        },
+        "decode\/validation-errors.json#16": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Missing colon after key\n  > items[2]{id,name}"
+        },
+        "decode\/validation-errors.json#17": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 1: Inline array length mismatch: expected 3, got 2\n  > a,b"
+        },
+        "decode\/validation-errors.json#18": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\CountMismatchException",
+            "message": "Line 1: List array length mismatch: expected 2, got 1\n  > items[2]:"
+        },
+        "decode\/validation-errors.json#19": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > items[03]: a,b,c"
+        },
+        "decode\/validation-errors.json#20": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > items[-1]: a,b,c"
+        },
+        "decode\/validation-errors.json#21": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > items[2] :"
+        },
+        "decode\/validation-errors.json#22": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\SyntaxException",
+            "message": "Line 1: Malformed array header (invalid bracket length or content before colon)\n  > items[2] {a,b}:"
+        },
+        "decode\/validation-errors.json#23": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 3: Duplicate object key: name"
+        },
+        "decode\/validation-errors.json#24": {
+            "error": "HelgeSverre\\Toon\\Exceptions\\StrictModeException",
+            "message": "Line 3: Duplicate object key: id"
+        },
+        "decode\/whitespace.json#0": {
+            "value": {
+                "tags": [
+                    "a",
+                    "b",
+                    "c"
+                ]
+            }
+        },
+        "decode\/whitespace.json#1": {
+            "value": {
+                "tags": [
+                    "a",
+                    "b",
+                    "c"
+                ]
+            }
+        },
+        "decode\/whitespace.json#2": {
+            "value": {
+                "tags": [
+                    "a",
+                    "b",
+                    "c"
+                ]
+            }
+        },
+        "decode\/whitespace.json#3": {
+            "value": {
+                "items": [
+                    {
+                        "id": 1,
+                        "name": "Alice"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Bob"
+                    }
+                ]
+            }
+        },
+        "decode\/whitespace.json#4": {
+            "value": {
+                "items": [
+                    "a",
+                    "b",
+                    "c"
+                ]
+            }
+        },
+        "decode\/whitespace.json#5": {
+            "value": {
+                "items": [
+                    "a",
+                    "",
+                    "c"
+                ]
+            }
+        }
+    }
+}

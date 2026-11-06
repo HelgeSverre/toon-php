@@ -13,7 +13,7 @@ final class Toon
      * human-readable Token-Oriented Object Notation format optimized for LLM contexts.
      *
      * @param  mixed  $value  The value to encode (arrays, objects, strings, numbers, booleans, null)
-     * @param  EncodeOptions|null  $options  Optional encoding options (delimiter, indent, length marker)
+     * @param  EncodeOptions|null  $options  Optional encoding options (delimiter, indent, spec version)
      * @return string The TOON-formatted string
      */
     public static function encode(mixed $value, ?EncodeOptions $options = null): string
@@ -21,19 +21,7 @@ final class Toon
         // Resolve options
         $options ??= EncodeOptions::default();
 
-        // Normalize the value
-        $normalizedValue = Normalize::normalizeValue($value);
-
-        // Create line writer
-        $indentString = str_repeat(Constants::SPACE, $options->indent);
-        $writer = new LineWriter($indentString);
-
-        // Create encoder and encode the value
-        $encoder = new Encoders($options, $writer);
-        $encoder->encodeValue($normalizedValue);
-
-        // Return the result
-        return $writer->toString();
+        return self::codec($options->version)->encode($value, $options);
     }
 
     /**
@@ -43,7 +31,7 @@ final class Toon
      * Objects are decoded as associative arrays.
      *
      * @param  string  $toon  The TOON-formatted string to decode
-     * @param  DecodeOptions|null  $options  Optional decoding options (indent, strict mode)
+     * @param  DecodeOptions|null  $options  Optional decoding options (indent, strict mode, spec version)
      * @return mixed The decoded PHP value
      *
      * @throws Exceptions\DecodeException If decoding fails
@@ -53,13 +41,7 @@ final class Toon
         // Resolve options
         $options ??= DecodeOptions::default();
 
-        // Tokenize input
-        $lines = Decoder\Tokenizer::tokenize($toon, $options);
-
-        // Parse tokenized lines
-        $parser = new Decoder\Parser($options);
-
-        return $parser->parse($lines);
+        return self::codec($options->version)->decode($toon, $options);
     }
 
     /**
@@ -71,7 +53,7 @@ final class Toon
      * throw.
      *
      * @param  string  $toon  The TOON-formatted string to validate
-     * @param  DecodeOptions|null  $options  Optional decoding options (indent, strict mode)
+     * @param  DecodeOptions|null  $options  Optional decoding options (indent, strict mode, spec version)
      * @return bool True when the document is valid for the given options, false otherwise
      */
     public static function validate(string $toon, ?DecodeOptions $options = null): bool
@@ -83,6 +65,15 @@ final class Toon
         } catch (Exceptions\DecodeException) {
             return false;
         }
+    }
+
+    private static function codec(SpecVersion $version): Codec\Codec
+    {
+        return match ($version) {
+            SpecVersion::V3_3 => new Codec\V33,
+            SpecVersion::V4_1 => new Codec\V41,
+            SpecVersion::V4_4 => new Codec\V44,
+        };
     }
 
     private function __construct()

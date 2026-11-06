@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/symfony/ai-mate",
+  "revision": "b21be9c4e71236679d452f11e95400e042046afc",
+  "path": "src/Encoding/ResponseEncoder.php",
+  "license": "MIT"
+}

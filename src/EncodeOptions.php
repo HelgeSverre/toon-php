@@ -19,6 +19,7 @@ final class EncodeOptions
     public function __construct(
         public readonly int $indent = 2,
         public readonly string $delimiter = Constants::DEFAULT_DELIMITER,
+        public readonly SpecVersion $version = SpecVersion::V3_3,
     ) {
         // §12: indentation is a fixed number of spaces per level; depth is only
         // recoverable when indentSize >= 1, so indent 0 cannot represent nesting.
@@ -113,7 +114,7 @@ final class EncodeOptions
      */
     public function withIndent(int $indent): self
     {
-        return new self($indent, $this->delimiter);
+        return new self($indent, $this->delimiter, $this->version);
     }
 
     /**
@@ -124,6 +125,12 @@ final class EncodeOptions
      */
     public function withDelimiter(string $delimiter): self
     {
-        return new self($this->indent, $delimiter);
+        return new self($this->indent, $delimiter, $this->version);
+    }
+
+    /** Return options for an explicitly selected wire-format version. */
+    public function withVersion(SpecVersion $version): self
+    {
+        return new self($this->indent, $this->delimiter, $version);
     }
 }

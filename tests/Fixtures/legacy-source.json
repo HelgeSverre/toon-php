@@ -1,0 +1,25 @@
+{
+  "revision": "55ca6ba93846bde75eeb04dac70a99fe0bb435dd",
+  "sha256": {
+    "src/Constants.php": "06a959dfd9636f7c60ab17e62fafea50238f854fa93c652128601962a93bd455",
+    "src/DecodeOptions.php": "a71a6d80c2a8906d36a06d1bf45c955db72a00b9cb1b0f8ceef359df24a1c189",
+    "src/Decoder/DelimiterParser.php": "3a67d324715f638ed02d32fe25b7580251069c4ceffe55834a445908b3179389",
+    "src/Decoder/HeaderParser.php": "0cc5249249f8bf2bfff693bd2da568498781f32914f40d1db150c8ae55e63cee",
+    "src/Decoder/Parser.php": "985f2370a4de71b9be346c8a82bf53c7944204320d799985dc358800a5b931fa",
+    "src/Decoder/StrictValidator.php": "12ddc0a08fd4dee94bb5d1f390ab6624dafefa468ffbb7e215bde150b4441c15",
+    "src/Decoder/Tokenizer.php": "cdf336df3121470ae7f697e74345d4091dd2a8bfae9819f595c64e55a3db0896",
+    "src/Decoder/ValueParser.php": "4d02182c6ce6353fbb8f5e37b74f18f32c0a887acb670f440ef2763d850aafe8",
+    "src/EncodeOptions.php": "c6637999c65f2ce7ade7d3b2b930d03a5c4fd158358504c9a551805744da38a2",
+    "src/Encoders.php": "fc88ec99f779e8210b907fca07204f469c40012c40ec6a300269d1d12a138a7b",
+    "src/Exceptions/CountMismatchException.php": "67ff688d40d2c21972e750bd4724d5c987b9085c2efa4c7d6a1e569d77793971",
+    "src/Exceptions/DecodeException.php": "cf55d056a01214d9841636fa46289d82d2781fa744198548ddf5583952a6164e",
+    "src/Exceptions/IndentationException.php": "0e8b7ce5e192b63494627700a83ac5de532a361bf42f07aff5f418b3eb4adc8d",
+    "src/Exceptions/StrictModeException.php": "8db530dbce8325241f55c24ae5fc5c05a30ee763778ad6524a01b2eb35b72037",
+    "src/Exceptions/SyntaxException.php": "acf12c36a3d73343cf4abf915301907dc7410c6cbde4850c1dfba37868f8aa7a",
+    "src/LineWriter.php": "54569abece7f53a546fdbb9a6bde67da41a4d91c36952cce32e77f1d77f60974",
+    "src/Normalize.php": "bca6226591b1e11fad651b8d005d0d128a4a8e8a0789366176baa88f6107d0a0",
+    "src/Primitives.php": "8f30eac4306d9942927b6d8437912fd00ec04ad3450b5a5c4a9326e778167e66",
+    "src/Toon.php": "e0390bcde7e5b51b7b735c59b7f54c738076e791c011f4932f2c978427fcce55",
+    "src/helpers.php": "8810f79d05c7fae580574a4be5b66187ad3303da5aea02f3b5f5df2fc8587e9e"
+  }
+}

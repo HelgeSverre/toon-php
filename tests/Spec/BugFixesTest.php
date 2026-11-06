@@ -199,7 +199,6 @@ final class BugFixesTest extends TestCase
         $writer = new \HelgeSverre\Toon\LineWriter('  ');
         $encoder = new \HelgeSverre\Toon\Encoders(new EncodeOptions, $writer);
         $method = new ReflectionMethod($encoder, 'encodeObjectAsListItem');
-        $method->setAccessible(true);
         $method->invoke($encoder, [], 0);
         $this->assertSame('-', $writer->toString());
     }

@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/toon-format/spec",
+  "revision": "07161ccc84242a5571f14d33504fc0b4b84da0b2",
+  "specVersion": "3.3",
+  "path": "tests/fixtures",
+  "license": "MIT"
+}
